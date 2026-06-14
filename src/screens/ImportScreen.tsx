@@ -492,13 +492,17 @@ export default function ImportScreen() {
         {'JSON: array of objects with field names as keys.'}
       </Text>
       <TouchableOpacity style={styles.pickFileButton} onPress={handlePickFile}>
-        <Text style={styles.pickFileButtonText}>
-          {fileName ? (
-            <><Ionicons name="document" size={16} color={colors.primary} /> {fileName}</>
-          ) : (
-            <><Ionicons name="folder-open" size={16} color={colors.primary} /> Select File</>
-          )}
-        </Text>
+        {fileName ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons name="document" size={16} color={colors.primary} />
+            <Text style={styles.pickFileButtonText}>{fileName}</Text>
+          </View>
+        ) : (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <Ionicons name="folder-open" size={16} color={colors.primary} />
+            <Text style={styles.pickFileButtonText}>Select File</Text>
+          </View>
+        )}
       </TouchableOpacity>
 
       {fileName && fileContent.length > 0 && previewCards.length === 0 && (
