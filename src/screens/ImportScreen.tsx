@@ -32,6 +32,8 @@ export default function ImportScreen() {
   const [templateFields, setTemplateFields] = useState<TemplateField[]>([]);
   const [previewCards, setPreviewCards] = useState<ImportedCard[]>([]);
   const [importing, setImporting] = useState(false);
+  const [importSuccess, setImportSuccess] = useState(false);
+  const [importedCount, setImportedCount] = useState(0);
   const [fileName, setFileName] = useState('');
   const [fileContent, setFileContent] = useState('');
   const { colors } = useTheme();
@@ -59,6 +61,8 @@ export default function ImportScreen() {
     setSelectedTemplateId(templateId);
     setPreviewCards([]);
     setFileName('');
+    setFileContent('');
+    setImportSuccess(false);
     const fields = await getTemplateFields(templateId);
     setTemplateFields(fields);
   };
@@ -97,6 +101,7 @@ export default function ImportScreen() {
       setFileName(file.name);
       setPreviewCards([]);
       setFileContent('');
+      setImportSuccess(false);
 
       let content = '';
       try {
@@ -170,24 +175,22 @@ export default function ImportScreen() {
     try {
       const tid = isCustomTemplate ? selectedTemplateId : undefined;
       const count = await importCards(selectedDeckId, previewCards, tid ?? undefined);
-      Alert.alert(
-        'Import Complete',
-        `Successfully imported ${count} card${count !== 1 ? 's' : ''}.`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              setPreviewCards([]);
-              setFileName('');
-            },
-          },
-        ]
-      );
+      setImportedCount(count);
+      setImportSuccess(true);
+      setPreviewCards([]);
     } catch (error) {
       Alert.alert('Error', 'Failed to import cards.');
     } finally {
       setImporting(false);
     }
+  };
+
+  const handleReset = () => {
+    setFileName('');
+    setFileContent('');
+    setPreviewCards([]);
+    setImportSuccess(false);
+    setImportedCount(0);
   };
 
   const renderPreview = () => {
@@ -524,16 +527,16 @@ export default function ImportScreen() {
         </TouchableOpacity>
       )}
 
-      {fileName ? (
-        <View style={{ padding: spacing.md, backgroundColor: colors.surface, borderRadius: borderRadius.sm, marginTop: spacing.sm }}>
-          <Text style={{ color: colors.text, fontSize: fontSize.sm }}>Debug info:</Text>
-          <Text style={{ color: colors.textSecondary, fontSize: fontSize.xs }}>fileName: {fileName}</Text>
-          <Text style={{ color: colors.textSecondary, fontSize: fontSize.xs }}>fileContent length: {fileContent.length}</Text>
-          <Text style={{ color: colors.textSecondary, fontSize: fontSize.xs }}>isCustomTemplate: {String(isCustomTemplate)}</Text>
-          <Text style={{ color: colors.textSecondary, fontSize: fontSize.xs }}>template fields: {templateFields.map(f => f.name).join(', ') || 'none'}</Text>
-          <Text style={{ color: colors.textSecondary, fontSize: fontSize.xs }}>First 80 chars: {fileContent.substring(0, 80) || '(empty)'}</Text>
+      {importSuccess && (
+        <View style={[styles.pickFileButton, { backgroundColor: withAlpha(colors.success, 0.12), borderColor: colors.success, borderStyle: 'solid' }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+            <Ionicons name="checkmark-circle" size={20} color={colors.success} />
+            <Text style={[styles.pickFileButtonText, { color: colors.success }]}>
+              Successfully imported {importedCount} card{importedCount !== 1 ? 's' : ''}
+            </Text>
+          </View>
         </View>
-      ) : null}
+      )}
 
       {renderPreview()}
     </ScrollView>
