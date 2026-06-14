@@ -112,14 +112,21 @@ export function parseJSON(content: string, fields?: TemplateField[]): ImportedCa
     if (sortedFields.length > 0) {
       const values: Record<string, string> = {};
       for (const f of sortedFields) {
-        if (typeof item[f.name] === 'string') {
+        const prefixedKey = `${f.side}:${f.name}`;
+        if (typeof item[prefixedKey] === 'string') {
+          values[f.name] = item[prefixedKey];
+        } else if (typeof item[f.name] === 'string') {
           values[f.name] = item[f.name];
         }
       }
       const frontField = sortedFields.find((f) => f.side === 'front');
       const backField = sortedFields.find((f) => f.side === 'back');
-      const frontText = frontField ? (values[frontField.name] ?? '') : item.front ?? item.front_text ?? item.question ?? '';
-      const backText = backField ? (values[backField.name] ?? '') : item.back ?? item.back_text ?? item.answer ?? '';
+      const frontText =
+        (frontField ? values[frontField.name] : undefined) ??
+        item.front ?? item.front_text ?? item.question ?? '';
+      const backText =
+        (backField ? values[backField.name] : undefined) ??
+        item.back ?? item.back_text ?? item.answer ?? '';
 
       return {
         front_text: typeof frontText === 'string' ? frontText : '',

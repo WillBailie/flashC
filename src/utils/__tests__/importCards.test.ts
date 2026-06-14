@@ -127,4 +127,76 @@ describe('parseJSON', () => {
     const cards = parseJSON(json);
     expect(cards).toEqual([]);
   });
+
+  test('generic keys work with custom template (fallback to front/back)', () => {
+    const json = JSON.stringify([
+      { front: 'hello', back: 'hola' },
+    ]);
+    const fields = [
+      { id: 1, template_id: 1, name: '汉字', side: 'front' as const, position: 0 },
+      { id: 2, template_id: 1, name: '翻译', side: 'back' as const, position: 0 },
+    ];
+    const cards = parseJSON(json, fields);
+    expect(cards).toHaveLength(1);
+    expect(cards[0].front_text).toBe('hello');
+    expect(cards[0].back_text).toBe('hola');
+  });
+
+  test('matching field names extract to field_values', () => {
+    const json = JSON.stringify([
+      { 汉字: '爱', 翻译: 'to love', 拼音: 'ài' },
+    ]);
+    const fields = [
+      { id: 1, template_id: 1, name: '汉字', side: 'front' as const, position: 0 },
+      { id: 2, template_id: 1, name: '拼音', side: 'back' as const, position: 0 },
+      { id: 3, template_id: 1, name: '翻译', side: 'back' as const, position: 1 },
+    ];
+    const cards = parseJSON(json, fields);
+    expect(cards).toHaveLength(1);
+    expect(cards[0].front_text).toBe('爱');
+    expect(cards[0].back_text).toBe('ài');
+    expect(cards[0].field_values).toEqual({ 汉字: '爱', 拼音: 'ài', 翻译: 'to love' });
+  });
+
+  test('side:name prefixed keys are parsed (app export format)', () => {
+    const json = JSON.stringify([
+      { 'front:Vocab': 'hola', 'back:Translation': 'hello' },
+    ]);
+    const fields = [
+      { id: 1, template_id: 1, name: 'Vocab', side: 'front' as const, position: 0 },
+      { id: 2, template_id: 1, name: 'Translation', side: 'back' as const, position: 0 },
+    ];
+    const cards = parseJSON(json, fields);
+    expect(cards).toHaveLength(1);
+    expect(cards[0].front_text).toBe('hola');
+    expect(cards[0].back_text).toBe('hello');
+    expect(cards[0].field_values).toEqual({ Vocab: 'hola', Translation: 'hello' });
+  });
+
+  test('prefixed keys override raw field names when both present', () => {
+    const json = JSON.stringify([
+      { 'front:Vocab': 'hola', Vocab: 'adios' },
+    ]);
+    const fields = [
+      { id: 1, template_id: 1, name: 'Vocab', side: 'front' as const, position: 0 },
+    ];
+    const cards = parseJSON(json, fields);
+    expect(cards).toHaveLength(1);
+    expect(cards[0].front_text).toBe('hola');
+    expect(cards[0].field_values).toEqual({ Vocab: 'hola' });
+  });
+
+  test('fallback through generic keys when field value not found', () => {
+    const json = JSON.stringify([
+      { front_text: 'hello', back_text: 'hola' },
+    ]);
+    const fields = [
+      { id: 1, template_id: 1, name: 'Vocab', side: 'front' as const, position: 0 },
+      { id: 2, template_id: 1, name: 'Translation', side: 'back' as const, position: 0 },
+    ];
+    const cards = parseJSON(json, fields);
+    expect(cards).toHaveLength(1);
+    expect(cards[0].front_text).toBe('hello');
+    expect(cards[0].back_text).toBe('hola');
+  });
 });

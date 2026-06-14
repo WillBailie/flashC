@@ -332,8 +332,12 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
-          await deleteTemplateField(field.id);
-          await loadTemplate();
+          try {
+            await deleteTemplateField(field.id);
+            await loadTemplate();
+          } catch {
+            Alert.alert('Error', 'Failed to delete field. Please try again.');
+          }
         },
       },
     ]);
