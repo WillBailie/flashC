@@ -493,17 +493,15 @@ export default function ImportScreen() {
             CSV: columns should match field names in order.
           </Text>
           <Text style={styles.templateHintText}>
-            {'JSON: {"' +
-              sortedFields.map((f) => f.name).join('", "') +
-              '"}'}
+            JSON: {JSON.stringify(sortedFields.map((f) => f.name))}
           </Text>
         </View>
       )}
 
       <Text style={styles.sectionTitle}>3. Choose a File</Text>
       <Text style={styles.sectionDesc}>
-        {'CSV: comma-separated values per line.\n'}
-        {'JSON: array of objects with field names as keys.'}
+        CSV: comma-separated values per line.{'\n'}
+        JSON: array of objects with field names as keys.
       </Text>
       <TouchableOpacity style={styles.pickFileButton} onPress={handlePickFile}>
         {fileName ? (

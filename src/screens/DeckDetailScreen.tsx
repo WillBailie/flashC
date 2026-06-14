@@ -13,7 +13,7 @@ import {
   Share,
   Switch,
 } from 'react-native';
-import Animated, { FadeInUp, Easing } from 'react-native-reanimated';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -148,7 +148,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
 
     return (
       <Animated.View
-        entering={FadeInUp.duration(250).easing(Easing.out(Easing.cubic)).delay(index * 50)}
+        entering={FadeInUp.duration(250).delay(index * 50)}
       >
       <TouchableOpacity
         style={styles.cardItem}

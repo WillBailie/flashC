@@ -7,7 +7,7 @@ import {
   Pressable,
   Alert,
 } from 'react-native';
-import Animated, { FadeInUp, Easing, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { FadeInUp, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { SPRING_CONFIG, useReduceMotion } from '../utils/animation';
@@ -167,7 +167,7 @@ export default function DeckListScreen({ navigation }: Props) {
 
   const renderDeck = ({ item, index }: { item: DeckWithStats; index: number }) => (
     <Animated.View
-      entering={FadeInUp.duration(250).easing(Easing.out(Easing.cubic)).delay(index * 50)}
+      entering={FadeInUp.duration(250).delay(index * 50)}
       style={{ marginBottom: spacing.sm }}
     >
     <Card

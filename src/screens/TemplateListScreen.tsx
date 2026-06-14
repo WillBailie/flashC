@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import Animated, { FadeInUp, Easing, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { FadeInUp, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -158,7 +158,7 @@ export default function TemplateListScreen() {
 
   const renderTemplate = ({ item, index }: { item: Template; index: number }) => (
     <Animated.View
-      entering={FadeInUp.duration(250).easing(Easing.out(Easing.cubic)).delay(index * 50)}
+      entering={FadeInUp.duration(250).delay(index * 50)}
     >
     <TouchableOpacity
       style={styles.templateItem}
