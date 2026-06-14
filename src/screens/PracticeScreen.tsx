@@ -8,11 +8,13 @@ import Animated, {
   withDelay,
   Easing,
   runOnJS,
+  FadeInUp,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, spacing, borderRadius, typography, withAlpha } from '../constants/theme';
+import { useReduceMotion } from '../utils/animation';
 import { EmptyState } from '../components/EmptyState';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
@@ -48,6 +50,13 @@ export default function PracticeScreen({ navigation, route }: Props) {
   const statsOpacity = useSharedValue(0);
   const buttonsOpacity = useSharedValue(0);
   const [showConfetti, setShowConfetti] = useState(false);
+
+  const reduceMotion = useReduceMotion();
+  const progressWidth = useSharedValue(0);
+
+  const progressAnimatedStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value * 100}%`,
+  }));
 
   React.useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -113,6 +122,18 @@ export default function PracticeScreen({ navigation, route }: Props) {
       loadCurrentCardTemplate(cards[currentIndex]);
     }
   }, [cards, currentIndex, loadCurrentCardTemplate]);
+
+  React.useEffect(() => {
+    const ratio = cards.length > 0 ? (currentIndex + 1) / cards.length : 0;
+    if (reduceMotion) {
+      progressWidth.value = ratio;
+    } else {
+      progressWidth.value = withTiming(ratio, {
+        duration: 400,
+        easing: Easing.out(Easing.cubic),
+      });
+    }
+  }, [currentIndex, cards.length, reduceMotion]);
 
   const handleFlip = () => {
     if (mode === 'freeflow' && isFlipped) {
@@ -326,10 +347,6 @@ export default function PracticeScreen({ navigation, route }: Props) {
     transform: [{ translateY: withTiming(buttonsOpacity.value > 0 ? 0 : 20) }],
   }));
 
-  const progress = cards.length > 0
-    ? `${((currentIndex + 1) / cards.length) * 100}%`
-    : '0%';
-
   if (sessionComplete) {
     return (
       <View style={styles.container}>
@@ -436,27 +453,28 @@ export default function PracticeScreen({ navigation, route }: Props) {
         </View>
         <View style={styles.floatingSpacer} />
       </View>
-      <View style={styles.cardWrapper}>
-        <FlipCard
-          frontText={applyReverseTextSwap(currentCard.front_text, currentCard.back_text, !!reverse).frontText}
-          backText={applyReverseTextSwap(currentCard.front_text, currentCard.back_text, !!reverse).backText}
-          isFlipped={isFlipped}
-          onFlip={handleFlip}
-          onSwipeLeft={handleSwipeLeft}
-          onSwipeRight={handleSwipeRight}
-          templateFields={displayFields.length > 0 ? displayFields : undefined}
-          fieldValues={Object.keys(currentValues).length > 0 ? currentValues : undefined}
-        />
-      </View>
+      <Animated.View style={styles.cardWrapper}>
+        <Animated.View
+          key={currentIndex}
+          entering={FadeInUp.duration(250).easing(Easing.out(Easing.cubic))}
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%' }}
+        >
+          <FlipCard
+            frontText={applyReverseTextSwap(currentCard.front_text, currentCard.back_text, !!reverse).frontText}
+            backText={applyReverseTextSwap(currentCard.front_text, currentCard.back_text, !!reverse).backText}
+            isFlipped={isFlipped}
+            onFlip={handleFlip}
+            onSwipeLeft={handleSwipeLeft}
+            onSwipeRight={handleSwipeRight}
+            templateFields={displayFields.length > 0 ? displayFields : undefined}
+            fieldValues={Object.keys(currentValues).length > 0 ? currentValues : undefined}
+          />
+        </Animated.View>
+      </Animated.View>
 
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${((currentIndex + 1) / Math.max(cards.length, 1)) * 100}%` },
-            ]}
-          />
+          <Animated.View style={[styles.progressFill, progressAnimatedStyle]} />
         </View>
         <Text style={styles.progressText}>
           {currentIndex + 1}/{cards.length}
