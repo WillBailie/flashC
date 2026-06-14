@@ -26,6 +26,7 @@ import {
   getCardsByDeckId,
   deleteCard,
   getTemplateFields,
+  updateDeck,
 } from '../storage/database';
 import { Card, TemplateField } from '../models/types';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -45,6 +46,9 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
   const [freeflowCount, setFreeflowCount] = useState('10');
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [reverseMode, setReverseModeState] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [displayName, setDisplayName] = useState(deckName);
+  const titleInputRef = React.useRef<TextInput>(null);
   const { colors } = useTheme();
 
   const loadCards = useCallback(async () => {
@@ -71,6 +75,22 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
   React.useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
+
+  const handleSaveTitle = async () => {
+    const trimmed = displayName.trim();
+    if (!trimmed) {
+      setDisplayName(deckName);
+      setIsEditingTitle(false);
+      return;
+    }
+    try {
+      await updateDeck(deckId, trimmed, '');
+      setDisplayName(trimmed);
+    } catch {
+      Alert.alert('Error', 'Failed to update deck name.');
+    }
+    setIsEditingTitle(false);
+  };
 
   const handleDeleteCard = (card: Card) => {
     Alert.alert('Delete Card', 'Are you sure you want to delete this card?', [
@@ -219,6 +239,13 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       fontSize: typography.fontSize.lg,
       fontWeight: typography.fontWeight.bold,
       color: colors.primary,
+    },
+    deckTitleInput: {
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.primary,
+      textAlign: 'center',
+      minWidth: 120,
     },
     container: {
       flex: 1,
@@ -467,9 +494,29 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.floatingPill}>
-          <View style={styles.floatingPillInner}>
-            <Text style={styles.floatingPillText} numberOfLines={1}>{deckName}</Text>
-          </View>
+          {isEditingTitle ? (
+            <TextInput
+              ref={titleInputRef}
+              style={[styles.floatingPillInner, styles.deckTitleInput]}
+              value={displayName}
+              onChangeText={setDisplayName}
+              onSubmitEditing={handleSaveTitle}
+              onBlur={handleSaveTitle}
+              autoFocus
+              selectTextOnFocus
+              returnKeyType="done"
+            />
+          ) : (
+            <TouchableOpacity
+              onPress={() => setIsEditingTitle(true)}
+              accessibilityRole="button"
+              accessibilityLabel={`Edit deck name: ${displayName}`}
+            >
+              <View style={styles.floatingPillInner}>
+                <Text style={styles.floatingPillText} numberOfLines={1}>{displayName}</Text>
+              </View>
+            </TouchableOpacity>
+          )}
         </View>
         <View style={styles.floatingSpacer} />
       </View>
