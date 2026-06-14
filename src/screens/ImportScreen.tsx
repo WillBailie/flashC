@@ -97,14 +97,24 @@ export default function ImportScreen() {
       const content = await FileSystem.readAsStringAsync(file.uri, {
         encoding: FileSystem.EncodingType.UTF8,
       });
+      const clean = content.replace(/^\uFEFF/, '').trim();
+      if (!clean) {
+        Alert.alert('Error', 'The file is empty.');
+        return;
+      }
 
       const fields = isCustomTemplate ? templateFields : undefined;
 
       let cards: ImportedCard[] = [];
       try {
-        cards = parseJSON(content, fields);
-      } catch {
-        cards = parseCSV(content, fields);
+        cards = parseJSON(clean, fields);
+      } catch (jsonErr) {
+        try {
+          cards = parseCSV(clean, fields);
+        } catch (csvErr) {
+          Alert.alert('Import Error', `Could not parse the file.\nJSON: ${(jsonErr as Error).message}\nCSV: ${(csvErr as Error).message}`);
+          return;
+        }
       }
 
       setPreviewCards(cards);
