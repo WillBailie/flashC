@@ -13,6 +13,7 @@ import {
   Share,
   Switch,
 } from 'react-native';
+import Animated, { FadeInUp, Easing } from 'react-native-reanimated';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -111,7 +112,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
     await setReverseMode(value);
   }, []);
 
-  const renderCard = ({ item }: { item: Card }) => {
+  const renderCard = ({ item, index }: { item: Card; index: number }) => {
     const fields = item.template_id
       ? templateFieldsMap[item.template_id] ?? []
       : [];
@@ -126,6 +127,9 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
         !(frontFields.length === 1 && frontFields[0].name === 'Front'));
 
     return (
+      <Animated.View
+        entering={FadeInUp.duration(250).easing(Easing.out(Easing.cubic)).delay(index * 50)}
+      >
       <TouchableOpacity
         style={styles.cardItem}
         onPress={() =>
@@ -173,6 +177,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
           </>
         )}
       </TouchableOpacity>
+      </Animated.View>
     );
   };
 
@@ -373,10 +378,6 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       minWidth: 48,
       backgroundColor: colors.surface,
     },
-    freeflowMax: {
-      fontSize: fontSize.sm,
-      color: colors.textSecondary,
-    },
     freeflowStart: {
       marginTop: spacing.md,
       backgroundColor: colors.primary,
@@ -518,9 +519,6 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
                     maxLength={3}
                     selectTextOnFocus
                   />
-                  <Text style={styles.freeflowMax}>
-                    / {Math.min(cards.length, 99)}
-                  </Text>
                 </View>
                 <TouchableOpacity
                   style={styles.freeflowStart}

@@ -7,6 +7,7 @@ import {
   Pressable,
   Alert,
 } from 'react-native';
+import Animated, { FadeInUp, Easing } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -162,7 +163,10 @@ export default function DeckListScreen({ navigation }: Props) {
     );
   };
 
-  const renderDeck = ({ item }: { item: DeckWithStats }) => (
+  const renderDeck = ({ item, index }: { item: DeckWithStats; index: number }) => (
+    <Animated.View
+      entering={FadeInUp.duration(250).easing(Easing.out(Easing.cubic)).delay(index * 50)}
+    >
     <Card
       variant="elevated"
       interactive
@@ -188,6 +192,7 @@ export default function DeckListScreen({ navigation }: Props) {
         {item.dueCards > 0 && <Badge text={`${item.dueCards} due`} color={colors.warning} />}
       </View>
     </Card>
+    </Animated.View>
   );
 
   const renderSkeleton = () => (

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import Animated, { FadeInUp, Easing } from 'react-native-reanimated';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -153,7 +154,10 @@ export default function TemplateListScreen() {
     [colors]
   );
 
-  const renderTemplate = ({ item }: { item: Template }) => (
+  const renderTemplate = ({ item, index }: { item: Template; index: number }) => (
+    <Animated.View
+      entering={FadeInUp.duration(250).easing(Easing.out(Easing.cubic)).delay(index * 50)}
+    >
     <TouchableOpacity
       style={styles.templateItem}
       onPress={() => navigation.navigate('TemplateEditor', { templateId: item.id })}
@@ -174,6 +178,7 @@ export default function TemplateListScreen() {
       </View>
       <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
     </TouchableOpacity>
+    </Animated.View>
   );
 
   return (
