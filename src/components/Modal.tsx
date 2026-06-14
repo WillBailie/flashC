@@ -1,6 +1,14 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Pressable, ViewStyle } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  runOnJS,
+  Easing,
+} from 'react-native-reanimated';
 import { useTheme, spacing, borderRadius, typography } from '../constants/theme';
+import { useReduceMotion } from '../utils/animation';
 
 interface ModalProps {
   visible: boolean;
@@ -20,6 +28,47 @@ export function Modal({
   style,
 }: ModalProps) {
   const { colors } = useTheme();
+  const reduceMotion = useReduceMotion();
+  const [shouldRender, setShouldRender] = useState(false);
+
+  const overlayOpacity = useSharedValue(0);
+  const sheetTranslateY = useSharedValue(300);
+
+  const animatedOverlay = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
+
+  const animatedSheet = useAnimatedStyle(() => ({
+    transform: [{ translateY: sheetTranslateY.value }],
+  }));
+
+  const animateIn = useCallback(() => {
+    setShouldRender(true);
+    if (reduceMotion) return;
+    overlayOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) });
+    sheetTranslateY.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
+  }, [reduceMotion]);
+
+  const animateOut = useCallback(() => {
+    if (reduceMotion) {
+      setShouldRender(false);
+      return;
+    }
+    overlayOpacity.value = withTiming(0, { duration: 200, easing: Easing.in(Easing.cubic) });
+    sheetTranslateY.value = withTiming(300, { duration: 250, easing: Easing.in(Easing.cubic) }, (finished) => {
+      if (finished) {
+        runOnJS(setShouldRender)(false);
+      }
+    });
+  }, [reduceMotion]);
+
+  useEffect(() => {
+    if (visible) {
+      animateIn();
+    } else {
+      animateOut();
+    }
+  }, [visible, animateIn, animateOut]);
 
   const styles = useMemo(
     () =>
@@ -58,20 +107,20 @@ export function Modal({
     [colors, maxWidth]
   );
 
-  if (!visible) return null;
+  if (!shouldRender && !visible) return null;
 
   return (
-    <View style={styles.overlay}>
+    <Animated.View style={[styles.overlay, animatedOverlay]}>
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ width: '100%', alignItems: 'center' }}
       >
-        <View style={[styles.content, style]}>
+        <Animated.View style={[styles.content, style, animatedSheet]}>
           {title ? <Text style={styles.title}>{title}</Text> : null}
           {children}
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
-    </View>
+    </Animated.View>
   );
 }
