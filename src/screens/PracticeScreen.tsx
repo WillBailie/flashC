@@ -61,10 +61,14 @@ export default function PracticeScreen({ navigation, route }: Props) {
 
   const displayFields = useMemo(() => {
     if (!reverse) return currentFields;
-    return currentFields.map((f) => ({
-      ...f,
-      side: (f.side === 'front' ? 'back' : 'front') as TemplateField['side'],
-    }));
+    return currentFields.map((f) => {
+      const isPinyin = f.name.toLowerCase() === 'pinyin';
+      const swappedSide = f.side === 'front' ? 'back' : 'front';
+      return {
+        ...f,
+        side: isPinyin ? ('back' as TemplateField['side']) : (swappedSide as TemplateField['side']),
+      };
+    });
   }, [reverse, currentFields]);
 
   const loadCards = useCallback(async () => {
