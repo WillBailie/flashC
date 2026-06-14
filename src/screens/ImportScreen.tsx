@@ -197,7 +197,7 @@ export default function ImportScreen() {
     if (previewCards.length === 0) return null;
 
     return (
-      <>
+      <View>
         <Text style={styles.sectionTitle}>Preview</Text>
         {isCustomTemplate ? (
           sortedFields.map((f) => {
@@ -230,7 +230,7 @@ export default function ImportScreen() {
         )}
         {previewCards.length > 5 && (
           <Text style={styles.moreText}>
-            ... and {previewCards.length - 5} more
+            and {previewCards.length - 5} more
           </Text>
         )}
         <TouchableOpacity
@@ -245,7 +245,7 @@ export default function ImportScreen() {
             {importing ? 'Importing...' : `Import ${previewCards.length} Cards`}
           </Text>
         </TouchableOpacity>
-      </>
+      </View>
     );
   };
 
@@ -500,8 +500,7 @@ export default function ImportScreen() {
 
       <Text style={styles.sectionTitle}>3. Choose a File</Text>
       <Text style={styles.sectionDesc}>
-        CSV: comma-separated values per line.{'\n'}
-        JSON: array of objects with field names as keys.
+        CSV: comma-separated values per line — JSON: array of objects with field names as keys
       </Text>
       <TouchableOpacity style={styles.pickFileButton} onPress={handlePickFile}>
         {fileName ? (
