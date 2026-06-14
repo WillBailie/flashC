@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Home Screen Redesign Proposal – Flashcards</title>
+<style>
+  /* ===== Variables ===== */
+  :root {
+    --primary: #4A90D9;
+    --primary-dark: #3A7BC8;
+    --secondary: #6C63FF;
+    --bg: #F5F7FA;
+    --surface: #FFFFFF;
+    --surface-variant: #F0F2F7;
+    --text: #1A1A2E;
+    --text-secondary: #6B7280;
+    --border: #E5E7EB;
+    --success: #10B981;
+    --shadow: rgba(0,0,0,0.08);
+    --shadow-lg: rgba(0,0,0,0.12);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 14px;
+    --spacing-lg: 20px;
+    --spacing-xl: 28px;
+    --spacing-xxl: 40px;
+  }
+  :root.dark {
+    --primary: #5B9FE0;
+    --primary-dark: #4A90D9;
+    --secondary: #8B83FF;
+    --bg: #0F1117;
+    --surface: #1A1D26;
+    --surface-variant: #222531;
+    --text: #E4E6EB;
+    --text-secondary: #9CA3AF;
+    --border: #2D3039;
+    --shadow: rgba(0,0,0,0.3);
+    --shadow-lg: rgba(0,0,0,0.5);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #E0E5EC;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    transition: background 0.3s;
+  }
+
+  /* ===== Theme Toggle ===== */
+  .toggle-bar {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+    display: flex;
+    gap: 8px;
+  }
+  .toggle-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .toggle-btn.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  /* ===== Phone Frame ===== */
+  .phone-frame {
+    width: 390px;
+    max-width: 100%;
+    height: 844px;
+    max-height: 90vh;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 2px #222;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: background 0.3s;
+  }
+  /* notch */
+  .phone-frame::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 30px;
+    background: #222;
+    border-radius: 0 0 20px 20px;
+    z-index: 10;
+  }
+
+  /* ===== Content ===== */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 100px;
+  }
+
+  /* ===== Hero Section ===== */
+  .hero {
+    position: relative;
+    padding: 60px var(--spacing-lg) var(--spacing-xl);
+    background: linear-gradient(135deg, var(--primary-dark), var(--secondary));
+    overflow: hidden;
+  }
+  .hero-blob {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .hero-blob-1 {
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,0.06);
+    top: -40px; right: -30px;
+  }
+  .hero-blob-2 {
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.08);
+    bottom: 10px; left: -20px;
+  }
+  .hero-blob-3 {
+    width: 70px; height: 70px;
+    background: rgba(255,255,255,0.05);
+    top: 50%; left: 60%;
+    transform: translate(-50%, -50%);
+  }
+  .hero-greeting {
+    font-size: 15px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 500;
+    margin-bottom: var(--spacing-lg);
+    letter-spacing: 0.3px;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-body {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    position: relative;
+    z-index: 1;
+  }
+  .progress-ring {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+  }
+  .progress-ring svg {
+    transform: rotate(-90deg);
+  }
+  .progress-ring-circle-bg {
+    fill: none;
+    stroke: rgba(255,255,255,0.15);
+    stroke-width: 8;
+  }
+  .progress-ring-circle-fg {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease;
+  }
+  .progress-ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .progress-ring-pct {
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+  .progress-ring-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 500;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .hero-text {
+    flex: 1;
+  }
+  .hero-stat-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+  }
+  .hero-stat-label {
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  /* ===== Mode Cards Section ===== */
+  .mode-section {
+    padding: var(--spacing-md);
+  }
+  .mode-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: var(--spacing-sm);
+    padding-left: 4px;
+  }
+  .mode-grid {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
+  .mode-card {
+    flex: 1;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    box-shadow: 0 2px 12px var(--shadow);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .mode-card:active {
+    transform: scale(0.97);
+  }
+  .mode-card-accent {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+  .mode-card-primary .mode-card-accent { background: var(--primary); }
+  .mode-card-secondary .mode-card-accent { background: var(--secondary); }
+  .mode-card-icon {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-bottom: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
+  }
+  .mode-card-primary .mode-card-icon { background: rgba(74,144,217,0.12); }
+  .mode-card-secondary .mode-card-icon { background: rgba(108,99,255,0.12); }
+  .mode-card-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .mode-card-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* ===== Stats Strip ===== */
+  .stats-strip {
+    display: flex;
+    gap: var(--spacing-sm);
+    padding: 0 var(--spacing-md);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    margin-bottom: var(--spacing-md);
+  }
+  .stats-strip::-webkit-scrollbar { display: none; }
+  .stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-variant);
+    border-radius: var(--radius-full);
+    padding: 8px 14px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .stat-pill-icon {
+    font-size: 14px;
+    width: 16px;
+    text-align: center;
+  }
+  .stat-pill-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .stat-pill-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* ===== Recent Activity ===== */
+  .recent-section {
+    padding: 0 var(--spacing-md);
+  }
+  .recent-section .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: var(--spacing-sm);
+    padding-left: 4px;
+  }
+  .activity-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    box-shadow: 0 1px 6px var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+  }
+  .activity-icon-wrap {
+    width: 44px; height: 44px;
+    border-radius: var(--radius-full);
+    background: rgba(16,185,129,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+  .activity-info { flex: 1; }
+  .activity-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .activity-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+  .activity-chevron {
+    font-size: 14px;
+    color: var(--text-secondary);
+    opacity: 0.4;
+  }
+
+  /* ===== Tab Bar ===== */
+  .tab-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0; right: 0;
+    height: 84px;
+    padding-bottom: 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+  }
+  .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .tab-item.active {
+    color: var(--primary);
+  }
+  .tab-item .tab-icon {
+    font-size: 22px;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 420px) {
+    .phone-frame {
+      border-radius: 0;
+      height: 100vh;
+      max-height: 100vh;
+      width: 100%;
+    }
+    .phone-frame::before { display: none; }
+    .hero { padding-top: 50px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toggle-bar">
+  <button class="toggle-btn active" onclick="switchTheme('light')">☀ Light</button>
+  <button class="toggle-btn" onclick="switchTheme('dark')">🌙 Dark</button>
+</div>
+
+<div class="phone-frame" id="frame">
+  <div class="content">
+
+    <!-- ========== HERO ========== -->
+    <div class="hero">
+      <div class="hero-blob hero-blob-1"></div>
+      <div class="hero-blob hero-blob-2"></div>
+      <div class="hero-blob hero-blob-3"></div>
+
+      <div class="hero-greeting">Good afternoon 👋</div>
+
+      <div class="hero-body">
+        <div class="progress-ring">
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            <circle class="progress-ring-circle-bg" cx="50" cy="50" r="42"/>
+            <circle class="progress-ring-circle-fg" id="ring-fg" cx="50" cy="50" r="42"
+                    stroke-dasharray="263.89" stroke-dashoffset="158.33"/>
+          </svg>
+          <div class="progress-ring-center">
+            <div class="progress-ring-pct" id="ring-pct">40%</div>
+            <div class="progress-ring-label">today</div>
+          </div>
+        </div>
+
+        <div class="hero-text">
+          <div class="hero-stat-value" id="hero-reviewed">12</div>
+          <div class="hero-stat-label">of 25 cards reviewed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== MODE CARDS ========== -->
+    <div class="mode-section">
+      <div class="mode-title">Practice Mode</div>
+      <div class="mode-grid">
+        <div class="mode-card mode-card-primary" onclick="flashCard(this)">
+          <div class="mode-card-accent"></div>
+          <div class="mode-card-icon">📅</div>
+          <div class="mode-card-value">12</div>
+          <div class="mode-card-label">due today</div>
+        </div>
+        <div class="mode-card mode-card-secondary" onclick="flashCard(this)">
+          <div class="mode-card-accent"></div>
+          <div class="mode-card-icon">🔀</div>
+          <div class="mode-card-value">86</div>
+          <div class="mode-card-label">available</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== STAT PILLS ========== -->
+    <div class="stats-strip">
+      <div class="stat-pill">
+        <span class="stat-pill-icon">✅</span>
+        <span class="stat-pill-value">12</span>
+        <span class="stat-pill-label">today</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill-icon">📁</span>
+        <span class="stat-pill-value">3</span>
+        <span class="stat-pill-label">decks</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill-icon">🏆</span>
+        <span class="stat-pill-value">85%</span>
+        <span class="stat-pill-label">mastered</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-pill-icon">📈</span>
+        <span class="stat-pill-value">2.5×</span>
+        <span class="stat-pill-label">avg ease</span>
+      </div>
+    </div>
+
+    <!-- ========== RECENT ACTIVITY ========== -->
+    <div class="recent-section">
+      <div class="section-title">Recent Activity</div>
+      <div class="activity-card">
+        <div class="activity-icon-wrap">🔥</div>
+        <div class="activity-info">
+          <div class="activity-value">3-day streak</div>
+          <div class="activity-label">Last review: 2 hours ago</div>
+        </div>
+        <div class="activity-chevron">›</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== TAB BAR ========== -->
+  <div class="tab-bar">
+    <div class="tab-item active">
+      <span class="tab-icon">🏠</span>
+      <span>Home</span>
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon">📚</span>
+      <span>Decks</span>
+    </div>
+    <div class="tab-item">
+      <span class="tab-icon">⚙️</span>
+      <span>Settings</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  function switchTheme(mode) {
+    document.documentElement.classList.toggle('dark', mode === 'dark');
+    document.querySelectorAll('.toggle-btn').forEach(b => {
+      b.classList.toggle('active', b.textContent.toLowerCase().includes(mode));
+    });
+    updateProgressRing();
+  }
+
+  function updateProgressRing() {
+    const isDark = document.documentElement.classList.contains('dark');
+    requestAnimationFrame(() => {
+      const ring = document.getElementById('ring-fg');
+      const pct = document.getElementById('ring-pct');
+      const reviewed = document.getElementById('hero-reviewed');
+      ring.style.strokeDashoffset = '158.33';
+      pct.textContent = '40%';
+      reviewed.textContent = '12';
+    });
+  }
+
+  function flashCard(el) {
+    el.style.transform = 'scale(0.95)';
+    el.style.boxShadow = '0 1px 4px var(--shadow)';
+    setTimeout(() => {
+      el.style.transform = '';
+      el.style.boxShadow = '';
+    }, 100);
+  }
+</script>
+
+</body>
+</html>

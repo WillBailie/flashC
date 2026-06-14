@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animation Proposals — Flashcard App</title>
+  <style>
+    :root {
+      --bg: #0f0f14;
+      --surface: #1a1a24;
+      --surface2: #24243a;
+      --text: #eaeaf0;
+      --text2: #9999aa;
+      --primary: #6366f1;
+      --secondary: #a78bfa;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    h1 { font-size: 28px; margin-bottom: 4px; }
+    h1 span { color: var(--primary); }
+    .subtitle { color: var(--text2); margin-bottom: 40px; font-size: 15px; }
+
+    .approaches {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 48px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .approach {
+      flex: 1;
+      min-width: 420px;
+      background: var(--surface);
+      border-radius: 16px;
+      border: 1px solid #2a2a3a;
+      overflow: hidden;
+    }
+
+    .approach-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #2a2a3a;
+    }
+
+    .approach-header h2 {
+      font-size: 18px;
+      margin-bottom: 2px;
+    }
+    .approach-header .tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .tag-apple { background: #22c55e20; color: var(--success); }
+    .tag-duo { background: #f59e0b20; color: var(--warning); }
+    .tag-balanced {
+      background: linear-gradient(135deg, #6366f120, #a78bfa20);
+      color: var(--secondary);
+    }
+    .desc { color: var(--text2); font-size: 13px; line-height: 1.6; }
+
+    .approach-body { padding: 24px; }
+
+    .section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text2);
+      margin: 28px 0 12px 0;
+      font-weight: 600;
+    }
+    .section-label:first-child { margin-top: 0; }
+
+    /* ── List Items ── */
+    .list-item {
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .list-item.animated { animation-fill-mode: forwards; }
+
+    .list-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    .list-content { flex: 1; }
+    .list-title { font-size: 14px; font-weight: 600; }
+    .list-subtitle { font-size: 12px; color: var(--text2); }
+    .list-badge {
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+
+    /* ── Buttons ── */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #fff;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+      outline: none;
+    }
+    .btn.primary { background: var(--primary); }
+    .btn.ghost { background: transparent; color: var(--text); border: 1px solid #3a3a4a; }
+    .btn.danger { background: var(--danger); }
+
+    .btn:active { filter: brightness(0.9); }
+
+    /* ── Modals ── */
+    .modal-trigger {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: var(--surface2);
+      border: 1px dashed #3a3a4a;
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .modal-trigger:hover { border-color: var(--primary); }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 100;
+      display: none;
+    }
+    .modal-overlay.show { display: flex; }
+
+    .modal-sheet {
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 480px;
+      padding: 24px;
+      transform: translateY(100%);
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .modal-desc {
+      font-size: 13px;
+      color: var(--text2);
+      margin-bottom: 20px;
+    }
+
+    /* ── Progress Bar ── */
+    .progress-wrap { margin-bottom: 8px; }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 8px;
+    }
+    .progress-bar {
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 3px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── Counters ── */
+    .counter-row { display: flex; gap: 12px; }
+    .counter-card {
+      flex: 1;
+      background: var(--surface2);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      transition: transform 0.15s ease;
+    }
+    .counter-card:hover { transform: translateY(-2px); }
+    .counter-value {
+      font-size: 32px;
+      font-weight: 800;
+      transition: transform 0.3s ease;
+    }
+    .counter-label {
+      font-size: 11px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Approach-specific overrides ── */
+    .approach-a .list-item:active { transform: scale(0.98); }
+    .approach-a .btn:active { transform: scale(0.97); }
+
+    .approach-b .list-item:active { transform: scale(0.95); }
+    .approach-b .btn:active { transform: scale(0.92); }
+
+    .approach-c .list-item:active { transform: scale(0.98); }
+    .approach-c .btn:active { transform: scale(0.96); }
+    .approach-c .btn.primary:active { transform: scale(0.95); box-shadow: 0 0 0 4px rgba(99,102,241,0.3); }
+
+    /* Animation keyframes */
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeSlideUpSubtle {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes bounceUp {
+      0% { opacity: 0; transform: translateY(30px) scale(0.9); }
+      50% { transform: translateY(-6px) scale(1.02); }
+      70% { transform: translateY(2px) scale(0.99); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes springIn {
+      from { opacity: 0; transform: scale(0.8) translateY(16px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes countUp {
+      from { transform: scale(0.5); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes progressPulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.2); }
+    }
+
+    @keyframes wobble {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-3deg); }
+      75% { transform: rotate(3deg); }
+    }
+
+    @keyframes gentleWobble {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-1.5deg); }
+      75% { transform: rotate(1.5deg); }
+    }
+
+    .stagger-1 { animation-delay: 0.05s !important; }
+    .stagger-2 { animation-delay: 0.10s !important; }
+    .stagger-3 { animation-delay: 0.15s !important; }
+    .stagger-4 { animation-delay: 0.20s !important; }
+
+    /* ── Responsive ── */
+    @media (max-width: 1400px) {
+      .approaches { flex-direction: column; }
+      .approach { min-width: 100%; }
+    }
+
+    .replay-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--surface2);
+      border: 1px solid #3a3a4a;
+      border-radius: 20px;
+      color: var(--text2);
+      font-family: var(--font);
+      font-size: 12px;
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .replay-btn:hover { border-color: var(--primary); color: var(--text); }
+
+    .side-by-side {
+      background: var(--surface);
+      border-radius: 16px;
+      border: 1px solid #2a2a3a;
+      padding: 24px;
+      margin-top: 48px;
+    }
+    .side-by-side h2 { font-size: 18px; margin-bottom: 4px; }
+    .side-by-side .subtitle { margin-bottom: 24px; }
+    .cmp-row { display: flex; gap: 24px; }
+    .cmp-col { flex: 1; }
+    .cmp-col h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); margin-bottom: 16px; }
+    @media (max-width: 900px) { .cmp-row { flex-direction: column; } }
+
+    .demo-divider { height: 1px; background: #2a2a3a; margin: 24px 0; }
+
+    /* Streak milestone — only used in approach C */
+    .streak-milestone {
+      background: linear-gradient(135deg, #f59e0b20, #f9731620);
+      border: 1px solid #f59e0b30;
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .streak-milestone .streak-num {
+      font-size: 48px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .streak-milestone .streak-msg {
+      font-size: 14px;
+      color: var(--text2);
+    }
+
+    .pulse-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: progressPulse 1.5s infinite;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Animation <span>Proposals</span></h1>
+  <p class="subtitle">Flashcard App — 3 visual directions. Each column is interactive.</p>
+
+  <div class="approaches">
+
+    <!-- ═══════════════════ APPROACH A: Subtle ═══════════════════ -->
+    <div class="approach approach-a" id="app-a">
+      <div class="approach-header">
+        <span class="tag tag-apple">Approach A</span>
+        <h2>Subtle &amp; Polished</h2>
+        <p class="desc">
+          iOS/Material-inspired micro-interactions. Gentle springs, 8px fade-slide list entrances, 0.97x button press scale, smooth progress tweens. Professional and understated — feels premium without drawing attention to itself.
+        </p>
+      </div>
+      <div class="approach-body">
+
+        <button class="replay-btn" onclick="replayApproach('a')">↻ Replay animations</button>
+
+        <div class="section-label">List Entrance (staggered 50ms)</div>
+        <div class="list-item a-item" id="a-item1">
+          <div class="list-icon" style="background:#6366f120;">📚</div>
+          <div class="list-content">
+            <div class="list-title">Spanish Verbs</div>
+            <div class="list-subtitle">42 cards · 8 due today</div>
+          </div>
+          <span class="list-badge" style="background:#6366f120;color:var(--primary)">A2</span>
+        </div>
+        <div class="list-item a-item" id="a-item2">
+          <div class="list-icon" style="background:#22c55e20;">🧪</div>
+          <div class="list-content">
+            <div class="list-title">Chemistry 101</div>
+            <div class="list-subtitle">120 cards · 15 due today</div>
+          </div>
+          <span class="list-badge" style="background:#22c55e20;color:var(--success)">B1</span>
+        </div>
+        <div class="list-item a-item" id="a-item3">
+          <div class="list-icon" style="background:#f59e0b20;">🌍</div>
+          <div class="list-content">
+            <div class="list-title">World Capitals</div>
+            <div class="list-subtitle">195 cards · 3 due today</div>
+          </div>
+          <span class="list-badge" style="background:#f59e0b20;color:var(--warning)">A1</span>
+        </div>
+        <div class="list-item a-item" id="a-item4">
+          <div class="list-icon" style="background:#ef444420;">💻</div>
+          <div class="list-content">
+            <div class="list-title">JavaScript Snippets</div>
+            <div class="list-subtitle">67 cards · 22 due today</div>
+          </div>
+          <span class="list-badge" style="background:#ef444420;color:var(--danger)">B2</span>
+        </div>
+
+        <div class="section-label">Button Press Feedback</div>
+        <div class="btn-row">
+          <button class="btn primary" id="a-btn-primary">Primary</button>
+          <button class="btn ghost" id="a-btn-ghost">Ghost</button>
+          <button class="btn danger" id="a-btn-danger">Danger</button>
+        </div>
+        <p style="font-size:11px;color:var(--text2);margin-top:8px">Feedback: scale(0.97) + brightness(0.9)</p>
+
+        <div class="section-label">Progress Bar</div>
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>Today's reviews</span>
+            <span id="a-progress-text">0 / 35</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="a-progress-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="section-label">Counter Animation</div>
+        <div class="counter-row">
+          <div class="counter-card">
+            <div class="counter-value" id="a-counter-due" style="color:var(--primary)">0</div>
+            <div class="counter-label">Due Today</div>
+          </div>
+          <div class="counter-card">
+            <div class="counter-value" id="a-counter-streak" style="color:var(--warning)">0</div>
+            <div class="counter-label">Day Streak</div>
+          </div>
+          <div class="counter-card">
+            <div class="counter-value" id="a-counter-mastered" style="color:var(--success)">0</div>
+            <div class="counter-label">Mastered</div>
+          </div>
+        </div>
+
+        <div class="section-label">Modal Entrance</div>
+        <button class="modal-trigger" onclick="openModal('a')">Tap to open modal →</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ APPROACH B: Playful ═══════════════════ -->
+    <div class="approach approach-b" id="app-b">
+      <div class="approach-header">
+        <span class="tag tag-duo">Approach B</span>
+        <h2>Playful &amp; Bouncy</h2>
+        <p class="desc">
+          Duolingo-inspired energy. Bouncy spring overshoots, 30px slide-up with bounce-back, 0.92x button press scale, wobble on milestones. Fun and energetic — keeps users engaged but can feel too casual or gimmicky.
+        </p>
+      </div>
+      <div class="approach-body">
+
+        <button class="replay-btn" onclick="replayApproach('b')">↻ Replay animations</button>
+
+        <div class="section-label">List Entrance (staggered, bounce)</div>
+        <div class="list-item b-item" id="b-item1">
+          <div class="list-icon" style="background:#6366f120;">📚</div>
+          <div class="list-content">
+            <div class="list-title">Spanish Verbs</div>
+            <div class="list-subtitle">42 cards · 8 due today</div>
+          </div>
+          <span class="list-badge" style="background:#6366f120;color:var(--primary)">A2</span>
+        </div>
+        <div class="list-item b-item" id="b-item2">
+          <div class="list-icon" style="background:#22c55e20;">🧪</div>
+          <div class="list-content">
+            <div class="list-title">Chemistry 101</div>
+            <div class="list-subtitle">120 cards · 15 due today</div>
+          </div>
+          <span class="list-badge" style="background:#22c55e20;color:var(--success)">B1</span>
+        </div>
+        <div class="list-item b-item" id="b-item3">
+          <div class="list-icon" style="background:#f59e0b20;">🌍</div>
+          <div class="list-content">
+            <div class="list-title">World Capitals</div>
+            <div class="list-subtitle">195 cards · 3 due today</div>
+          </div>
+          <span class="list-badge" style="background:#f59e0b20;color:var(--warning)">A1</span>
+        </div>
+        <div class="list-item b-item" id="b-item4">
+          <div class="list-icon" style="background:#ef444420;">💻</div>
+          <div class="list-content">
+            <div class="list-title">JavaScript Snippets</div>
+            <div class="list-subtitle">67 cards · 22 due today</div>
+          </div>
+          <span class="list-badge" style="background:#ef444420;color:var(--danger)">B2</span>
+        </div>
+
+        <div class="section-label">Button Press Feedback</div>
+        <div class="btn-row" style="gap:10px">
+          <button class="btn primary" id="b-btn-primary">Primary</button>
+          <button class="btn ghost" id="b-btn-ghost">Ghost</button>
+          <button class="btn danger" id="b-btn-danger">Danger</button>
+        </div>
+        <p style="font-size:11px;color:var(--text2);margin-top:8px">Feedback: scale(0.92) + brightness(0.9)</p>
+
+        <div class="section-label">Progress Bar (with pulse)</div>
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span><span class="pulse-dot"></span>Today's reviews</span>
+            <span id="b-progress-text">0 / 35</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="b-progress-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="section-label">Counter Animation (bouncy numbers)</div>
+        <div class="counter-row">
+          <div class="counter-card">
+            <div class="counter-value" id="b-counter-due" style="color:var(--primary)">0</div>
+            <div class="counter-label">Due Today</div>
+          </div>
+          <div class="counter-card">
+            <div class="counter-value" id="b-counter-streak" style="color:var(--warning)">0</div>
+            <div class="counter-label">Day Streak</div>
+          </div>
+          <div class="counter-card">
+            <div class="counter-value" id="b-counter-mastered" style="color:var(--success)">0</div>
+            <div class="counter-label">Mastered</div>
+          </div>
+        </div>
+
+        <div class="section-label">Modal Entrance (springy)</div>
+        <button class="modal-trigger" onclick="openModal('b')">Tap to open modal →</button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════ APPROACH C: Balanced ═══════════════════ -->
+    <div class="approach approach-c" id="app-c">
+      <div class="approach-header">
+        <span class="tag tag-balanced">Approach C · Recommended</span>
+        <h2>Balanced</h2>
+        <p class="desc">
+          Subtle interactions everywhere (buttons, lists, modals, counters, progress), but reserves playful energy for moments that earn it: session complete, streak milestones, first card mastered. Confetti stays. Best of both worlds — feels modern daily, delightful rarely.
+        </p>
+      </div>
+      <div class="approach-body">
+
+        <button class="replay-btn" onclick="replayApproach('c')">↻ Replay animations</button>
+
+        <div class="section-label">List Entrance (gentle staggered fade)</div>
+        <div class="list-item c-item" id="c-item1">
+          <div class="list-icon" style="background:#6366f120;">📚</div>
+          <div class="list-content">
+            <div class="list-title">Spanish Verbs</div>
+            <div class="list-subtitle">42 cards · 8 due today</div>
+          </div>
+          <span class="list-badge" style="background:#6366f120;color:var(--primary)">A2</span>
+        </div>
+        <div class="list-item c-item" id="c-item2">
+          <div class="list-icon" style="background:#22c55e20;">🧪</div>
+          <div class="list-content">
+            <div class="list-title">Chemistry 101</div>
+            <div class="list-subtitle">120 cards · 15 due today</div>
+          </div>
+          <span class="list-badge" style="background:#22c55e20;color:var(--success)">B1</span>
+        </div>
+        <div class="list-item c-item" id="c-item3">
+          <div class="list-icon" style="background:#f59e0b20;">🌍</div>
+          <div class="list-content">
+            <div class="list-title">World Capitals</div>
+            <div class="list-subtitle">195 cards · 3 due today</div>
+          </div>
+          <span class="list-badge" style="background:#f59e0b20;color:var(--warning)">A1</span>
+        </div>
+        <div class="list-item c-item" id="c-item4">
+          <div class="list-icon" style="background:#ef444420;">💻</div>
+          <div class="list-content">
+            <div class="list-title">JavaScript Snippets</div>
+            <div class="list-subtitle">67 cards · 22 due today</div>
+          </div>
+          <span class="list-badge" style="background:#ef444420;color:var(--danger)">B2</span>
+        </div>
+
+        <div class="section-label">Button Press Feedback</div>
+        <div class="btn-row">
+          <button class="btn primary" id="c-btn-primary">Primary</button>
+          <button class="btn ghost" id="c-btn-ghost">Ghost</button>
+          <button class="btn danger" id="c-btn-danger">Danger</button>
+        </div>
+        <p style="font-size:11px;color:var(--text2);margin-top:8px">Feedback: scale(0.95–0.98) + primary glow ring on press</p>
+
+        <div class="section-label">Progress Bar (smooth, subtle)</div>
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>Today's reviews</span>
+            <span id="c-progress-text">0 / 35</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="c-progress-fill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="section-label">Counter Animation</div>
+        <div class="counter-row">
+          <div class="counter-card">
+            <div class="counter-value" id="c-counter-due" style="color:var(--primary)">0</div>
+            <div class="counter-label">Due Today</div>
+          </div>
+          <div class="counter-card">
+            <div class="counter-value" id="c-counter-streak" style="color:var(--warning)">0</div>
+            <div class="counter-label">Day Streak</div>
+          </div>
+          <div class="counter-card">
+            <div class="counter-value" id="c-counter-mastered" style="color:var(--success)">0</div>
+            <div class="counter-label">Mastered</div>
+          </div>
+        </div>
+
+        <div class="section-label">Modal Entrance</div>
+        <button class="modal-trigger" onclick="openModal('c')">Tap to open modal →</button>
+
+        <div class="demo-divider"></div>
+        <div class="section-label">Streak Milestone (playful — earns the energy)</div>
+        <div class="streak-milestone">
+          <div style="font-size:36px">🔥</div>
+          <div class="streak-num" id="c-streak-num">7</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Day Streak!</div>
+          <div class="streak-msg">You're on fire — keep it going</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════ Comparison: Side-by-side across approaches ══════════════ -->
+  <div class="side-by-side">
+    <h2>Head-to-Head Comparison</h2>
+    <p class="subtitle">Same interactions, three different animation styles. Press the buttons to feel the difference.</p>
+    <div class="cmp-row">
+      <div class="cmp-col">
+        <h3>List item press</h3>
+        <div class="list-item cmp-item" onclick="animateCmpItem(this)">
+          <div class="list-icon" style="background:#6366f120;">📚</div>
+          <div class="list-content">
+            <div class="list-title">Tap me — I scale</div>
+            <div class="list-subtitle">A: 0.98x · B: 0.95x · C: 0.98x (default)</div>
+          </div>
+        </div>
+      </div>
+      <div class="cmp-col">
+        <h3>Primary button press</h3>
+        <div class="btn-row" style="gap:10px">
+          <button class="btn primary" onclick="animateCmpBtn(this)" style="flex:1">A: 0.97x</button>
+          <button class="btn primary" onclick="animateCmpBtnB(this)" style="flex:1">B: 0.92x</button>
+          <button class="btn primary" onclick="animateCmpBtnC(this)" style="flex:1">C: 0.95x</button>
+        </div>
+      </div>
+      <div class="cmp-col">
+        <h3>Rating feedback</h3>
+        <div class="btn-row" style="gap:8px">
+          <button class="btn" style="background:#ef4444;cursor:pointer;transition:transform 0.1s;flex:1;font-size:12px" onclick="animateCmpBtnSmall(this)">Again</button>
+          <button class="btn" style="background:#f59e0b;cursor:pointer;transition:transform 0.1s;flex:1;font-size:12px" onclick="animateCmpBtnSmall(this)">Hard</button>
+          <button class="btn" style="background:#22c55e;cursor:pointer;transition:transform 0.1s;flex:1;font-size:12px" onclick="animateCmpBtnSmall(this)">Good</button>
+          <button class="btn" style="background:#6366f1;cursor:pointer;transition:transform 0.1s;flex:1;font-size:12px" onclick="animateCmpBtnSmall(this)">Easy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════ Global Modal (used by all approaches) ══════════════ -->
+  <div class="modal-overlay" id="global-modal" onclick="closeModal()">
+    <div class="modal-sheet" id="global-modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-title" id="modal-title">Choose Practice Mode</div>
+      <div class="modal-desc" id="modal-desc">Select how you'd like to practice today</div>
+      <div class="list-item" style="margin-bottom:8px;opacity:1;transform:none;animation:none">
+        <div class="list-icon" style="background:#6366f120;">📅</div>
+        <div class="list-content">
+          <div class="list-title">Daily Review</div>
+          <div class="list-subtitle">Cards due based on spaced repetition</div>
+        </div>
+      </div>
+      <div class="list-item" style="margin-bottom:16px;opacity:1;transform:none;animation:none">
+        <div class="list-icon" style="background:#a78bfa20;">🔀</div>
+        <div class="list-content">
+          <div class="list-title">Freeflow</div>
+          <div class="list-subtitle">Random cards from the deck</div>
+        </div>
+      </div>
+      <button class="btn primary" style="width:100%" onclick="closeModal()">Start Practice</button>
+      <button class="btn ghost" style="width:100%;margin-top:8px" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+
+<script>
+  // ── Replay animations per approach ──
+  function replayApproach(approach) {
+    const prefix = approach;
+    const items = document.querySelectorAll(`#app-${approach} .${prefix}-item`);
+    const counters = [
+      `#${prefix}-counter-due`,
+      `#${prefix}-counter-streak`,
+      `#${prefix}-counter-mastered`,
+    ];
+    const progressFills = [
+      `#${prefix}-progress-fill`,
+    ];
+    const progressTexts = [
+      `#${prefix}-progress-text`,
+    ];
+
+    // Reset and animate list items
+    items.forEach((el, i) => {
+      el.style.animation = 'none';
+      el.style.opacity = '0';
+      const transform = el.style.transform;
+      el.style.transform = 'translateY(20px) scale(0.95)';
+      el.offsetHeight; // force reflow
+      el.style.opacity = '';
+      el.style.transform = '';
+      if (approach === 'a') {
+        el.style.animation = `fadeSlideUpSubtle 0.35s cubic-bezier(0.4,0,0.2,1) ${i * 50}ms forwards`;
+      } else if (approach === 'b') {
+        el.style.animation = `bounceUp 0.45s cubic-bezier(0.34,1.56,0.64,1) ${i * 60}ms forwards`;
+      } else {
+        el.style.animation = `fadeSlideUp 0.4s cubic-bezier(0.34,1.2,0.64,1) ${i * 60}ms forwards`;
+      }
+    });
+
+    // Reset counters
+    counters.forEach(id => {
+      const el = document.querySelector(id);
+      if (!el) return;
+      el.style.transform = 'scale(0.6)';
+      el.style.opacity = '0';
+    });
+
+    // Animate counters with staggered delayed pop-ins
+    const targetValues = [24, 7, 142];
+    setTimeout(() => {
+      counters.forEach((id, i) => {
+        const el = document.querySelector(id);
+        if (!el) return;
+        el.textContent = targetValues[i];
+        const anim = approach === 'b' ? 'springIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards' : 'countUp 0.35s cubic-bezier(0.4,0,0.2,1) forwards';
+        el.style.animation = anim;
+      });
+    }, approach === 'b' ? 350 : 250);
+
+    // Progress bar
+    setTimeout(() => {
+      progressFills.forEach(id => {
+        const el = document.querySelector(id);
+        if (!el) return;
+        el.style.transition = 'none';
+        el.style.width = '0%';
+        el.offsetHeight;
+        el.style.transition = `width 0.8s cubic-bezier(0.4,0,0.2,1)`;
+        el.style.width = '68%';
+        if (approach === 'b') {
+          el.style.animation = 'progressPulse 1.5s infinite';
+          setTimeout(() => el.style.animation = '', 1500);
+        }
+      });
+      progressTexts.forEach(id => {
+        const el = document.querySelector(id);
+        if (!el) return;
+        el.textContent = '24 / 35';
+      });
+    }, approach === 'b' ? 400 : 300);
+
+    // Approach C streak milestone
+    if (approach === 'c') {
+      const streakNum = document.querySelector('#c-streak-num');
+      if (streakNum) {
+        streakNum.style.transform = 'scale(0.5)';
+        streakNum.style.opacity = '0';
+        streakNum.offsetHeight;
+        streakNum.style.transition = 'transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease';
+        streakNum.style.transform = 'scale(1)';
+        streakNum.style.opacity = '1';
+      }
+    }
+  }
+
+  // ── Modals ──
+  let currentModalApproach = 'c';
+  function openModal(approach) {
+    currentModalApproach = approach;
+    const overlay = document.getElementById('global-modal');
+    const sheet = document.getElementById('global-modal-sheet');
+    overlay.classList.add('show');
+
+    // Reset sheet
+    sheet.style.transition = 'none';
+    sheet.style.transform = 'translateY(100%)';
+    sheet.offsetHeight;
+
+    // Animate in based on approach
+    if (approach === 'a') {
+      sheet.style.transition = 'transform 0.3s cubic-bezier(0.4,0,0.2,1)';
+      sheet.style.transform = 'translateY(0)';
+    } else if (approach === 'b') {
+      sheet.style.transition = 'transform 0.45s cubic-bezier(0.34,1.56,0.64,1)';
+      sheet.style.transform = 'translateY(0)';
+    } else {
+      sheet.style.transition = 'transform 0.35s cubic-bezier(0.34,1.2,0.64,1)';
+      sheet.style.transform = 'translateY(0)';
+    }
+  }
+
+  function closeModal() {
+    const overlay = document.getElementById('global-modal');
+    const sheet = document.getElementById('global-modal-sheet');
+
+    const approach = currentModalApproach;
+    const duration = approach === 'b' ? 0.35 : 0.25;
+    sheet.style.transition = `transform ${duration}s cubic-bezier(0.4,0,0.2,1)`;
+    sheet.style.transform = 'translateY(100%)';
+
+    setTimeout(() => {
+      overlay.classList.remove('show');
+      sheet.style.transition = 'none';
+      sheet.style.transform = 'translateY(100%)';
+    }, duration * 1000 + 50);
+  }
+
+  // ── Comparison: list item tap ──
+  function animateCmpItem(el) {
+    el.style.transition = 'transform 0.12s cubic-bezier(0.4,0,0.2,1)';
+    el.style.transform = 'scale(0.97)';
+    setTimeout(() => { el.style.transform = 'scale(1)'; }, 120);
+  }
+
+  // ── Comparison: button taps ──
+  function animateCmpBtn(btn) {
+    btn.style.transition = 'transform 0.12s cubic-bezier(0.4,0,0.2,1)';
+    btn.style.transform = 'scale(0.97)';
+    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 120);
+  }
+  function animateCmpBtnB(btn) {
+    btn.style.transition = 'transform 0.12s cubic-bezier(0.34,1.3,0.64,1)';
+    btn.style.transform = 'scale(0.92)';
+    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 120);
+  }
+  function animateCmpBtnC(btn) {
+    btn.style.transition = 'transform 0.15s cubic-bezier(0.34,1.15,0.64,1)';
+    btn.style.transform = 'scale(0.95)';
+    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
+  }
+  function animateCmpBtnSmall(btn) {
+    btn.style.transition = 'transform 0.1s cubic-bezier(0.4,0,0.2,1)';
+    btn.style.transform = 'scale(0.93)';
+    setTimeout(() => { btn.style.transform = 'scale(1)'; }, 100);
+  }
+
+  // ── Auto-play on load ──
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => replayApproach('a'), 200);
+    setTimeout(() => replayApproach('b'), 400);
+    setTimeout(() => replayApproach('c'), 600);
+  });
+
+  // ── Close modal with Escape ──
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+</script>
+
+</body>
+</html>
