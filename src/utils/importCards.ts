@@ -15,21 +15,29 @@ function sortFields(fields: TemplateField[]): TemplateField[] {
 export function parseCSV(content: string, fields?: TemplateField[]): ImportedCard[] {
   const lines = content.trim().split('\n');
   const cards: ImportedCard[] = [];
+  const sortedFields = fields ? sortFields(fields) : [];
 
-  const hasHeader = fields && fields.length > 0;
-  let headerMap: Record<string, number> | null = null;
+  if (lines.length === 0) return cards;
+
+  const firstParts = parseCSVLine(lines[0].trim());
+  if (firstParts.length < 2) return cards;
+
+  let hasHeader = false;
+  let headerMap: Record<string, number> = {};
+
+  if (sortedFields.length > 0) {
+    const allHeaders = firstParts.map((h) => h.trim());
+    const matched = sortedFields.filter((f) => allHeaders.includes(f.name));
+    hasHeader = matched.length > 0;
+  }
 
   let lineIdx = 0;
   if (hasHeader) {
-    const firstParts = parseCSVLine(lines[0].trim());
-    headerMap = {};
     firstParts.forEach((h, i) => {
-      headerMap![h.trim()] = i;
+      headerMap[h.trim()] = i;
     });
     lineIdx = 1;
   }
-
-  const sortedFields = fields ? sortFields(fields) : [];
 
   for (; lineIdx < lines.length; lineIdx++) {
     const trimmed = lines[lineIdx].trim();

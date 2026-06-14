@@ -98,12 +98,12 @@ export default function ImportScreen() {
         encoding: FileSystem.EncodingType.UTF8,
       });
 
-      let cards: ImportedCard[] = [];
       const fields = isCustomTemplate ? templateFields : undefined;
 
-      if (file.name.endsWith('.json')) {
+      let cards: ImportedCard[] = [];
+      try {
         cards = parseJSON(content, fields);
-      } else {
+      } catch {
         cards = parseCSV(content, fields);
       }
 
