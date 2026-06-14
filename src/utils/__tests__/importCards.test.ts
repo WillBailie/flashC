@@ -199,4 +199,29 @@ describe('parseJSON', () => {
     expect(cards[0].front_text).toBe('hello');
     expect(cards[0].back_text).toBe('hola');
   });
+
+  test('uses first two string keys as front/back when no pattern matches', () => {
+    const json = JSON.stringify([
+      { 汉字: '爱', 翻译: 'to love', 拼音: 'ài' },
+    ]);
+    const cards = parseJSON(json);
+    expect(cards).toHaveLength(1);
+    expect(cards[0].front_text).toBe('爱');
+    expect(cards[0].back_text).toBe('to love');
+  });
+
+  test('uses first two string keys with custom template too', () => {
+    const json = JSON.stringify([
+      { foo: 'hello', bar: 'world' },
+    ]);
+    const fields = [
+      { id: 1, template_id: 1, name: 'Vocab', side: 'front' as const, position: 0 },
+      { id: 2, template_id: 1, name: 'Translation', side: 'back' as const, position: 0 },
+    ];
+    const cards = parseJSON(json, fields);
+    expect(cards).toHaveLength(1);
+    expect(cards[0].front_text).toBe('hello');
+    expect(cards[0].back_text).toBe('world');
+    expect(cards[0].field_values).toEqual({});
+  });
 });

@@ -121,12 +121,21 @@ export function parseJSON(content: string, fields?: TemplateField[]): ImportedCa
       }
       const frontField = sortedFields.find((f) => f.side === 'front');
       const backField = sortedFields.find((f) => f.side === 'back');
-      const frontText =
-        (frontField ? values[frontField.name] : undefined) ??
-        item.front ?? item.front_text ?? item.question ?? '';
-      const backText =
-        (backField ? values[backField.name] : undefined) ??
-        item.back ?? item.back_text ?? item.answer ?? '';
+
+      let frontText =
+        (frontField ? values[frontField.name] || undefined : undefined) ??
+        item.front ?? item.front_text ?? item.question;
+      let backText =
+        (backField ? values[backField.name] || undefined : undefined) ??
+        item.back ?? item.back_text ?? item.answer;
+
+      if (!frontText || !backText) {
+        const keys = Object.keys(item).filter((k) => typeof item[k] === 'string');
+        if (keys.length >= 2) {
+          frontText = frontText ?? item[keys[0]];
+          backText = backText ?? item[keys[1]];
+        }
+      }
 
       return {
         front_text: typeof frontText === 'string' ? frontText : '',
@@ -143,6 +152,10 @@ export function parseJSON(content: string, fields?: TemplateField[]): ImportedCa
     }
     if (typeof item.question === 'string' && typeof item.answer === 'string') {
       return { front_text: item.question, back_text: item.answer };
+    }
+    const keys = Object.keys(item).filter((k) => typeof item[k] === 'string');
+    if (keys.length >= 2) {
+      return { front_text: item[keys[0]], back_text: item[keys[1]] };
     }
     throw new Error('Invalid card format. Expected {front, back}, {front_text, back_text}, or {question, answer}');
   };
