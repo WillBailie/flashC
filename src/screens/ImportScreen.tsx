@@ -109,7 +109,8 @@ export default function ImportScreen() {
 
       setFileContent(clean);
     } catch (error) {
-      Alert.alert('Import Error', `Could not read the file.\n${(error as Error).message}`);
+      const msg = error instanceof Error ? error.message : String(error);
+      Alert.alert('Import Error', `Could not read the file.\n${msg}`);
     }
   };
 
@@ -500,10 +501,10 @@ export default function ImportScreen() {
         </Text>
       </TouchableOpacity>
 
-      {fileName && fileContent && previewCards.length === 0 && (
+      {fileName && fileContent.length > 0 && previewCards.length === 0 && (
         <TouchableOpacity style={styles.parseButton} onPress={handleParseFile}>
           <Text style={styles.parseButtonText}>
-            <Ionicons name="search" size={16} color={colors.surface} /> Parse &amp; Preview
+            Parse & Preview
           </Text>
         </TouchableOpacity>
       )}
