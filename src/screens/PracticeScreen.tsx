@@ -236,9 +236,16 @@ export default function PracticeScreen({ navigation, route }: Props) {
       alignItems: 'center',
     },
     ratingContainer: {
-      paddingHorizontal: spacing.md,
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      paddingHorizontal: spacing.sm,
       paddingBottom: spacing.lg,
-      paddingTop: spacing.md,
+      paddingTop: spacing.sm,
+      backgroundColor: colors.background,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
     },
     ratingLabel: {
       fontSize: typography.fontSize.sm,
@@ -248,13 +255,14 @@ export default function PracticeScreen({ navigation, route }: Props) {
     },
     ratingButtons: {
       flexDirection: 'row',
-      gap: spacing.sm,
+      gap: spacing.xs,
     },
     rateButton: {
       flex: 1,
-      paddingVertical: 12,
-      borderRadius: borderRadius.sm,
+      paddingVertical: 16,
+      borderRadius: borderRadius.md,
       alignItems: 'center',
+      justifyContent: 'center',
     },
     rateButtonText: {
       color: colors.surface,
