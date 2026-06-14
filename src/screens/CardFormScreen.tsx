@@ -1,0 +1,517 @@
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Animated,
+} from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useTheme, spacing, fontSize, borderRadius, withAlpha } from '../constants/theme';
+import {
+  createCard,
+  deleteCard,
+  getCardById,
+  updateCard,
+  getAllTemplates,
+  getTemplateFields,
+  getDefaultTemplateId,
+} from '../storage/database';
+import { Button } from '../components/Button';
+import { Modal } from '../components/Modal';
+import { Template, TemplateField } from '../models/types';
+import { RootStackParamList } from '../navigation/AppNavigator';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'CardForm'>;
+
+export default function CardFormScreen({ navigation, route }: Props) {
+  const { deckId, cardId } = route.params;
+  const isEditing = cardId !== undefined;
+
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
+  const [templateFields, setTemplateFields] = useState<TemplateField[]>([]);
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [frontText, setFrontText] = useState('');
+  const [backText, setBackText] = useState('');
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const { colors } = useTheme();
+
+  const loadTemplates = useCallback(async () => {
+    const allTemplates = await getAllTemplates();
+    setTemplates(allTemplates);
+    const defaultId = await getDefaultTemplateId();
+    setSelectedTemplateId((prev) => prev ?? defaultId);
+  }, []);
+
+  const loadTemplateFields = useCallback(async (templateId: number) => {
+    const fields = await getTemplateFields(templateId);
+    setTemplateFields(fields);
+  }, []);
+
+  useEffect(() => {
+    loadTemplates();
+    if (isEditing) {
+      loadExistingCard();
+    }
+  }, [cardId]);
+
+  useEffect(() => {
+    if (selectedTemplateId) {
+      loadTemplateFields(selectedTemplateId);
+    }
+  }, [selectedTemplateId, loadTemplateFields]);
+
+  const loadExistingCard = async () => {
+    const card = await getCardById(cardId!);
+    if (card) {
+      setFrontText(card.front_text);
+      setBackText(card.back_text);
+      if (card.template_id) {
+        setSelectedTemplateId(card.template_id);
+      }
+      if (card.field_values) {
+        try {
+          const parsed = JSON.parse(card.field_values);
+          setFieldValues(parsed);
+        } catch {
+          setFieldValues({});
+        }
+      }
+    }
+  };
+
+  const handleTemplateSelect = (templateId: number) => {
+    if (templateId === selectedTemplateId) return;
+    setSelectedTemplateId(templateId);
+    setFieldValues({});
+  };
+
+  const handleFieldChange = (fieldName: string, value: string) => {
+    setFieldValues((prev) => ({ ...prev, [fieldName]: value }));
+    const frontFields = templateFields.filter((f) => f.side === 'front');
+    const backFields = templateFields.filter((f) => f.side === 'back');
+    if (frontFields.length > 0 && frontFields[0].name === fieldName) {
+      setFrontText(value);
+    }
+    if (backFields.length > 0 && backFields[0].name === fieldName) {
+      setBackText(value);
+    }
+  };
+
+  const handleSave = async () => {
+    const frontFields = templateFields.filter((f) => f.side === 'front');
+    const backFields = templateFields.filter((f) => f.side === 'back');
+
+    const autoFront =
+      frontFields.length > 0 ? fieldValues[frontFields[0].name] ?? '' : '';
+    const autoBack =
+      backFields.length > 0 ? fieldValues[backFields[0].name] ?? '' : '';
+
+    const finalFront = frontText || autoFront || '';
+    const finalBack = backText || autoBack || '';
+
+    if (!finalFront.trim() || !finalBack.trim()) {
+      Alert.alert('Error', 'Front and back text cannot be empty.');
+      return;
+    }
+
+    const hasTemplateFields = Object.keys(fieldValues).length > 0;
+
+    if (isEditing) {
+      await updateCard(
+        cardId!,
+        finalFront,
+        finalBack,
+        selectedTemplateId ?? undefined,
+        hasTemplateFields ? fieldValues : undefined
+      );
+    } else {
+      await createCard(
+        deckId,
+        finalFront,
+        finalBack,
+        selectedTemplateId ?? undefined,
+        hasTemplateFields ? fieldValues : undefined
+      );
+    }
+
+    navigation.goBack();
+  };
+
+  const handleDeleteConfirmed = () => {
+    setDeleteConfirmVisible(false);
+    setDeleting(true);
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 0.92,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(async () => {
+      await deleteCard(cardId!);
+      navigation.goBack();
+    });
+  };
+
+  const frontFields = templateFields.filter((f) => f.side === 'front');
+  const backFields = templateFields.filter((f) => f.side === 'back');
+  const hasTemplateFields = templateFields.length > 0;
+  const isBasicTemplate =
+    templateFields.length === 2 &&
+    templateFields.some((f) => f.name === 'Front') &&
+    templateFields.some((f) => f.name === 'Back');
+
+  const renderField = (field: TemplateField) => (
+    <View key={field.name} style={styles.templateFieldRow}>
+      <Text style={styles.templateFieldLabel}>{field.name}</Text>
+      <TextInput
+        style={styles.templateFieldInput}
+        placeholder={`Enter ${field.name.toLowerCase()}...`}
+        placeholderTextColor={colors.textSecondary}
+        value={fieldValues[field.name] ?? ''}
+        onChangeText={(text) => handleFieldChange(field.name, text)}
+      />
+    </View>
+  );
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    contentScroll: {
+      flex: 1,
+    },
+    content: {
+      padding: spacing.md,
+    },
+    bottomBar: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      backgroundColor: colors.background,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    templateSelector: {
+      marginBottom: spacing.md,
+    },
+    label: {
+      fontSize: fontSize.md,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: spacing.xs,
+    },
+    templateChips: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      paddingVertical: spacing.xs,
+    },
+    templateChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    templateChipSelected: {
+      borderColor: colors.primary,
+      backgroundColor: withAlpha(colors.primary, 0.08),
+    },
+    templateChipText: {
+      fontSize: fontSize.sm,
+      color: colors.text,
+      fontWeight: '600',
+    },
+    templateChipTextSelected: {
+      color: colors.primary,
+    },
+    templateChipNew: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: colors.primary,
+      borderStyle: 'dashed',
+    },
+    templateChipNewText: {
+      fontSize: fontSize.sm,
+      color: colors.primary,
+      fontWeight: '600',
+    },
+    sideSection: {
+      marginBottom: spacing.md,
+    },
+    sideLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.primary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginBottom: spacing.sm,
+    },
+    templateFieldRow: {
+      marginBottom: spacing.sm,
+    },
+    templateFieldLabel: {
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    templateFieldInput: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: borderRadius.sm,
+      padding: 10,
+      fontSize: fontSize.md,
+      color: colors.text,
+    },
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: borderRadius.sm,
+      padding: 12,
+      fontSize: fontSize.md,
+      color: colors.text,
+      minHeight: 100,
+      textAlignVertical: 'top',
+      marginBottom: spacing.lg,
+    },
+    preview: {
+      marginBottom: spacing.lg,
+    },
+    previewLabel: {
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: spacing.sm,
+    },
+    previewCard: {
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.md,
+      borderWidth: 2,
+      borderColor: withAlpha(colors.primary, 0.18),
+      padding: spacing.md,
+    },
+    previewSideLabel: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: colors.textSecondary,
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      marginBottom: spacing.xs,
+    },
+    previewText: {
+      fontSize: fontSize.lg,
+      fontWeight: '600',
+      color: colors.text,
+      textAlign: 'center',
+      paddingVertical: spacing.sm,
+    },
+    previewFieldRow: {
+      marginBottom: spacing.sm,
+    },
+    previewFieldLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.primary,
+    },
+    previewFieldValue: {
+      fontSize: fontSize.md,
+      color: colors.text,
+    },
+    previewDivider: {
+      height: 1,
+      backgroundColor: colors.border,
+      marginVertical: spacing.sm,
+    },
+  }), [colors]);
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+    <Animated.View
+      style={[
+        styles.contentScroll,
+        {
+          opacity: fadeAnim,
+          transform: [{ scale: scaleAnim }],
+        },
+      ]}
+      pointerEvents={deleting ? 'none' : 'auto'}
+    >
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.templateSelector}>
+        <Text style={styles.label}>Template</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.templateChips}>
+            {templates.map((t) => (
+              <TouchableOpacity
+                key={t.id}
+                style={[
+                  styles.templateChip,
+                  selectedTemplateId === t.id && styles.templateChipSelected,
+                ]}
+                onPress={() => handleTemplateSelect(t.id)}
+              >
+                <Text
+                  style={[
+                    styles.templateChipText,
+                    selectedTemplateId === t.id && styles.templateChipTextSelected,
+                  ]}
+                >
+                  {t.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.templateChipNew}
+              onPress={() => navigation.navigate('TemplateEditor', {})}
+            >
+              <Text style={styles.templateChipNewText}>+ New</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+
+      {isBasicTemplate || !hasTemplateFields ? (
+        <>
+          <Text style={styles.label}>Front Side</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g., Hello"
+            placeholderTextColor={colors.textSecondary}
+            value={frontText}
+            onChangeText={setFrontText}
+            multiline
+            autoFocus={!isEditing}
+          />
+          <Text style={styles.label}>Back Side</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g., Hola"
+            placeholderTextColor={colors.textSecondary}
+            value={backText}
+            onChangeText={setBackText}
+            multiline
+          />
+        </>
+      ) : (
+        <>
+          <View style={styles.sideSection}>
+            <Text style={styles.sideLabel}>FRONT</Text>
+            {frontFields.map(renderField)}
+          </View>
+          <View style={styles.sideSection}>
+            <Text style={styles.sideLabel}>BACK</Text>
+            {backFields.map(renderField)}
+          </View>
+        </>
+      )}
+
+      <View style={styles.preview}>
+        <Text style={styles.previewLabel}>Preview</Text>
+        <View style={styles.previewCard}>
+          <Text style={styles.previewSideLabel}>FRONT</Text>
+          {frontFields.length > 0 && !isBasicTemplate ? (
+            frontFields.map((f) => (
+              <View key={f.name} style={styles.previewFieldRow}>
+                <Text style={styles.previewFieldLabel}>{f.name}</Text>
+                <Text style={styles.previewFieldValue}>
+                  {fieldValues[f.name] || '—'}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.previewText}>
+              {frontText || 'Front side...'}
+            </Text>
+          )}
+          <View style={styles.previewDivider} />
+          <Text style={styles.previewSideLabel}>BACK</Text>
+          {backFields.length > 0 && !isBasicTemplate ? (
+            backFields.map((f) => (
+              <View key={f.name} style={styles.previewFieldRow}>
+                <Text style={styles.previewFieldLabel}>{f.name}</Text>
+                <Text style={styles.previewFieldValue}>
+                  {fieldValues[f.name] || '—'}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.previewText}>
+              {backText || 'Back side...'}
+            </Text>
+          )}
+        </View>
+      </View>
+
+    </ScrollView>
+
+      <View style={styles.bottomBar}>
+        <Button
+          title={isEditing ? 'Update Card' : 'Create Card'}
+          onPress={handleSave}
+          fullWidth
+        />
+        {isEditing && (
+          <Button
+            title="Delete Card"
+            variant="danger"
+            onPress={() => setDeleteConfirmVisible(true)}
+            fullWidth
+            style={{ marginTop: spacing.sm }}
+          />
+        )}
+      </View>
+
+      </Animated.View>
+
+      <Modal
+        visible={deleteConfirmVisible}
+        onClose={() => setDeleteConfirmVisible(false)}
+        title="Delete Card"
+      >
+        <Text style={{ fontSize: fontSize.md, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
+          Are you sure you want to delete this card?
+        </Text>
+        <Button
+          title="Delete"
+          variant="danger"
+          onPress={handleDeleteConfirmed}
+          fullWidth
+        />
+        <Button
+          title="Cancel"
+          variant="ghost"
+          onPress={() => setDeleteConfirmVisible(false)}
+          fullWidth
+          style={{ marginTop: spacing.sm }}
+        />
+      </Modal>
+    </KeyboardAvoidingView>
+  );
+}
