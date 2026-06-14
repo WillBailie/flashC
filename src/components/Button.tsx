@@ -1,13 +1,19 @@
 import React, { useMemo } from 'react';
 import {
-  TouchableOpacity,
+  Pressable,
   Text,
   StyleSheet,
   ActivityIndicator,
   ViewStyle,
-  TextStyle,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { useTheme, typography, spacing, borderRadius } from '../constants/theme';
+import { SPRING_CONFIG, useReduceMotion } from '../utils/animation';
 
 interface ButtonProps {
   title: string;
@@ -35,6 +41,25 @@ export function Button({
   accessibilityHint,
 }: ButtonProps) {
   const { colors } = useTheme();
+  const reduceMotion = useReduceMotion();
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (!reduceMotion) {
+      scale.value = withSpring(0.97, SPRING_CONFIG);
+    }
+  };
+
+  const handlePressOut = () => {
+    if (!reduceMotion) {
+      scale.value = withSpring(1, SPRING_CONFIG);
+    }
+  };
 
   const styles = useMemo(
     () => {
@@ -79,18 +104,21 @@ export function Button({
   );
 
   return (
-    <TouchableOpacity
-      style={[styles.button, style]}
-      onPress={onPress}
-      disabled={disabled || loading}
-      activeOpacity={0.7}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? title}
-      accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled: disabled || loading, busy: loading }}
-    >
-      {loading && <ActivityIndicator size="small" color={styles.text.color} />}
-      <Text style={styles.text}>{title}</Text>
-    </TouchableOpacity>
+    <Animated.View style={[animatedStyle, fullWidth && { alignSelf: 'stretch' }]}>
+      <Pressable
+        style={[styles.button, style]}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={disabled || loading}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? title}
+        accessibilityHint={accessibilityHint}
+        accessibilityState={{ disabled: disabled || loading, busy: loading }}
+      >
+        {loading && <ActivityIndicator size="small" color={styles.text.color} />}
+        <Text style={styles.text}>{title}</Text>
+      </Pressable>
+    </Animated.View>
   );
 }
