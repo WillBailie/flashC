@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -14,7 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, spacing, borderRadius, typography, withAlpha } from '../constants/theme';
-import { useReduceMotion } from '../utils/animation';
+import { useReduceMotion, SPRING_CONFIG } from '../utils/animation';
 import { EmptyState } from '../components/EmptyState';
 import { Button } from '../components/Button';
 import { Badge } from '../components/Badge';
@@ -50,6 +50,16 @@ export default function PracticeScreen({ navigation, route }: Props) {
   const statsOpacity = useSharedValue(0);
   const buttonsOpacity = useSharedValue(0);
   const [showConfetti, setShowConfetti] = useState(false);
+
+  const againScale = useSharedValue(1);
+  const hardScale = useSharedValue(1);
+  const goodScale = useSharedValue(1);
+  const easyScale = useSharedValue(1);
+
+  const againAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: againScale.value }] }));
+  const hardAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: hardScale.value }] }));
+  const goodAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: goodScale.value }] }));
+  const easyAnimatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: easyScale.value }] }));
 
   const reduceMotion = useReduceMotion();
   const progressWidth = useSharedValue(0);
@@ -485,42 +495,78 @@ export default function PracticeScreen({ navigation, route }: Props) {
         <View style={styles.ratingContainer}>
           <Text style={styles.ratingLabel}>How well did you know this?</Text>
           <View style={styles.ratingButtons}>
-            <TouchableOpacity
-              style={[styles.rateButton, { backgroundColor: colors.again }]}
-              onPress={() => handleRate(0)}
-              accessibilityRole="button"
-              accessibilityLabel="Rate: Again"
-            >
-              <Text style={styles.rateButtonText}>Again</Text>
-              <Text style={styles.rateInterval}>&lt;1m</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.rateButton, { backgroundColor: colors.hard }]}
-              onPress={() => handleRate(2)}
-              accessibilityRole="button"
-              accessibilityLabel="Rate: Hard"
-            >
-              <Text style={styles.rateButtonText}>Hard</Text>
-              <Text style={styles.rateInterval}>~1d</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.rateButton, { backgroundColor: colors.good }]}
-              onPress={() => handleRate(3)}
-              accessibilityRole="button"
-              accessibilityLabel="Rate: Good"
-            >
-              <Text style={styles.rateButtonText}>Good</Text>
-              <Text style={styles.rateInterval}>~3d</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.rateButton, { backgroundColor: colors.easy }]}
-              onPress={() => handleRate(5)}
-              accessibilityRole="button"
-              accessibilityLabel="Rate: Easy"
-            >
-              <Text style={styles.rateButtonText}>Easy</Text>
-              <Text style={styles.rateInterval}>~7d</Text>
-            </TouchableOpacity>
+            <Animated.View style={againAnimatedStyle}>
+              <Pressable
+                style={[styles.rateButton, { backgroundColor: colors.again }]}
+                onPress={() => handleRate(0)}
+                onPressIn={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                  if (!reduceMotion) againScale.value = withSpring(0.95, SPRING_CONFIG);
+                }}
+                onPressOut={() => {
+                  if (!reduceMotion) againScale.value = withSpring(1, SPRING_CONFIG);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Rate: Again"
+              >
+                <Text style={styles.rateButtonText}>Again</Text>
+                <Text style={styles.rateInterval}>&lt;1m</Text>
+              </Pressable>
+            </Animated.View>
+            <Animated.View style={hardAnimatedStyle}>
+              <Pressable
+                style={[styles.rateButton, { backgroundColor: colors.hard }]}
+                onPress={() => handleRate(2)}
+                onPressIn={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  if (!reduceMotion) hardScale.value = withSpring(0.95, SPRING_CONFIG);
+                }}
+                onPressOut={() => {
+                  if (!reduceMotion) hardScale.value = withSpring(1, SPRING_CONFIG);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Rate: Hard"
+              >
+                <Text style={styles.rateButtonText}>Hard</Text>
+                <Text style={styles.rateInterval}>~1d</Text>
+              </Pressable>
+            </Animated.View>
+            <Animated.View style={goodAnimatedStyle}>
+              <Pressable
+                style={[styles.rateButton, { backgroundColor: colors.good }]}
+                onPress={() => handleRate(3)}
+                onPressIn={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  if (!reduceMotion) goodScale.value = withSpring(0.95, SPRING_CONFIG);
+                }}
+                onPressOut={() => {
+                  if (!reduceMotion) goodScale.value = withSpring(1, SPRING_CONFIG);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Rate: Good"
+              >
+                <Text style={styles.rateButtonText}>Good</Text>
+                <Text style={styles.rateInterval}>~3d</Text>
+              </Pressable>
+            </Animated.View>
+            <Animated.View style={easyAnimatedStyle}>
+              <Pressable
+                style={[styles.rateButton, { backgroundColor: colors.easy }]}
+                onPress={() => handleRate(5)}
+                onPressIn={() => {
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                  if (!reduceMotion) easyScale.value = withSpring(0.95, SPRING_CONFIG);
+                }}
+                onPressOut={() => {
+                  if (!reduceMotion) easyScale.value = withSpring(1, SPRING_CONFIG);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Rate: Easy"
+              >
+                <Text style={styles.rateButtonText}>Easy</Text>
+                <Text style={styles.rateInterval}>~7d</Text>
+              </Pressable>
+            </Animated.View>
           </View>
         </View>
       )}
