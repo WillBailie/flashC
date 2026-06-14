@@ -122,12 +122,8 @@ export function parseJSON(content: string, fields?: TemplateField[]): ImportedCa
       const frontField = sortedFields.find((f) => f.side === 'front');
       const backField = sortedFields.find((f) => f.side === 'back');
 
-      let frontText =
-        (frontField ? values[frontField.name] || undefined : undefined) ??
-        item.front ?? item.front_text ?? item.question;
-      let backText =
-        (backField ? values[backField.name] || undefined : undefined) ??
-        item.back ?? item.back_text ?? item.answer;
+      let frontText = frontField ? values[frontField.name] || undefined : undefined;
+      let backText = backField ? values[backField.name] || undefined : undefined;
 
       if (!frontText || !backText) {
         const keys = Object.keys(item).filter((k) => typeof item[k] === 'string');
