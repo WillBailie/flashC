@@ -250,11 +250,11 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
     container: {
       flex: 1,
       backgroundColor: colors.background,
+      paddingBottom: 80,
     },
     listContent: {
       padding: spacing.md,
       paddingTop: spacing.xxl + spacing.xl + spacing.sm + 44 + spacing.sm,
-      paddingBottom: 100,
     },
     emptyContainer: {
       flexGrow: 1,
