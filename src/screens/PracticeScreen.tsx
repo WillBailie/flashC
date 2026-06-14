@@ -503,7 +503,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
         <View style={styles.ratingContainer}>
           <Text style={styles.ratingLabel}>How well did you know this?</Text>
           <View style={styles.ratingButtons}>
-            <Animated.View style={againAnimatedStyle}>
+            <Animated.View style={[againAnimatedStyle, { flex: 1 }]}>
               <Pressable
                 style={[styles.rateButton, { backgroundColor: colors.again }]}
                 onPress={() => handleRate(0)}
@@ -521,7 +521,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
                 <Text style={styles.rateInterval}>&lt;1m</Text>
               </Pressable>
             </Animated.View>
-            <Animated.View style={hardAnimatedStyle}>
+            <Animated.View style={[hardAnimatedStyle, { flex: 1 }]}>
               <Pressable
                 style={[styles.rateButton, { backgroundColor: colors.hard }]}
                 onPress={() => handleRate(2)}
@@ -539,7 +539,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
                 <Text style={styles.rateInterval}>~1d</Text>
               </Pressable>
             </Animated.View>
-            <Animated.View style={goodAnimatedStyle}>
+            <Animated.View style={[goodAnimatedStyle, { flex: 1 }]}>
               <Pressable
                 style={[styles.rateButton, { backgroundColor: colors.good }]}
                 onPress={() => handleRate(3)}
@@ -557,7 +557,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
                 <Text style={styles.rateInterval}>~3d</Text>
               </Pressable>
             </Animated.View>
-            <Animated.View style={easyAnimatedStyle}>
+            <Animated.View style={[easyAnimatedStyle, { flex: 1 }]}>
               <Pressable
                 style={[styles.rateButton, { backgroundColor: colors.easy }]}
                 onPress={() => handleRate(5)}
