@@ -106,7 +106,11 @@ export function Button({
   return (
     <Animated.View style={[animatedStyle, fullWidth && { alignSelf: 'stretch' }]}>
       <Pressable
-        style={[styles.button, style]}
+        style={({ pressed }) => [
+          styles.button,
+          style,
+          pressed && reduceMotion && { opacity: 0.7 },
+        ]}
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}

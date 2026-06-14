@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, spacing, typography, withAlpha } from '../constants/theme';
+import { useReduceMotion } from '../utils/animation';
 
 interface EmptyStateProps {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -12,6 +13,7 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon = 'albums', title, subtitle }: EmptyStateProps) {
   const { colors } = useTheme();
+  const reduceMotion = useReduceMotion();
 
   const styles = useMemo(
     () =>
@@ -49,7 +51,7 @@ export function EmptyState({ icon = 'albums', title, subtitle }: EmptyStateProps
   );
 
   return (
-    <Animated.View entering={FadeIn.duration(300)} style={styles.container}>
+    <Animated.View entering={reduceMotion ? undefined : FadeIn.duration(300)} style={styles.container}>
       <View style={styles.iconWrapper}>
         <Ionicons name={icon} size={36} color={colors.primary} />
       </View>

@@ -44,7 +44,11 @@ export function Modal({
 
   const animateIn = useCallback(() => {
     setShouldRender(true);
-    if (reduceMotion) return;
+    if (reduceMotion) {
+      overlayOpacity.value = 1;
+      sheetTranslateY.value = 0;
+      return;
+    }
     overlayOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) });
     sheetTranslateY.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
   }, [reduceMotion]);
