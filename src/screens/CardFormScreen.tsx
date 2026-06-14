@@ -12,7 +12,8 @@ import {
   Animated,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useTheme, spacing, fontSize, borderRadius, withAlpha } from '../constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme, spacing, fontSize, borderRadius, withAlpha, typography } from '../constants/theme';
 import {
   createCard,
   deleteCard,
@@ -69,6 +70,10 @@ export default function CardFormScreen({ navigation, route }: Props) {
       loadTemplateFields(selectedTemplateId);
     }
   }, [selectedTemplateId, loadTemplateFields]);
+
+  React.useLayoutEffect(() => {
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
 
   const loadExistingCard = async () => {
     const card = await getCardById(cardId!);
@@ -189,9 +194,48 @@ export default function CardFormScreen({ navigation, route }: Props) {
   );
 
   const styles = useMemo(() => StyleSheet.create({
+    floatingHeader: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.xxl,
+      paddingBottom: spacing.sm,
+    },
+    floatingBackButton: {
+      width: 44,
+      height: 44,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    floatingSpacer: {
+      width: 44,
+    },
+    floatingPill: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    floatingPillInner: {
+      backgroundColor: withAlpha(colors.primary, 0.12),
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: borderRadius.full,
+    },
+    floatingPillText: {
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.primary,
+    },
     container: {
       flex: 1,
       backgroundColor: colors.background,
+      paddingTop: spacing.xxl + spacing.sm + 44 + spacing.sm,
     },
     contentScroll: {
       flex: 1,
@@ -349,6 +393,24 @@ export default function CardFormScreen({ navigation, route }: Props) {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <View style={styles.floatingHeader}>
+        <TouchableOpacity
+          style={styles.floatingBackButton}
+          onPress={() => navigation.goBack()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.floatingPill}>
+          <View style={styles.floatingPillInner}>
+            <Text style={styles.floatingPillText} numberOfLines={1}>
+              {isEditing ? 'Edit Card' : 'New Card'}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.floatingSpacer} />
+      </View>
     <Animated.View
       style={[
         styles.contentScroll,
