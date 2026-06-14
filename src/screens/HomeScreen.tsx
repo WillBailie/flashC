@@ -8,7 +8,20 @@ import {
   ScrollView,
   Switch,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useAnimatedProps,
+  withTiming,
+  withSequence,
+  withSpring,
+  Easing,
+  SharedValue,
+} from 'react-native-reanimated';
 import Svg, { Circle, G } from 'react-native-svg';
+import { SPRING_CONFIG, useReduceMotion } from '../utils/animation';
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, CompositeScreenProps } from '@react-navigation/native';
@@ -56,12 +69,79 @@ export default function HomeScreen({ navigation }: Props) {
     ? circumference * (1 - Math.min(stats.dueCards, stats.totalCards) / stats.totalCards)
     : circumference;
 
+  const reduceMotion = useReduceMotion();
+
+  const dueScale = useSharedValue(1);
+  const totalScale = useSharedValue(1);
+  const streakScaleVal = useSharedValue(1);
+
+  const ringOffset = useSharedValue(dashOffset);
+
+  const dueAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: dueScale.value }],
+  }));
+  const totalAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: totalScale.value }],
+  }));
+  const streakAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: streakScaleVal.value }],
+  }));
+
+  const ringAnimatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: ringOffset.value,
+  }));
+
+  const animateCounter = (sharedValue: SharedValue<number>) => {
+    if (reduceMotion) return;
+    sharedValue.value = withSequence(
+      withTiming(0.85, { duration: 0 }),
+      withSpring(1.05, SPRING_CONFIG),
+      withSpring(1, SPRING_CONFIG),
+    );
+  };
+
   useEffect(() => {
     const hour = new Date().getHours();
     if (hour < 12) setGreeting('Good morning');
     else if (hour < 18) setGreeting('Good afternoon');
     else setGreeting('Good evening');
   }, []);
+
+  const prevDue = React.useRef(stats.dueCards);
+  const prevTotal = React.useRef(stats.totalCards);
+  const prevStreak = React.useRef(streak);
+
+  React.useEffect(() => {
+    if (prevDue.current !== stats.dueCards && prevDue.current !== 0) {
+      animateCounter(dueScale);
+    }
+    prevDue.current = stats.dueCards;
+  }, [stats.dueCards]);
+
+  React.useEffect(() => {
+    if (prevTotal.current !== stats.totalCards && prevTotal.current !== 0) {
+      animateCounter(totalScale);
+    }
+    prevTotal.current = stats.totalCards;
+  }, [stats.totalCards]);
+
+  React.useEffect(() => {
+    if (prevStreak.current !== streak && prevStreak.current !== 0) {
+      animateCounter(streakScaleVal);
+    }
+    prevStreak.current = streak;
+  }, [streak]);
+
+  React.useEffect(() => {
+    if (reduceMotion) {
+      ringOffset.value = dashOffset;
+    } else {
+      ringOffset.value = withTiming(dashOffset, {
+        duration: 600,
+        easing: Easing.out(Easing.cubic),
+      });
+    }
+  }, [dashOffset]);
 
   const loadStats = useCallback(async () => {
     const s = await getGlobalStats();
@@ -386,6 +466,24 @@ export default function HomeScreen({ navigation }: Props) {
       fontSize: typography.fontSize.lg,
       color: colors.textSecondary,
     },
+    streakPill: {
+      position: 'absolute',
+      top: spacing.xxl + spacing.xl,
+      right: spacing.lg,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: withAlpha(colors.surface, 0.2),
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: borderRadius.full,
+      gap: spacing.xs,
+      zIndex: 2,
+    },
+    streakPillText: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.surface,
+    },
     modalButtons: {
       gap: spacing.sm,
     },
@@ -404,12 +502,18 @@ export default function HomeScreen({ navigation }: Props) {
         <View style={[styles.heroBlob, styles.heroBlob2]} />
         <View style={[styles.heroBlob, styles.heroBlob3]} />
 
+        {streak > 0 && (
+          <View style={styles.streakPill}>
+            <Text style={styles.streakPillText}>🔥 {streak}</Text>
+          </View>
+        )}
+
         <Text style={styles.heroGreeting}>{greeting} 👋</Text>
 
         <View style={styles.heroBody}>
           <View style={styles.ringContainer}>
             <Svg width={RING_SIZE} height={RING_SIZE}>
-              <G rotation={-90} originX={RING_SIZE / 2} originY={RING_SIZE / 2}>
+              <G transform={`rotate(-90, ${RING_SIZE / 2}, ${RING_SIZE / 2})`}>
               <Circle
                 cx={RING_SIZE / 2}
                 cy={RING_SIZE / 2}
@@ -418,7 +522,7 @@ export default function HomeScreen({ navigation }: Props) {
                 stroke={withAlpha(colors.surface, 0.15)}
                 strokeWidth={RING_STROKE}
               />
-              <Circle
+              <AnimatedCircle
                 cx={RING_SIZE / 2}
                 cy={RING_SIZE / 2}
                 r={RING_RADIUS}
@@ -426,13 +530,13 @@ export default function HomeScreen({ navigation }: Props) {
                 stroke={colors.surface}
                 strokeWidth={RING_STROKE}
                 strokeDasharray={circumference}
-                strokeDashoffset={dashOffset}
                 strokeLinecap="round"
+                animatedProps={ringAnimatedProps}
               />
               </G>
             </Svg>
             <View style={styles.ringCenter}>
-              <Text style={styles.ringPct} adjustsFontSizeToFit numberOfLines={1}>{stats.dueCards}</Text>
+              <Animated.Text style={[styles.ringPct, dueAnimatedStyle]} adjustsFontSizeToFit numberOfLines={1}>{stats.dueCards}</Animated.Text>
               <Text style={styles.ringPctLabel}>due</Text>
             </View>
           </View>
@@ -471,7 +575,7 @@ export default function HomeScreen({ navigation }: Props) {
             <View style={[styles.modeCardIconWrap, { backgroundColor: withAlpha(colors.primary, 0.12) }]}>
               <Ionicons name="calendar" size={18} color={colors.primary} />
             </View>
-            <Text style={styles.modeCardValue}>{stats.dueCards}</Text>
+            <Animated.Text style={[styles.modeCardValue, dueAnimatedStyle]}>{stats.dueCards}</Animated.Text>
             <Text style={styles.modeCardLabel}>due today</Text>
           </TouchableOpacity>
 
@@ -486,7 +590,7 @@ export default function HomeScreen({ navigation }: Props) {
             <View style={[styles.modeCardIconWrap, { backgroundColor: withAlpha(colors.secondary, 0.12) }]}>
               <Ionicons name="shuffle" size={18} color={colors.secondary} />
             </View>
-            <Text style={styles.modeCardValue}>{stats.totalCards}</Text>
+            <Animated.Text style={[styles.modeCardValue, totalAnimatedStyle]}>{stats.totalCards}</Animated.Text>
             <Text style={styles.modeCardLabel}>available</Text>
           </TouchableOpacity>
         </View>
