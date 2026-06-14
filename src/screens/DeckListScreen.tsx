@@ -168,6 +168,7 @@ export default function DeckListScreen({ navigation }: Props) {
   const renderDeck = ({ item, index }: { item: DeckWithStats; index: number }) => (
     <Animated.View
       entering={FadeInUp.duration(250).easing(Easing.out(Easing.cubic)).delay(index * 50)}
+      style={{ marginBottom: spacing.sm }}
     >
     <Card
       variant="elevated"
