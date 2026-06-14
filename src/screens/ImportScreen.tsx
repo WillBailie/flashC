@@ -98,9 +98,20 @@ export default function ImportScreen() {
       setPreviewCards([]);
       setFileContent('');
 
-      const content = await FileSystem.readAsStringAsync(file.uri, {
-        encoding: FileSystem.EncodingType.UTF8,
-      });
+      let content = '';
+      try {
+        content = await FileSystem.readAsStringAsync(file.uri, {
+          encoding: FileSystem.EncodingType.UTF8,
+        });
+      } catch {
+        // readAsStringAsync may fail on web; fall through to fetch
+      }
+
+      if (!content) {
+        const response = await fetch(file.uri);
+        content = await response.text();
+      }
+
       const clean = content.replace(/^\uFEFF/, '').trim();
       if (!clean) {
         Alert.alert('Error', 'The file is empty.');
