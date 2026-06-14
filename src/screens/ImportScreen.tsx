@@ -94,6 +94,10 @@ export default function ImportScreen() {
       if (result.canceled) return;
 
       const file = result.assets[0];
+      setFileName(file.name);
+      setPreviewCards([]);
+      setFileContent('');
+
       const content = await FileSystem.readAsStringAsync(file.uri, {
         encoding: FileSystem.EncodingType.UTF8,
       });
@@ -103,11 +107,9 @@ export default function ImportScreen() {
         return;
       }
 
-      setFileName(file.name);
       setFileContent(clean);
-      setPreviewCards([]);
     } catch (error) {
-      Alert.alert('Import Error', 'Could not read the file.');
+      Alert.alert('Import Error', `Could not read the file.\n${(error as Error).message}`);
     }
   };
 
