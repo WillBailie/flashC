@@ -106,13 +106,18 @@ export default function ImportScreen() {
       const fields = isCustomTemplate ? templateFields : undefined;
 
       let cards: ImportedCard[] = [];
+      let parseError = '';
       try {
         cards = parseJSON(clean, fields);
       } catch (jsonErr) {
+        parseError = `JSON: ${(jsonErr as Error).message}`;
         try {
           cards = parseCSV(clean, fields);
         } catch (csvErr) {
-          Alert.alert('Import Error', `Could not parse the file.\nJSON: ${(jsonErr as Error).message}\nCSV: ${(csvErr as Error).message}`);
+          Alert.alert(
+            'Import Error',
+            `Could not parse ${file.name}.\n\nJSON: ${(jsonErr as Error).message}\nCSV: ${(csvErr as Error).message}\n\nFirst 100 chars: ${clean.substring(0, 100)}`
+          );
           return;
         }
       }
@@ -120,7 +125,11 @@ export default function ImportScreen() {
       setPreviewCards(cards);
 
       if (cards.length === 0) {
-        Alert.alert('Error', 'No valid cards found in the file.');
+        const fieldNames = fields ? fields.map(f => f.name).join(', ') : 'none';
+        Alert.alert(
+          'No Cards Found',
+          `File: ${file.name}\nTemplate fields: ${fieldNames}\nIs custom template: ${isCustomTemplate}\n${parseError ? `Parse error: ${parseError}\n` : ''}First 100 chars: ${clean.substring(0, 100)}\n\nMake sure the file keys match the template field names.`
+        );
       }
     } catch (error) {
       Alert.alert(
