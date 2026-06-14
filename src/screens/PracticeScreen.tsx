@@ -456,7 +456,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
       <Animated.View style={styles.cardWrapper}>
         <Animated.View
           key={currentIndex}
-          entering={FadeInUp.duration(250).easing(Easing.out(Easing.cubic))}
+          entering={reduceMotion ? undefined : FadeInUp.duration(250).easing(Easing.out(Easing.cubic))}
           style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%' }}
         >
           <FlipCard
