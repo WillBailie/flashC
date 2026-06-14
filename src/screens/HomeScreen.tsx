@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -107,9 +107,9 @@ export default function HomeScreen({ navigation }: Props) {
     else setGreeting('Good evening');
   }, []);
 
-  const prevDue = React.useRef(stats.dueCards);
-  const prevTotal = React.useRef(stats.totalCards);
-  const prevStreak = React.useRef(streak);
+  const prevDue = useRef(stats.dueCards);
+  const prevTotal = useRef(stats.totalCards);
+  const prevStreak = useRef(streak);
 
   React.useEffect(() => {
     if (prevDue.current !== stats.dueCards && prevDue.current !== 0) {
@@ -141,7 +141,7 @@ export default function HomeScreen({ navigation }: Props) {
         easing: Easing.out(Easing.cubic),
       });
     }
-  }, [dashOffset]);
+  }, [dashOffset, reduceMotion]);
 
   const loadStats = useCallback(async () => {
     const s = await getGlobalStats();
@@ -504,7 +504,7 @@ export default function HomeScreen({ navigation }: Props) {
 
         {streak > 0 && (
           <View style={styles.streakPill}>
-            <Text style={styles.streakPillText}>🔥 {streak}</Text>
+            <Animated.Text style={[styles.streakPillText, streakAnimatedStyle]}>🔥 {streak}</Animated.Text>
           </View>
         )}
 
