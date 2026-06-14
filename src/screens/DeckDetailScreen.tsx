@@ -524,6 +524,8 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
         data={cards}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderCard}
+        bounces={false}
+        overScrollMode="never"
         contentContainerStyle={
           cards.length === 0 ? styles.emptyContainer : styles.listContent
         }
