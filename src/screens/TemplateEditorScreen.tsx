@@ -14,7 +14,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme, spacing, fontSize, borderRadius, withAlpha } from '../constants/theme';
+import { useTheme, spacing, fontSize, borderRadius, withAlpha, typography } from '../constants/theme';
 import { EmptyState } from '../components/EmptyState';
 import { Button } from '../components/Button';
 import { Modal as ThemedModal } from '../components/Modal';
@@ -47,9 +47,48 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
   const { colors } = useTheme();
 
   const styles = useMemo(() => StyleSheet.create({
+    floatingHeader: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.xxl,
+      paddingBottom: spacing.sm,
+    },
+    floatingBackButton: {
+      width: 44,
+      height: 44,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    floatingSpacer: {
+      width: 44,
+    },
+    floatingPill: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    floatingPillInner: {
+      backgroundColor: withAlpha(colors.primary, 0.12),
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: borderRadius.full,
+    },
+    floatingPillText: {
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.primary,
+    },
     container: {
       flex: 1,
       backgroundColor: colors.background,
+      paddingTop: spacing.xxl + spacing.xl + spacing.sm + 44 + spacing.sm,
     },
     nameSection: {
       padding: spacing.md,
@@ -297,10 +336,8 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
   );
 
   React.useLayoutEffect(() => {
-    navigation.setOptions({
-      title: isNew ? 'New Template' : 'Edit Template',
-    });
-  }, [navigation, isNew]);
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -383,6 +420,22 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.floatingHeader}>
+        <TouchableOpacity
+          style={styles.floatingBackButton}
+          onPress={() => navigation.goBack()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.floatingPill}>
+          <View style={styles.floatingPillInner}>
+            <Text style={styles.floatingPillText} numberOfLines={1}>Edit Template</Text>
+          </View>
+        </View>
+        <View style={styles.floatingSpacer} />
+      </View>
       <View style={styles.nameSection}>
         <Text style={styles.label}>Template Name</Text>
         <TextInput
