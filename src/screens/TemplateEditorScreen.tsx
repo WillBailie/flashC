@@ -16,6 +16,8 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, spacing, fontSize, borderRadius, withAlpha } from '../constants/theme';
 import { EmptyState } from '../components/EmptyState';
+import { Button } from '../components/Button';
+import { Modal as ThemedModal } from '../components/Modal';
 import {
   createTemplate,
   getAllTemplates,
@@ -39,6 +41,8 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
   const [modalVisible, setModalVisible] = useState(false);
   const [newFieldName, setNewFieldName] = useState('');
   const [newFieldSide, setNewFieldSide] = useState<'front' | 'back'>('front');
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [fieldToDelete, setFieldToDelete] = useState<TemplateField | null>(null);
 
   const { colors } = useTheme();
 
@@ -326,21 +330,21 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
   };
 
   const handleDeleteField = (field: TemplateField) => {
-    Alert.alert('Delete Field', `Remove "${field.name}" from this template?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteTemplateField(field.id);
-            await loadTemplate();
-          } catch {
-            Alert.alert('Error', 'Failed to delete field. Please try again.');
-          }
-        },
-      },
-    ]);
+    setFieldToDelete(field);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDeleteField = async () => {
+    if (!fieldToDelete) return;
+    try {
+      await deleteTemplateField(fieldToDelete.id);
+      setFields((prev) => prev.filter((f) => f.id !== fieldToDelete.id));
+    } catch {
+      Alert.alert('Error', 'Failed to delete field. Please try again.');
+    } finally {
+      setDeleteModalVisible(false);
+      setFieldToDelete(null);
+    }
   };
 
   const frontFields = fields.filter((f) => f.side === 'front');
@@ -366,8 +370,13 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
           </Text>
         </View>
       </View>
-      <TouchableOpacity onPress={() => handleDeleteField(item)}>
-        <Ionicons name="close" size={16} color={colors.danger} />
+      <TouchableOpacity
+        onPress={() => handleDeleteField(item)}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        accessibilityRole="button"
+        accessibilityLabel={`Delete field ${item.name}`}
+      >
+        <Ionicons name="close" size={20} color={colors.danger} />
       </TouchableOpacity>
     </View>
   );
@@ -505,6 +514,35 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <ThemedModal
+        visible={deleteModalVisible}
+        onClose={() => {
+          setDeleteModalVisible(false);
+          setFieldToDelete(null);
+        }}
+        title="Delete Field"
+      >
+        <Text style={{ fontSize: fontSize.md, color: colors.text, textAlign: 'center', marginBottom: spacing.lg }}>
+          Remove "{fieldToDelete?.name}" from this template?
+        </Text>
+        <Button
+          title="Delete"
+          variant="danger"
+          onPress={confirmDeleteField}
+          fullWidth
+        />
+        <View style={{ height: spacing.sm }} />
+        <Button
+          title="Cancel"
+          variant="ghost"
+          onPress={() => {
+            setDeleteModalVisible(false);
+            setFieldToDelete(null);
+          }}
+          fullWidth
+        />
+      </ThemedModal>
     </View>
   );
 }
