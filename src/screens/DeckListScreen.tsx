@@ -7,8 +7,10 @@ import {
   Pressable,
   Alert,
 } from 'react-native';
-import Animated, { FadeInUp, Easing } from 'react-native-reanimated';
+import Animated, { FadeInUp, Easing, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { SPRING_CONFIG, useReduceMotion } from '../utils/animation';
 import { useFocusEffect, CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -203,6 +205,20 @@ export default function DeckListScreen({ navigation }: Props) {
     </View>
   );
 
+  const reduceMotion = useReduceMotion();
+  const fabScale = useSharedValue(reduceMotion ? 1 : 0);
+  const fabPressScale = useSharedValue(1);
+
+  const fabAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: fabScale.value * fabPressScale.value }],
+  }));
+
+  React.useEffect(() => {
+    if (!reduceMotion) {
+      fabScale.value = withSpring(1, SPRING_CONFIG);
+    }
+  }, []);
+
   return (
     <View style={styles.container}>
       {loading && decks.length === 0 ? (
@@ -222,14 +238,23 @@ export default function DeckListScreen({ navigation }: Props) {
         />
       )}
 
-      <Pressable
-        style={styles.fab}
-        onPress={() => setModalVisible(true)}
-        accessibilityRole="button"
-        accessibilityLabel="Create new deck"
-      >
-        <Ionicons name="add" size={28} color={colors.surface} />
-      </Pressable>
+      <Animated.View style={[styles.fab, fabAnimatedStyle]}>
+        <Pressable
+          onPress={() => setModalVisible(true)}
+          onPressIn={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            if (!reduceMotion) fabPressScale.value = withSpring(0.95, SPRING_CONFIG);
+          }}
+          onPressOut={() => {
+            if (!reduceMotion) fabPressScale.value = withSpring(1, SPRING_CONFIG);
+          }}
+          style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+          accessibilityRole="button"
+          accessibilityLabel="Create new deck"
+        >
+          <Ionicons name="add" size={28} color={colors.surface} />
+        </Pressable>
+      </Animated.View>
 
       <Modal
         visible={modalVisible}

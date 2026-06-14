@@ -7,12 +7,14 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import Animated, { FadeInUp, Easing } from 'react-native-reanimated';
+import Animated, { FadeInUp, Easing, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, spacing, fontSize, borderRadius, withAlpha } from '../constants/theme';
 import { EmptyState } from '../components/EmptyState';
+import * as Haptics from 'expo-haptics';
+import { SPRING_CONFIG, useReduceMotion } from '../utils/animation';
 import {
   getAllTemplates,
   deleteTemplate,
@@ -181,6 +183,20 @@ export default function TemplateListScreen() {
     </Animated.View>
   );
 
+  const reduceMotion = useReduceMotion();
+  const fabScale = useSharedValue(reduceMotion ? 1 : 0);
+  const fabPressScale = useSharedValue(1);
+
+  const fabAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: fabScale.value * fabPressScale.value }],
+  }));
+
+  React.useEffect(() => {
+    if (!reduceMotion) {
+      fabScale.value = withSpring(1, SPRING_CONFIG);
+    }
+  }, []);
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -197,12 +213,21 @@ export default function TemplateListScreen() {
           />
         }
       />
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('TemplateEditor', {})}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      <Animated.View style={[styles.fab, fabAnimatedStyle]}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('TemplateEditor', {})}
+          onPressIn={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            if (!reduceMotion) fabPressScale.value = withSpring(0.95, SPRING_CONFIG);
+          }}
+          onPressOut={() => {
+            if (!reduceMotion) fabPressScale.value = withSpring(1, SPRING_CONFIG);
+          }}
+          style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 }
