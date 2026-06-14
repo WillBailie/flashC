@@ -33,6 +33,7 @@ export default function ImportScreen() {
   const [previewCards, setPreviewCards] = useState<ImportedCard[]>([]);
   const [importing, setImporting] = useState(false);
   const [fileName, setFileName] = useState('');
+  const [fileContent, setFileContent] = useState('');
   const { colors } = useTheme();
 
   const loadData = React.useCallback(async () => {
@@ -93,7 +94,6 @@ export default function ImportScreen() {
       if (result.canceled) return;
 
       const file = result.assets[0];
-      setFileName(file.name);
       const content = await FileSystem.readAsStringAsync(file.uri, {
         encoding: FileSystem.EncodingType.UTF8,
       });
@@ -103,38 +103,41 @@ export default function ImportScreen() {
         return;
       }
 
-      const fields = isCustomTemplate ? templateFields : undefined;
-
-      let cards: ImportedCard[] = [];
-      let parseError = '';
-      try {
-        cards = parseJSON(clean, fields);
-      } catch (jsonErr) {
-        parseError = `JSON: ${(jsonErr as Error).message}`;
-        try {
-          cards = parseCSV(clean, fields);
-        } catch (csvErr) {
-          Alert.alert(
-            'Import Error',
-            `Could not parse ${file.name}.\n\nJSON: ${(jsonErr as Error).message}\nCSV: ${(csvErr as Error).message}\n\nFirst 100 chars: ${clean.substring(0, 100)}`
-          );
-          return;
-        }
-      }
-
-      setPreviewCards(cards);
-
-      if (cards.length === 0) {
-        const fieldNames = fields ? fields.map(f => f.name).join(', ') : 'none';
-        Alert.alert(
-          'No Cards Found',
-          `File: ${file.name}\nTemplate fields: ${fieldNames}\nIs custom template: ${isCustomTemplate}\n${parseError ? `Parse error: ${parseError}\n` : ''}First 100 chars: ${clean.substring(0, 100)}\n\nMake sure the file keys match the template field names.`
-        );
-      }
+      setFileName(file.name);
+      setFileContent(clean);
+      setPreviewCards([]);
     } catch (error) {
+      Alert.alert('Import Error', 'Could not read the file.');
+    }
+  };
+
+  const handleParseFile = () => {
+    if (!fileContent) return;
+
+    const fields = isCustomTemplate ? templateFields : undefined;
+
+    let cards: ImportedCard[] = [];
+    try {
+      cards = parseJSON(fileContent, fields);
+    } catch (jsonErr) {
+      try {
+        cards = parseCSV(fileContent, fields);
+      } catch (csvErr) {
+        Alert.alert(
+          'Parse Error',
+          `Could not parse ${fileName}.\n\nJSON: ${(jsonErr as Error).message}\nCSV: ${(csvErr as Error).message}\n\nFirst 100 chars:\n${fileContent.substring(0, 100)}`
+        );
+        return;
+      }
+    }
+
+    setPreviewCards(cards);
+
+    if (cards.length === 0) {
+      const fieldNames = fields ? fields.map((f) => f.name).join(', ') : 'none';
       Alert.alert(
-        'Import Error',
-        'Could not parse the file. Make sure it\'s valid and matches the selected template.'
+        'No Cards Found',
+        `File: ${fileName}\nTemplate fields: ${fieldNames}\nIs custom template: ${isCustomTemplate}\nFirst 100 chars:\n${fileContent.substring(0, 100)}\n\nMake sure the file keys match the template field names.`
       );
     }
   };
@@ -315,6 +318,18 @@ export default function ImportScreen() {
       color: colors.primary,
       fontWeight: '600',
     },
+    parseButton: {
+      backgroundColor: colors.primary,
+      borderRadius: borderRadius.sm,
+      paddingVertical: spacing.sm + 4,
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    parseButtonText: {
+      fontSize: fontSize.md,
+      color: colors.surface,
+      fontWeight: '700',
+    },
     previewItem: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -476,12 +491,20 @@ export default function ImportScreen() {
       <TouchableOpacity style={styles.pickFileButton} onPress={handlePickFile}>
         <Text style={styles.pickFileButtonText}>
           {fileName ? (
-            <><Ionicons name="document" size={16} color={colors.primary} /> {fileName} ({previewCards.length} cards)</>
+            <><Ionicons name="document" size={16} color={colors.primary} /> {fileName}</>
           ) : (
             <><Ionicons name="folder-open" size={16} color={colors.primary} /> Select File</>
           )}
         </Text>
       </TouchableOpacity>
+
+      {fileName && fileContent && previewCards.length === 0 && (
+        <TouchableOpacity style={styles.parseButton} onPress={handleParseFile}>
+          <Text style={styles.parseButtonText}>
+            <Ionicons name="search" size={16} color={colors.surface} /> Parse &amp; Preview
+          </Text>
+        </TouchableOpacity>
+      )}
 
       {renderPreview()}
     </ScrollView>
