@@ -513,6 +513,17 @@ export default function ImportScreen() {
         </TouchableOpacity>
       )}
 
+      {fileName ? (
+        <View style={{ padding: spacing.md, backgroundColor: colors.surface, borderRadius: borderRadius.sm, marginTop: spacing.sm }}>
+          <Text style={{ color: colors.text, fontSize: fontSize.sm }}>Debug info:</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: fontSize.xs }}>fileName: {fileName}</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: fontSize.xs }}>fileContent length: {fileContent.length}</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: fontSize.xs }}>isCustomTemplate: {String(isCustomTemplate)}</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: fontSize.xs }}>template fields: {templateFields.map(f => f.name).join(', ') || 'none'}</Text>
+          <Text style={{ color: colors.textSecondary, fontSize: fontSize.xs }}>First 80 chars: {fileContent.substring(0, 80) || '(empty)'}</Text>
+        </View>
+      ) : null}
+
       {renderPreview()}
     </ScrollView>
   );
