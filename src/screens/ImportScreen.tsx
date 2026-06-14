@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme, spacing, fontSize, borderRadius, withAlpha } from '../constants/theme';
 import {
   getAllDecks,
@@ -34,7 +35,7 @@ export default function ImportScreen() {
   const [fileName, setFileName] = useState('');
   const { colors } = useTheme();
 
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     const [allDecks, allTemplates, defaultId] = await Promise.all([
       getAllDecks(),
       getAllTemplates(),
@@ -44,12 +45,14 @@ export default function ImportScreen() {
     setTemplates(allTemplates);
     if (selectedTemplateId === null) {
       setSelectedTemplateId(defaultId);
+      const fields = await getTemplateFields(defaultId);
+      setTemplateFields(fields);
     }
-  };
+  }, [selectedTemplateId]);
 
   React.useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const handleTemplateSelect = async (templateId: number) => {
     setSelectedTemplateId(templateId);
@@ -58,16 +61,6 @@ export default function ImportScreen() {
     const fields = await getTemplateFields(templateId);
     setTemplateFields(fields);
   };
-
-  React.useEffect(() => {
-    const init = async () => {
-      if (selectedTemplateId) {
-        const fields = await getTemplateFields(selectedTemplateId);
-        setTemplateFields(fields);
-      }
-    };
-    init();
-  }, [selectedTemplateId]);
 
   const sortedFields = React.useMemo(() => {
     const front = templateFields
@@ -463,7 +456,11 @@ export default function ImportScreen() {
       </Text>
       <TouchableOpacity style={styles.pickFileButton} onPress={handlePickFile}>
         <Text style={styles.pickFileButtonText}>
-          {fileName ? `📄 ${fileName} (${previewCards.length} cards)` : '📂 Select File'}
+          {fileName ? (
+            <><Ionicons name="document" size={16} color={colors.primary} /> {fileName} ({previewCards.length} cards)</>
+          ) : (
+            <><Ionicons name="folder-open" size={16} color={colors.primary} /> Select File</>
+          )}
         </Text>
       </TouchableOpacity>
 

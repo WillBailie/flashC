@@ -14,6 +14,7 @@ import {
   Switch,
 } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme, spacing, fontSize, borderRadius } from '../constants/theme';
@@ -29,17 +30,9 @@ import { Card, TemplateField } from '../models/types';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { exportDeckToCSV, exportDeckToJSON } from '../utils/exportCards';
 import { getReverseMode, setReverseMode } from '../utils/settings';
+import { parseFieldValues } from '../utils/cards';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeckDetail'>;
-
-function parseFieldValues(json: string | null): Record<string, string> {
-  if (!json) return {};
-  try {
-    return JSON.parse(json);
-  } catch {
-    return {};
-  }
-}
 
 export default function DeckDetailScreen({ navigation, route }: Props) {
   const { deckId, deckName } = route.params;
@@ -100,12 +93,12 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
         : await exportDeckToJSON(deckId);
 
       const ext = format === 'csv' ? 'csv' : 'json';
-      const mime = format === 'csv' ? 'text/csv' : 'application/json';
       const fileName = `${deckName.replace(/[^a-zA-Z0-9]/g, '_')}.${ext}`;
       const filePath = `${FileSystem.cacheDirectory}${fileName}`;
 
       await FileSystem.writeAsStringAsync(filePath, content);
       await Share.share({ title: fileName, url: filePath });
+      await FileSystem.deleteAsync(filePath, { idempotent: true });
     } catch (error: any) {
       if (error?.message !== 'User did not share') {
         Alert.alert('Export Failed', error?.message || 'Could not export deck.');
@@ -200,7 +193,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       borderRadius: borderRadius.md,
       padding: spacing.md,
       marginBottom: spacing.sm,
-      shadowColor: '#000',
+      shadowColor: colors.shadow,
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.08,
       shadowRadius: 4,
@@ -311,7 +304,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       padding: spacing.lg,
       width: '100%',
       maxWidth: 420,
-      shadowColor: '#000',
+      shadowColor: colors.shadow,
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.25,
       shadowRadius: 24,
@@ -494,7 +487,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
                 navigation.navigate('Practice', { deckId, deckName, mode: 'daily', reverse: reverseMode });
               }}
             >
-              <Text style={styles.modeIcon}>📅</Text>
+              <Text style={styles.modeIcon}><Ionicons name="calendar" size={28} color={colors.primary} /></Text>
               <View style={styles.modeInfo}>
                 <Text style={styles.modeTitle}>Daily Review</Text>
                 <Text style={styles.modeDesc}>
@@ -509,7 +502,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
               style={[styles.modeOption, styles.modeOptionExpanded]}
               activeOpacity={0.7}
             >
-              <Text style={styles.modeIcon}>🎲</Text>
+              <Text style={styles.modeIcon}><Ionicons name="shuffle" size={28} color={colors.secondary} /></Text>
               <View style={styles.modeInfo}>
                 <Text style={styles.modeTitle}>Freeflow</Text>
                 <Text style={styles.modeDesc}>

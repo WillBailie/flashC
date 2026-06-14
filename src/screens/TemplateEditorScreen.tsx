@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme, spacing, fontSize, borderRadius, withAlpha } from '../constants/theme';
 import { EmptyState } from '../components/EmptyState';
 import {
@@ -179,12 +180,6 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
       fontWeight: '700',
       textTransform: 'uppercase',
     },
-    deleteField: {
-      fontSize: 16,
-      color: colors.danger,
-      fontWeight: '700',
-      padding: spacing.xs,
-    },
     modalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.5)',
@@ -198,7 +193,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
       padding: spacing.lg,
       width: '100%',
       maxWidth: 420,
-      shadowColor: '#000',
+      shadowColor: colors.shadow,
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.25,
       shadowRadius: 24,
@@ -368,7 +363,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
         </View>
       </View>
       <TouchableOpacity onPress={() => handleDeleteField(item)}>
-        <Text style={styles.deleteField}>✕</Text>
+        <Ionicons name="close" size={16} color={colors.danger} />
       </TouchableOpacity>
     </View>
   );

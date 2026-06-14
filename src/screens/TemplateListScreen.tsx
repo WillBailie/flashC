@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme, spacing, fontSize, borderRadius, withAlpha } from '../constants/theme';
 import { EmptyState } from '../components/EmptyState';
 import {
@@ -92,7 +93,7 @@ export default function TemplateListScreen() {
           borderRadius: borderRadius.md,
           padding: spacing.md,
           marginBottom: spacing.sm,
-          shadowColor: '#000',
+          shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: 0.08,
           shadowRadius: 4,
@@ -127,11 +128,6 @@ export default function TemplateListScreen() {
           fontSize: fontSize.sm,
           color: colors.textSecondary,
         },
-        arrow: {
-          fontSize: fontSize.lg,
-          color: colors.textSecondary,
-          marginLeft: spacing.sm,
-        },
         fab: {
           position: 'absolute',
           bottom: 24,
@@ -142,7 +138,7 @@ export default function TemplateListScreen() {
           backgroundColor: colors.primary,
           justifyContent: 'center',
           alignItems: 'center',
-          shadowColor: '#000',
+          shadowColor: colors.shadow,
           shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,
           shadowRadius: 8,
@@ -176,7 +172,7 @@ export default function TemplateListScreen() {
           {fieldCounts[item.id] ?? 0} field{(fieldCounts[item.id] ?? 0) !== 1 ? 's' : ''}
         </Text>
       </View>
-      <Text style={styles.arrow}>→</Text>
+      <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
     </TouchableOpacity>
   );
 

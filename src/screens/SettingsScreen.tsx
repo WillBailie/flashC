@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useTheme, spacing, borderRadius, typography } from '../constants/theme';
+import { useTheme, spacing, borderRadius, typography, withAlpha } from '../constants/theme';
 import { getGlobalStats } from '../storage/database';
 import { Card } from '../components/Card';
 import { Skeleton } from '../components/Skeleton';
@@ -43,7 +43,7 @@ function StatCard({ label, value, icon, color }: {
       width: 44,
       height: 44,
       borderRadius: borderRadius.md,
-      backgroundColor: `${finalColor}20`,
+      backgroundColor: withAlpha(finalColor, 0.125),
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -124,19 +124,19 @@ function StatsView() {
   const statRows = [
     [
       { label: 'Total Cards', value: stats.totalCards, icon: 'albums', color: colors.primary },
-      { label: 'Decks', value: stats.totalDecks, icon: 'book', color: '#6B7280' },
+      { label: 'Decks', value: stats.totalDecks, icon: 'book', color: colors.textSecondary },
     ],
     [
-      { label: 'Due for Review', value: stats.dueCards, icon: 'alarm', color: stats.dueCards > 0 ? '#EF4444' : colors.primary },
-      { label: 'Reviews Today', value: stats.reviewsToday, icon: 'checkmark-done', color: '#10B981' },
+      { label: 'Due for Review', value: stats.dueCards, icon: 'alarm', color: stats.dueCards > 0 ? colors.danger : colors.primary },
+      { label: 'Reviews Today', value: stats.reviewsToday, icon: 'checkmark-done', color: colors.success },
     ],
     [
-      { label: 'New Cards', value: stats.newCards, icon: 'sparkles', color: '#8B5CF6' },
-      { label: 'Mastered', value: stats.masteredCards, icon: 'star', color: '#F59E0B' },
+      { label: 'New Cards', value: stats.newCards, icon: 'sparkles', color: colors.secondary },
+      { label: 'Mastered', value: stats.masteredCards, icon: 'star', color: colors.warning },
     ],
     [
-      { label: 'Templates', value: stats.totalTemplates, icon: 'layers', color: '#EC4899' },
-      { label: 'Avg Ease', value: stats.avgEaseFactor.toFixed(2), icon: 'trending-up', color: '#3B82F6' },
+      { label: 'Templates', value: stats.totalTemplates, icon: 'layers', color: colors.primary },
+      { label: 'Avg Ease', value: stats.avgEaseFactor.toFixed(2), icon: 'trending-up', color: colors.easy },
     ],
   ] as const;
 

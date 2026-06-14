@@ -1,10 +1,6 @@
 import { getCardsByDeckId, getTemplateFields, getDeckById } from '../storage/database';
 import { Card, TemplateField } from '../models/types';
-
-function parseFieldValues(json: string | null): Record<string, string> {
-  if (!json) return {};
-  try { return JSON.parse(json); } catch { return {}; }
-}
+import { parseFieldValues } from './cards';
 
 export async function exportDeckToCSV(deckId: number): Promise<string> {
   const deck = await getDeckById(deckId);
