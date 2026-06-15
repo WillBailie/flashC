@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -44,6 +45,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
   const [currentFields, setCurrentFields] = useState<TemplateField[]>([]);
   const [currentValues, setCurrentValues] = useState<Record<string, string>>({});
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const completeScale = useSharedValue(0);
   const completeOpacity = useSharedValue(0);
@@ -319,7 +321,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: spacing.md,
-      paddingTop: spacing.xxl,
+      paddingTop: insets.top + spacing.sm,
       paddingBottom: spacing.sm,
     },
     floatingBackButton: {
@@ -348,7 +350,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
       fontWeight: typography.fontWeight.bold,
       color: colors.primary,
     },
-  }), [colors]);
+  }), [colors, insets]);
 
   const iconAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: completeScale.value }],

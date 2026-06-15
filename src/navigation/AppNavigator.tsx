@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../constants/theme';
 import DeckListScreen from '../screens/DeckListScreen';
@@ -39,6 +40,7 @@ function MainTabs() {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
@@ -68,6 +70,7 @@ function MainTabs() {
       <Tab.Screen name="DeckList" component={DeckListScreen} options={{ tabBarLabel: 'Decks' }} />
       <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarLabel: 'Settings' }} />
     </Tab.Navigator>
+    </SafeAreaView>
   );
 }
 
