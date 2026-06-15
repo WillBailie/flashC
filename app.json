@@ -27,6 +27,13 @@
       "expo-asset",
       "expo-sharing"
     ],
+    "updates": {
+      "url": "https://u.expo.dev/5cdf6502-d017-40de-87ee-decc88c1858c",
+      "checkAutomatically": "ON_LOAD"
+    },
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
     "extra": {
       "eas": {
         "projectId": "5cdf6502-d017-40de-87ee-decc88c1858c"
