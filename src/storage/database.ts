@@ -66,6 +66,25 @@ async function initializeDatabase(database: SQLite.SQLiteDatabase): Promise<void
   `);
 
   await seedDefaultTemplate(database);
+  await migrateDatabase(database);
+}
+
+async function migrateDatabase(database: SQLite.SQLiteDatabase): Promise<void> {
+  const cardInfo = await database.getAllAsync<{ name: string }>(
+    'PRAGMA table_info(cards)'
+  );
+  const cardColumns = new Set(cardInfo.map((c) => c.name));
+
+  if (!cardColumns.has('template_id')) {
+    await database.execAsync('ALTER TABLE cards ADD COLUMN template_id INTEGER');
+    await database.execAsync('CREATE INDEX IF NOT EXISTS idx_cards_template_id ON cards(template_id)');
+  }
+  if (!cardColumns.has('field_values')) {
+    await database.execAsync('ALTER TABLE cards ADD COLUMN field_values TEXT');
+  }
+  if (!cardColumns.has('modified_at')) {
+    await database.execAsync('ALTER TABLE cards ADD COLUMN modified_at TEXT NOT NULL DEFAULT (datetime(\'now\'))');
+  }
 }
 
 async function seedDefaultTemplate(database: SQLite.SQLiteDatabase): Promise<void> {
