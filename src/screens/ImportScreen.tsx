@@ -179,7 +179,8 @@ export default function ImportScreen() {
       setImportSuccess(true);
       setPreviewCards([]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to import cards.');
+      const msg = error instanceof Error ? error.message : String(error);
+      Alert.alert('Import Failed', msg);
     } finally {
       setImporting(false);
     }

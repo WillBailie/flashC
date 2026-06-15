@@ -381,21 +381,33 @@ export async function importCards(
   const database = await getDatabase();
   const now = new Date().toISOString();
   const tid = templateId ?? (await getDefaultTemplateId());
+
+  const insertCardStmt = await database.prepareAsync(
+    `INSERT INTO cards (deck_id, template_id, front_text, back_text, field_values, created_at, modified_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  );
+  const insertReviewStmt = await database.prepareAsync(
+    'INSERT OR IGNORE INTO reviews (card_id) VALUES (?)'
+  );
+
   let count = 0;
 
-  for (const card of cards) {
-    const fv = card.field_values ? JSON.stringify(card.field_values) : null;
-    const result = await database.runAsync(
-      `INSERT INTO cards (deck_id, template_id, front_text, back_text, field_values, created_at, modified_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [deckId, tid, card.front_text, card.back_text, fv, now, now]
-    );
-    await database.runAsync(
-      'INSERT OR IGNORE INTO reviews (card_id) VALUES (?)',
-      [result.lastInsertRowId]
-    );
-    count++;
+  try {
+    await database.withTransactionAsync(async () => {
+      for (const card of cards) {
+        const fv = card.field_values ? JSON.stringify(card.field_values) : null;
+        const result = await insertCardStmt.executeAsync(
+          [deckId, tid, card.front_text, card.back_text, fv, now, now]
+        );
+        await insertReviewStmt.executeAsync([result.lastInsertRowId]);
+        count++;
+      }
+    });
+  } finally {
+    await insertCardStmt.finalizeAsync();
+    await insertReviewStmt.finalizeAsync();
   }
+
   return count;
 }
 

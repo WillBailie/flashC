@@ -153,7 +153,35 @@ function evalOp(val: any, target: any, operator: string): boolean {
   return String(val) === String(target);
 }
 
+class MockStatement {
+  private mockDb: MockDatabase;
+  private sql: string;
+
+  constructor(mockDb: MockDatabase, sql: string) {
+    this.mockDb = mockDb;
+    this.sql = sql;
+  }
+
+  executeAsync(params: any[] = []): Promise<{ lastInsertRowId: number; changes: number }> {
+    return this.mockDb.runAsync(this.sql, params);
+  }
+
+  finalizeAsync(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  finalizeSync(): void {}
+}
+
 class MockDatabase {
+  prepareAsync(sql: string): Promise<MockStatement> {
+    return Promise.resolve(new MockStatement(this, sql));
+  }
+
+  async withTransactionAsync(task: () => Promise<void>): Promise<void> {
+    await task();
+  }
+
   execAsync(sql: string): Promise<void> {
     const createTableMatches = sql.matchAll(/CREATE TABLE IF NOT EXISTS (\w+)\s*\(([\s\S]*?)\);/gi);
     for (const match of createTableMatches) {
@@ -444,3 +472,4 @@ export function openDatabaseAsync(name: string): Promise<MockDatabase> {
 }
 
 export const SQLiteDatabase = MockDatabase;
+export const SQLiteStatement = MockStatement;
