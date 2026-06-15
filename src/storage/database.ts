@@ -298,7 +298,7 @@ export async function getCardsDueForReview(deckId?: number): Promise<CardWithRev
     sql += ' AND c.deck_id = ?';
     params.push(deckId);
   }
-  sql += ' ORDER BY r.next_review_date ASC LIMIT 50';
+  sql += ' ORDER BY RANDOM() LIMIT 50';
   return database.getAllAsync<CardWithReview>(sql, params);
 }
 
