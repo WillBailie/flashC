@@ -57,16 +57,18 @@ async function initializeDatabase(database: SQLite.SQLiteDatabase): Promise<void
       last_review_date TEXT,
       FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE
     );
+  `);
 
+  await seedDefaultTemplate(database);
+  await migrateDatabase(database);
+
+  await database.execAsync(`
     CREATE INDEX IF NOT EXISTS idx_cards_deck_id ON cards(deck_id);
     CREATE INDEX IF NOT EXISTS idx_cards_template_id ON cards(template_id);
     CREATE INDEX IF NOT EXISTS idx_template_fields_template ON template_fields(template_id);
     CREATE INDEX IF NOT EXISTS idx_reviews_card_id ON reviews(card_id);
     CREATE INDEX IF NOT EXISTS idx_reviews_next_review ON reviews(next_review_date);
   `);
-
-  await seedDefaultTemplate(database);
-  await migrateDatabase(database);
 }
 
 async function migrateDatabase(database: SQLite.SQLiteDatabase): Promise<void> {
