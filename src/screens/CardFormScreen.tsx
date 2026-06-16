@@ -18,6 +18,7 @@ import {
   createCard,
   deleteCard,
   getCardById,
+  getReviewByCardId,
   updateCard,
   getAllTemplates,
   getTemplateFields,
@@ -25,7 +26,7 @@ import {
 } from '../storage/database';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
-import { Template, TemplateField } from '../models/types';
+import { Template, TemplateField, Review } from '../models/types';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CardForm'>;
@@ -40,6 +41,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [frontText, setFrontText] = useState('');
   const [backText, setBackText] = useState('');
+  const [review, setReview] = useState<Review | null>(null);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -92,6 +94,8 @@ export default function CardFormScreen({ navigation, route }: Props) {
         }
       }
     }
+    const rev = await getReviewByCardId(cardId!);
+    setReview(rev);
   };
 
   const handleTemplateSelect = (templateId: number) => {
@@ -386,6 +390,46 @@ export default function CardFormScreen({ navigation, route }: Props) {
       backgroundColor: colors.border,
       marginVertical: spacing.sm,
     },
+    reviewSection: {
+      marginBottom: spacing.lg,
+    },
+    reviewSectionTitle: {
+      fontSize: fontSize.sm,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginBottom: spacing.sm,
+    },
+    reviewCard: {
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.md,
+      gap: spacing.sm,
+    },
+    reviewRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    reviewRowIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: borderRadius.sm,
+      backgroundColor: withAlpha(colors.primary, 0.1),
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    reviewRowLabel: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      flex: 1,
+    },
+    reviewRowValue: {
+      fontSize: fontSize.md,
+      fontWeight: '600',
+      color: colors.text,
+    },
   }), [colors]);
 
   return (
@@ -530,6 +574,41 @@ export default function CardFormScreen({ navigation, route }: Props) {
           )}
         </View>
       </View>
+
+      {isEditing && review && (
+        <View style={styles.reviewSection}>
+          <Text style={styles.reviewSectionTitle}>Review Schedule</Text>
+          <View style={styles.reviewCard}>
+            <View style={styles.reviewRow}>
+              <View style={styles.reviewRowIcon}>
+                <Ionicons name="trending-up-outline" size={16} color={colors.primary} />
+              </View>
+              <Text style={styles.reviewRowLabel}>Ease Factor</Text>
+              <Text style={styles.reviewRowValue}>{review.ease_factor.toFixed(2)}</Text>
+            </View>
+            <View style={styles.reviewRow}>
+              <View style={styles.reviewRowIcon}>
+                <Ionicons name="repeat-outline" size={16} color={colors.primary} />
+              </View>
+              <Text style={styles.reviewRowLabel}>Interval</Text>
+              <Text style={styles.reviewRowValue}>
+                {review.interval === 0 ? 'New' : `${review.interval} day${review.interval !== 1 ? 's' : ''}`}
+              </Text>
+            </View>
+            <View style={styles.reviewRow}>
+              <View style={styles.reviewRowIcon}>
+                <Ionicons name="calendar-outline" size={16} color={colors.primary} />
+              </View>
+              <Text style={styles.reviewRowLabel}>Next Review</Text>
+              <Text style={styles.reviewRowValue}>
+                {review.next_review_date.startsWith('1970-01-01')
+                  ? 'Pending'
+                  : new Date(review.next_review_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
 
     </ScrollView>
 

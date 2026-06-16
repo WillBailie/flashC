@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Share,
   Switch,
+  Pressable,
 } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -27,14 +28,19 @@ import {
   deleteCard,
   getTemplateFields,
   updateDeck,
+  getDeckById,
+  deleteDeck,
 } from '../storage/database';
 import { Card, TemplateField } from '../models/types';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { exportDeckToCSV, exportDeckToJSON } from '../utils/exportCards';
 import { getReverseMode, setReverseMode } from '../utils/settings';
 import { parseFieldValues } from '../utils/cards';
+import { emit } from '../utils/eventBus';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeckDetail'>;
+
+const commonLanguages = ['Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Japanese', 'Korean', 'Chinese', 'Russian', 'Arabic'];
 
 export default function DeckDetailScreen({ navigation, route }: Props) {
   const { deckId, deckName } = route.params;
@@ -48,7 +54,13 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
   const [reverseMode, setReverseModeState] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [displayName, setDisplayName] = useState(deckName);
+  const [deckLanguage, setDeckLanguage] = useState('');
+  const [languageModalVisible, setLanguageModalVisible] = useState(false);
+  const [editingLang, setEditingLang] = useState('');
+  const [editingCustomLang, setEditingCustomLang] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const titleInputRef = React.useRef<TextInput>(null);
   const searchInputRef = React.useRef<TextInput>(null);
   const { colors } = useTheme();
@@ -89,7 +101,10 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
     useCallback(() => {
       loadCards();
       getReverseMode().then(setReverseModeState);
-    }, [loadCards])
+      getDeckById(deckId).then((deck) => {
+        if (deck) setDeckLanguage(deck.language);
+      });
+    }, [loadCards, deckId])
   );
 
   React.useLayoutEffect(() => {
@@ -110,6 +125,24 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       Alert.alert('Error', 'Failed to update deck name.');
     }
     setIsEditingTitle(false);
+  };
+
+  const handleOpenLanguageEditor = () => {
+    setEditingLang(deckLanguage);
+    setEditingCustomLang('');
+    setLanguageModalVisible(true);
+  };
+
+  const handleSaveLanguage = async () => {
+    setLanguageModalVisible(false);
+    const lang = editingLang.trim();
+    if (lang === deckLanguage) return;
+    try {
+      await updateDeck(deckId, displayName, '', lang);
+      setDeckLanguage(lang);
+    } catch {
+      Alert.alert('Error', 'Failed to update language.');
+    }
   };
 
   const handleDeleteCard = (card: Card) => {
@@ -530,6 +563,89 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       marginTop: spacing.xs,
       paddingHorizontal: spacing.xs,
     },
+    languageRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: spacing.xs,
+    },
+    languageChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingHorizontal: spacing.sm + 2,
+      paddingVertical: 2,
+      borderRadius: borderRadius.full,
+      backgroundColor: withAlpha(colors.primary, 0.08),
+    },
+    languageChipText: {
+      fontSize: typography.fontSize.xs,
+      fontWeight: typography.fontWeight.medium,
+      color: colors.primary,
+    },
+    langChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: borderRadius.full,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+    },
+    langChipSelected: {
+      borderColor: colors.primary,
+      backgroundColor: withAlpha(colors.primary, 0.1),
+    },
+    langChipText: {
+      fontSize: typography.fontSize.xs,
+      fontWeight: typography.fontWeight.medium,
+      color: colors.text,
+    },
+    langChipTextSelected: {
+      color: colors.primary,
+    },
+    langChipRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+      marginBottom: spacing.sm,
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      paddingVertical: spacing.md,
+      paddingHorizontal: spacing.sm,
+      borderRadius: borderRadius.sm,
+    },
+    menuItemText: {
+      fontSize: fontSize.md,
+      color: colors.text,
+      fontWeight: '600',
+    },
+    menuItemDanger: {
+      color: colors.danger,
+    },
+    menuBackdrop: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.lg,
+    },
+    menuSheet: {
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.lg,
+      padding: spacing.lg,
+      width: '100%',
+      maxWidth: 320,
+    },
+    menuTitle: {
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
   }), [colors]);
 
   return (
@@ -568,7 +684,14 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
             </TouchableOpacity>
           )}
         </View>
-        <View style={styles.floatingSpacer} />
+        <TouchableOpacity
+          style={styles.floatingBackButton}
+          onPress={() => setMenuVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Open menu"
+        >
+          <Ionicons name="ellipsis-horizontal" size={24} color={colors.text} />
+        </TouchableOpacity>
       </View>
       <View style={styles.searchContainer}>
         <View style={styles.searchRow}>
@@ -624,25 +747,9 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={styles.practiceButton}
-          onPress={() => setModeModalVisible(true)}
-        >
-          <Text style={styles.practiceButtonText}>
-            Practice ({cards.length} cards)
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.addButton}
           onPress={() => navigation.navigate('CardForm', { deckId })}
         >
-          <Text style={styles.addButtonText}>+ Add Card</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.exportButton}
-          onPress={() => setExportModalVisible(true)}
-        >
-          <Text style={styles.exportButtonText}>Export</Text>
+          <Text style={styles.practiceButtonText}>+ Add Card</Text>
         </TouchableOpacity>
       </View>
 
@@ -761,6 +868,157 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
           title="Cancel"
           variant="ghost"
           onPress={() => setExportModalVisible(false)}
+          fullWidth
+          style={{ marginTop: spacing.sm }}
+        />
+      </ThemedModal>
+
+      <ThemedModal
+        visible={languageModalVisible}
+        onClose={() => setLanguageModalVisible(false)}
+        title="Deck Language"
+      >
+        <View style={styles.langChipRow}>
+          {commonLanguages.map((lang) => (
+            <TouchableOpacity
+              key={lang}
+              style={[
+                styles.langChip,
+                editingLang === lang && styles.langChipSelected,
+              ]}
+              onPress={() => {
+                setEditingLang(editingLang === lang ? '' : lang);
+                setEditingCustomLang('');
+              }}
+            >
+              <Text
+                style={[
+                  styles.langChipText,
+                  editingLang === lang && styles.langChipTextSelected,
+                ]}
+              >
+                {lang}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <TextInput
+          style={{
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: borderRadius.sm,
+            padding: spacing.sm + 2,
+            fontSize: fontSize.md,
+            color: colors.text,
+            backgroundColor: colors.background,
+          }}
+          placeholder="Or enter custom language..."
+          placeholderTextColor={colors.textSecondary}
+          value={editingCustomLang}
+          onChangeText={(text) => {
+            setEditingCustomLang(text);
+            setEditingLang(text);
+          }}
+        />
+        <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
+          <Button
+            title="Cancel"
+            variant="secondary"
+            onPress={() => setLanguageModalVisible(false)}
+            style={{ flex: 1 }}
+          />
+          <Button
+            title="Save"
+            onPress={handleSaveLanguage}
+            style={{ flex: 1 }}
+          />
+        </View>
+      </ThemedModal>
+
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <Pressable
+          style={styles.menuBackdrop}
+          onPress={() => setMenuVisible(false)}
+        >
+          <View style={styles.menuSheet}>
+            <Text style={styles.menuTitle}>Deck Options</Text>
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                setTimeout(() => setModeModalVisible(true), 200);
+              }}
+            >
+              <Ionicons name="play" size={20} color={colors.primary} />
+              <Text style={styles.menuItemText}>Practice</Text>
+            </Pressable>
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                setTimeout(() => handleOpenLanguageEditor(), 200);
+              }}
+            >
+              <Ionicons name="language" size={20} color={colors.primary} />
+              <Text style={styles.menuItemText}>Language</Text>
+            </Pressable>
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                setTimeout(() => setExportModalVisible(true), 200);
+              }}
+            >
+              <Ionicons name="share-outline" size={20} color={colors.primary} />
+              <Text style={styles.menuItemText}>Export</Text>
+            </Pressable>
+            <View style={styles.modeDivider} />
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => {
+                setMenuVisible(false);
+                setTimeout(() => setDeleteConfirmVisible(true), 300);
+              }}
+            >
+              <Ionicons name="trash-outline" size={20} color={colors.danger} />
+              <Text style={[styles.menuItemText, styles.menuItemDanger]}>Delete Deck</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
+
+      <ThemedModal
+        visible={deleteConfirmVisible}
+        onClose={() => setDeleteConfirmVisible(false)}
+        title="Delete Deck"
+      >
+        <Text style={{ fontSize: fontSize.md, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
+          Delete "{displayName}" and all its cards?
+        </Text>
+        <Button
+          title="Delete"
+          variant="danger"
+          onPress={async () => {
+            setDeleteConfirmVisible(false);
+            try {
+              await deleteDeck(deckId);
+              emit('decks-changed');
+              navigation.goBack();
+            } catch {
+              Alert.alert('Error', 'Failed to delete deck.');
+            }
+          }}
+          fullWidth
+        />
+        <Button
+          title="Cancel"
+          variant="ghost"
+          onPress={() => setDeleteConfirmVisible(false)}
           fullWidth
           style={{ marginTop: spacing.sm }}
         />

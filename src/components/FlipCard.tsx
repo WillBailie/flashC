@@ -15,7 +15,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { useTheme, typography, borderRadius } from '../constants/theme';
+import { useTheme, typography, borderRadius, withAlpha } from '../constants/theme';
 import { TemplateField } from '../models/types';
 
 interface FlipCardProps {
@@ -27,6 +27,9 @@ interface FlipCardProps {
   fieldValues?: Record<string, string>;
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
+  exampleSentence?: string;
+  exampleTranslation?: string;
+  examplePinyin?: string;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -48,6 +51,9 @@ export function FlipCard({
   fieldValues,
   onSwipeLeft,
   onSwipeRight,
+  exampleSentence,
+  exampleTranslation,
+  examplePinyin,
 }: FlipCardProps) {
   const { colors } = useTheme();
   const rotation = useSharedValue(0);
@@ -174,11 +180,11 @@ export function FlipCard({
           backgroundColor: colors.secondary,
         },
         faceText: {
-          fontSize: typography.fontSize.xxxl,
+          fontSize: typography.fontSize.xl,
           fontWeight: typography.fontWeight.bold,
           color: colors.text,
           textAlign: 'center',
-          lineHeight: typography.fontSize.xxxl * 1.25,
+          lineHeight: typography.fontSize.xl * 1.25,
           flexShrink: 1,
         },
         backText: {
@@ -208,6 +214,29 @@ export function FlipCard({
           opacity: 0.7,
         },
         backFieldValue: {
+          color: colors.surface,
+        },
+        exampleLabel: {
+          fontSize: 10,
+          fontWeight: typography.fontWeight.bold,
+          color: colors.textSecondary,
+          textTransform: 'uppercase',
+          letterSpacing: 0.5,
+          marginTop: 16,
+          marginBottom: 4,
+        },
+        exampleText: {
+          fontSize: typography.fontSize.xl,
+          color: colors.text,
+          fontStyle: 'italic',
+          textAlign: 'center',
+          lineHeight: typography.fontSize.xl * 1.25,
+          flexShrink: 1,
+        },
+        backExampleLabel: {
+          color: withAlpha(colors.surface, 0.7),
+        },
+        backExampleText: {
           color: colors.surface,
         },
       }),
@@ -241,30 +270,80 @@ export function FlipCard({
 
   const renderFront = () => {
     if (frontFields.length > 0) {
-      return frontFields.map((f) => renderFieldValue(f, fieldValues, f.name, false));
+      return (
+        <>
+          {frontFields.map((f) => renderFieldValue(f, fieldValues, f.name, false))}
+          {exampleSentence ? <ExampleSection sentence={exampleSentence} isBack={false} /> : null}
+        </>
+      );
     }
     return (
-      <Text style={styles.faceText} numberOfLines={5} adjustsFontSizeToFit minimumFontScale={0.6}>
-        {frontText}
-      </Text>
+      <>
+        <Text style={styles.faceText} numberOfLines={5} adjustsFontSizeToFit minimumFontScale={0.6}>
+          {frontText}
+        </Text>
+        {exampleSentence ? <ExampleSection sentence={exampleSentence} isBack={false} /> : null}
+      </>
     );
   };
 
   const renderBack = () => {
     if (backFields.length > 0) {
-      return backFields.map((f) => renderFieldValue(f, fieldValues, f.name, true));
+      return (
+        <>
+          {backFields.map((f) => renderFieldValue(f, fieldValues, f.name, true))}
+        {exampleTranslation ? <ExampleSection sentence={exampleTranslation} isBack={true} /> : null}
+        {examplePinyin ? (
+          <Text
+            style={[styles.exampleText, styles.backExampleText, { fontSize: typography.fontSize.md, marginTop: 4 }]}
+            numberOfLines={3}
+          >
+            {examplePinyin}
+          </Text>
+        ) : null}
+        </>
+      );
     }
     return (
-      <Text
-        style={[styles.faceText, styles.backText]}
-        numberOfLines={5}
-        adjustsFontSizeToFit
-        minimumFontScale={0.6}
-      >
-        {backText}
-      </Text>
+      <>
+        <Text
+          style={[styles.faceText, styles.backText]}
+          numberOfLines={5}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+        >
+          {backText}
+        </Text>
+        {exampleTranslation ? <ExampleSection sentence={exampleTranslation} isBack={true} /> : null}
+        {examplePinyin ? (
+          <Text
+            style={[styles.exampleText, styles.backExampleText, { fontSize: typography.fontSize.md, marginTop: 4 }]}
+            numberOfLines={3}
+          >
+            {examplePinyin}
+          </Text>
+        ) : null}
+      </>
     );
   };
+
+  function ExampleSection({ sentence, isBack }: { sentence: string; isBack: boolean }) {
+    return (
+      <>
+        <Text style={[styles.exampleLabel, isBack && styles.backExampleLabel]}>
+          Example
+        </Text>
+        <Text
+          style={[styles.exampleText, isBack && styles.backExampleText]}
+          numberOfLines={5}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+        >
+          {sentence}
+        </Text>
+      </>
+    );
+  }
 
   return (
     <GestureDetector gesture={composedGesture}>

@@ -26,10 +26,13 @@ import {
   getRandomCardsForReview,
   updateReview,
   getTemplateFields,
+  getDeckById,
   CardWithReview,
 } from '../storage/database';
 import { calculateSM2 } from '../utils/spacedRepetition';
 import { applyReverseSwap, applyReverseTextSwap } from '../utils/reverseSwap';
+import { generateExample } from '../utils/ai';
+import { getAiEnabled, getApiKey } from '../utils/settings';
 import { Quality, TemplateField } from '../models/types';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
@@ -52,6 +55,14 @@ export default function PracticeScreen({ navigation, route }: Props) {
   const statsOpacity = useSharedValue(0);
   const buttonsOpacity = useSharedValue(0);
   const [showConfetti, setShowConfetti] = useState(false);
+
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [deckLanguage, setDeckLanguage] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [exampleSentence, setExampleSentence] = useState('');
+  const [exampleTranslation, setExampleTranslation] = useState('');
+  const [examplePinyin, setExamplePinyin] = useState('');
 
   const againScale = useSharedValue(1);
   const hardScale = useSharedValue(1);
@@ -87,6 +98,9 @@ export default function PracticeScreen({ navigation, route }: Props) {
   );
 
   const loadCards = useCallback(async () => {
+    const [enabled, key] = await Promise.all([getAiEnabled(), getApiKey()]);
+    setAiEnabled(enabled);
+    setApiKey(key);
     let practiceCards: CardWithReview[];
     if (mode === 'freeflow') {
       practiceCards = await getRandomCardsForReview(deckId, cardCount ?? 10);
@@ -117,18 +131,23 @@ export default function PracticeScreen({ navigation, route }: Props) {
     }
   }, []);
 
-  useEffect(() => {
-    if (sessionComplete) {
-      setShowConfetti(true);
-      completeScale.value = withSpring(1, { damping: 8, stiffness: 150 });
-      completeOpacity.value = withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) });
-      statsOpacity.value = withDelay(500, withTiming(1, { duration: 400 }));
-      buttonsOpacity.value = withDelay(900, withTiming(1, { duration: 400 }));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  }, [sessionComplete]);
-
   useEffect(() => { loadCards(); }, [loadCards]);
+
+  useEffect(() => {
+    getAiEnabled().then(setAiEnabled).catch(() => {});
+    getApiKey().then(setApiKey).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const card = cards[currentIndex];
+    if (card) {
+      getDeckById(card.deck_id).then((deck) => {
+        if (deck) setDeckLanguage(deck.language);
+      }).catch(() => {});
+    } else {
+      setDeckLanguage('');
+    }
+  }, [cards, currentIndex]);
   useEffect(() => {
     if (cards.length > 0 && currentIndex < cards.length) {
       loadCurrentCardTemplate(cards[currentIndex]);
@@ -150,6 +169,9 @@ export default function PracticeScreen({ navigation, route }: Props) {
   const handleFlip = () => {
     if (mode === 'freeflow' && isFlipped) {
       setStats((prev) => ({ reviewed: prev.reviewed + 1 }));
+      setExampleSentence('');
+      setExampleTranslation('');
+      setExamplePinyin('');
       if (currentIndex + 1 < cards.length) {
         setCurrentIndex(currentIndex + 1);
         setIsFlipped(false);
@@ -165,6 +187,9 @@ export default function PracticeScreen({ navigation, route }: Props) {
     if (!isFlipped) return;
     if (mode === 'freeflow') {
       setStats((prev) => ({ reviewed: prev.reviewed + 1 }));
+      setExampleSentence('');
+      setExampleTranslation('');
+      setExamplePinyin('');
       if (currentIndex + 1 < cards.length) {
         setCurrentIndex(currentIndex + 1);
         setIsFlipped(false);
@@ -179,6 +204,21 @@ export default function PracticeScreen({ navigation, route }: Props) {
   const handleSwipeRight = () => {
     if (!isFlipped) return;
     setIsFlipped(false);
+  };
+
+  const handleGenerateExample = async () => {
+    const card = cards[currentIndex];
+    if (!card) return;
+    const word = card.front_text.trim();
+    if (!word || !deckLanguage || !apiKey) return;
+    setGenerating(true);
+    const result = await generateExample(word, deckLanguage, apiKey);
+    setGenerating(false);
+    if (result) {
+      setExampleSentence(result.sentence);
+      setExampleTranslation(result.translation);
+      setExamplePinyin(result.pinyin);
+    }
   };
 
   const handleRate = async (quality: Quality) => {
@@ -197,11 +237,18 @@ export default function PracticeScreen({ navigation, route }: Props) {
       setCards(newCards);
       setCurrentIndex(wasLast ? 0 : currentIndex);
       setIsFlipped(false);
+      setExampleSentence('');
+      setExampleTranslation('');
+      setExamplePinyin('');
       return;
     }
 
     const newStats = { reviewed: stats.reviewed + 1 };
     setStats(newStats);
+
+    setExampleSentence('');
+    setExampleTranslation('');
+    setExamplePinyin('');
 
     if (currentIndex + 1 < cards.length) {
       setCurrentIndex(currentIndex + 1);
@@ -361,6 +408,39 @@ export default function PracticeScreen({ navigation, route }: Props) {
       fontWeight: typography.fontWeight.bold,
       color: colors.primary,
     },
+    generateButton: {
+      alignSelf: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderRadius: borderRadius.full,
+      backgroundColor: withAlpha(colors.primary, 0.1),
+      marginBottom: spacing.sm,
+    },
+    generateButtonText: {
+      fontSize: typography.fontSize.xs,
+      fontWeight: typography.fontWeight.semibold,
+      color: colors.primary,
+    },
+    exampleSentence: {
+      fontSize: typography.fontSize.xl,
+      fontWeight: typography.fontWeight.semibold,
+      color: colors.text,
+      textAlign: 'center',
+    },
+    exampleTranslation: {
+      fontSize: typography.fontSize.md,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginTop: spacing.md,
+    },
+    exampleDivider: {
+      height: 1,
+      backgroundColor: colors.border,
+      marginVertical: spacing.md,
+    },
   }), [colors, insets]);
 
   const iconAnimatedStyle = useAnimatedStyle(() => ({
@@ -499,9 +579,31 @@ export default function PracticeScreen({ navigation, route }: Props) {
             onSwipeRight={handleSwipeRight}
             templateFields={displayFields.length > 0 ? displayFields : undefined}
             fieldValues={Object.keys(currentValues).length > 0 ? currentValues : undefined}
+            exampleSentence={exampleSentence || undefined}
+            exampleTranslation={exampleTranslation || undefined}
+            examplePinyin={examplePinyin || undefined}
           />
         </Animated.View>
       </Animated.View>
+
+      {aiEnabled && deckLanguage !== '' && apiKey !== '' && (
+        <TouchableOpacity
+          style={styles.generateButton}
+          onPress={handleGenerateExample}
+          disabled={generating}
+          accessibilityRole="button"
+          accessibilityLabel="Generate example sentence"
+        >
+          <Ionicons
+            name={generating ? 'hourglass-outline' : 'sparkles-outline'}
+            size={16}
+            color={colors.primary}
+          />
+          <Text style={styles.generateButtonText}>
+            {generating ? 'Generating...' : 'Example'}
+          </Text>
+        </TouchableOpacity>
+      )}
 
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>

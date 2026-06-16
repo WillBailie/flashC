@@ -12,7 +12,7 @@ Status legend: `todo` `in-progress` `done` `wontfix`
 | 2 | Global card search | todo | SQL LIKE across all decks |
 | 3 | Pull-to-refresh | todo | RefreshControl on deck/card lists, home |
 | 4 | Session complete celebration | done | Confetti burst + animated trophy/stats |
-| 5 | Card detail: show review schedule | todo | ease_factor, interval, next_review_date on edit screen |
+| 5 | Card detail: show review schedule | done | ease_factor, interval, next_review_date on edit screen |
 
 ## Medium Impact, Medium Effort
 

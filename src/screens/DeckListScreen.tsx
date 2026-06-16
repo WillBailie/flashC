@@ -45,6 +45,10 @@ export default function DeckListScreen({ navigation }: Props) {
   const [modalVisible, setModalVisible] = useState(false);
   const [newDeckName, setNewDeckName] = useState('');
   const [newDeckDesc, setNewDeckDesc] = useState('');
+  const [newDeckLanguage, setNewDeckLanguage] = useState('');
+  const [customLanguage, setCustomLanguage] = useState('');
+
+  const commonLanguages = ['Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Japanese', 'Korean', 'Chinese', 'Russian', 'Arabic'];
 
   const loadDecks = useCallback(async () => {
     setLoading(true);
@@ -132,6 +136,41 @@ export default function DeckListScreen({ navigation }: Props) {
           gap: spacing.sm,
           marginTop: spacing.md,
         },
+        languageLabel: {
+          fontSize: typography.fontSize.xs,
+          fontWeight: typography.fontWeight.semibold,
+          color: colors.textSecondary,
+          textTransform: 'uppercase',
+          letterSpacing: 0.5,
+          marginTop: spacing.sm,
+          marginBottom: spacing.xs,
+        },
+        languageChips: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: spacing.xs,
+          marginBottom: spacing.sm,
+        },
+        languageChip: {
+          paddingHorizontal: 12,
+          paddingVertical: 6,
+          borderRadius: borderRadius.full,
+          borderWidth: 1,
+          borderColor: colors.border,
+          backgroundColor: colors.surface,
+        },
+        languageChipSelected: {
+          borderColor: colors.primary,
+          backgroundColor: withAlpha(colors.primary, 0.1),
+        },
+        languageChipText: {
+          fontSize: typography.fontSize.xs,
+          fontWeight: typography.fontWeight.medium,
+          color: colors.text,
+        },
+        languageChipTextSelected: {
+          color: colors.primary,
+        },
       }),
     [colors]
   );
@@ -142,9 +181,11 @@ export default function DeckListScreen({ navigation }: Props) {
       return;
     }
     try {
-      await createDeck(newDeckName.trim(), newDeckDesc.trim());
+      await createDeck(newDeckName.trim(), newDeckDesc.trim(), newDeckLanguage.trim());
       setNewDeckName('');
       setNewDeckDesc('');
+      setNewDeckLanguage('');
+      setCustomLanguage('');
       setModalVisible(false);
       emit('decks-changed');
       await loadDecks();
@@ -282,6 +323,40 @@ export default function DeckListScreen({ navigation }: Props) {
           value={newDeckDesc}
           onChangeText={setNewDeckDesc}
           multiline
+        />
+        <Text style={styles.languageLabel}>Language</Text>
+        <View style={styles.languageChips}>
+          {commonLanguages.map((lang) => (
+            <Pressable
+              key={lang}
+              style={[
+                styles.languageChip,
+                newDeckLanguage === lang && styles.languageChipSelected,
+              ]}
+              onPress={() => {
+                setNewDeckLanguage(newDeckLanguage === lang ? '' : lang);
+                setCustomLanguage('');
+              }}
+            >
+              <Text
+                style={[
+                  styles.languageChipText,
+                  newDeckLanguage === lang && styles.languageChipTextSelected,
+                ]}
+              >
+                {lang}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        <Input
+          label="Or enter custom language"
+          placeholder="e.g., Finnish"
+          value={customLanguage}
+          onChangeText={(text) => {
+            setCustomLanguage(text);
+            setNewDeckLanguage(text);
+          }}
         />
         <View style={styles.modalButtons}>
           <Button

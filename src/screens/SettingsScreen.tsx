@@ -1,10 +1,11 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -12,6 +13,8 @@ import { useTheme, spacing, borderRadius, typography, withAlpha } from '../const
 import { getGlobalStats } from '../storage/database';
 import { Card } from '../components/Card';
 import { Skeleton } from '../components/Skeleton';
+import { Input } from '../components/Input';
+import { getAiEnabled, setAiEnabled, getApiKey, setApiKey } from '../utils/settings';
 import ImportScreen from './ImportScreen';
 import TemplateListScreen from './TemplateListScreen';
 
@@ -156,6 +159,20 @@ function StatsView() {
 export default function SettingsScreen() {
   const [section, setSection] = useState<Section>('import');
   const { colors, mode, setMode } = useTheme();
+  const [aiEnabled, setAiEnabledLocal] = useState(false);
+  const [apiKey, setApiKeyLocal] = useState('');
+  const [draftApiKey, setDraftApiKey] = useState('');
+  const [apiKeyVisible, setApiKeyVisible] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'fail'>('idle');
+
+  useEffect(() => {
+    getAiEnabled().then(setAiEnabledLocal);
+    getApiKey().then((key) => {
+      setApiKeyLocal(key);
+      setDraftApiKey(key);
+    });
+  }, []);
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
@@ -215,6 +232,27 @@ export default function SettingsScreen() {
       fontWeight: typography.fontWeight.semibold,
     },
     themeOptionTextActive: { color: colors.surface },
+    aiSection: {
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.sm,
+      gap: spacing.sm,
+    },
+    aiToggleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+    },
+    aiTitle: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.semibold,
+      color: colors.text,
+    },
+    aiDescription: {
+      fontSize: typography.fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: 1,
+    },
   }), [colors]);
 
   const themeIcons: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -266,6 +304,112 @@ export default function SettingsScreen() {
             </Text>
           </TouchableOpacity>
         ))}
+      </View>
+
+      <View style={styles.aiSection}>
+        <View style={styles.aiToggleRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.aiTitle}>AI Example Generation</Text>
+            <Text style={styles.aiDescription}>Generate example sentences during practice</Text>
+          </View>
+          <Switch
+            value={aiEnabled}
+            onValueChange={(v) => {
+              setAiEnabledLocal(v);
+              setAiEnabled(v);
+            }}
+            trackColor={{ false: colors.border, true: withAlpha(colors.primary, 0.4) }}
+            thumbColor={aiEnabled ? colors.primary : colors.textSecondary}
+          />
+        </View>
+        {aiEnabled && (
+          <View>
+            <Input
+              label="DeepSeek API Key"
+              placeholder="Enter your API key"
+              value={draftApiKey}
+              onChangeText={setDraftApiKey}
+              secureTextEntry={!apiKeyVisible}
+            />
+            <TouchableOpacity
+              onPress={() => setApiKeyVisible(!apiKeyVisible)}
+              style={{ position: 'absolute', right: spacing.sm + 4, top: 28 }}
+            >
+              <Ionicons
+                name={apiKeyVisible ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setApiKeyLocal(draftApiKey);
+                setApiKey(draftApiKey);
+                setTestStatus('idle');
+              }}
+              style={{
+                marginTop: spacing.xs,
+                alignSelf: 'flex-end',
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.xs + 2,
+                borderRadius: borderRadius.sm,
+                backgroundColor: draftApiKey !== apiKey ? colors.primary : colors.border,
+              }}
+              disabled={draftApiKey === apiKey}
+            >
+              <Text style={{
+                fontSize: typography.fontSize.xs,
+                fontWeight: typography.fontWeight.semibold,
+                color: draftApiKey !== apiKey ? colors.surface : colors.textSecondary,
+              }}>
+                Save
+              </Text>
+            </TouchableOpacity>
+            {apiKey !== '' && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
+                <TouchableOpacity
+                  onPress={async () => {
+                    setTesting(true);
+                    setTestStatus('idle');
+                    try {
+                      const res = await fetch(
+                        'https://api.deepseek.com/v1/models',
+                        {
+                          headers: { 'Authorization': `Bearer ${apiKey}` },
+                        }
+                      );
+                      setTestStatus(res.ok ? 'success' : 'fail');
+                    } catch {
+                      setTestStatus('fail');
+                    }
+                    setTesting(false);
+                  }}
+                  disabled={testing}
+                  style={{
+                    paddingHorizontal: spacing.md,
+                    paddingVertical: spacing.xs + 2,
+                    borderRadius: borderRadius.sm,
+                    backgroundColor: withAlpha(colors.primary, 0.1),
+                  }}
+                >
+                  <Text style={{
+                    fontSize: typography.fontSize.xs,
+                    fontWeight: typography.fontWeight.semibold,
+                    color: colors.primary,
+                  }}>
+                    {testing ? 'Testing...' : 'Test Key'}
+                  </Text>
+                </TouchableOpacity>
+                {testStatus === 'success' && (
+                  <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+                )}
+                {testStatus === 'fail' && (
+                  <Ionicons name="close-circle" size={18} color={colors.danger} />
+                )}
+              </View>
+            )}
+          </View>
+        )}
       </View>
 
       {section === 'import' && <ImportScreen />}

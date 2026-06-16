@@ -2,6 +2,7 @@ export interface Deck {
   id: number;
   name: string;
   description: string;
+  language: string;
   created_at: string;
 }
 

@@ -75,6 +75,7 @@ async function migrateDatabase(database: SQLite.SQLiteDatabase): Promise<void> {
   try { await database.runAsync('ALTER TABLE cards ADD COLUMN template_id INTEGER'); } catch {}
   try { await database.runAsync('ALTER TABLE cards ADD COLUMN field_values TEXT'); } catch {}
   try { await database.runAsync('ALTER TABLE cards ADD COLUMN modified_at TEXT'); } catch {}
+  try { await database.runAsync('ALTER TABLE decks ADD COLUMN language TEXT NOT NULL DEFAULT \'\''); } catch {}
 }
 
 async function seedDefaultTemplate(database: SQLite.SQLiteDatabase): Promise<void> {
@@ -113,11 +114,11 @@ export async function getDefaultTemplateId(): Promise<number> {
 
 // ========== Deck operations ==========
 
-export async function createDeck(name: string, description: string = ''): Promise<Deck> {
+export async function createDeck(name: string, description: string = '', language: string = ''): Promise<Deck> {
   const database = await getDatabase();
   const result = await database.runAsync(
-    'INSERT INTO decks (name, description) VALUES (?, ?)',
-    [name, description]
+    'INSERT INTO decks (name, description, language) VALUES (?, ?, ?)',
+    [name, description, language]
   );
   const deck = await database.getFirstAsync<Deck>(
     'SELECT * FROM decks WHERE id = ?',
@@ -136,12 +137,19 @@ export async function getDeckById(id: number): Promise<Deck | null> {
   return database.getFirstAsync<Deck>('SELECT * FROM decks WHERE id = ?', [id]);
 }
 
-export async function updateDeck(id: number, name: string, description: string): Promise<void> {
+export async function updateDeck(id: number, name: string, description: string, language?: string): Promise<void> {
   const database = await getDatabase();
-  await database.runAsync(
-    'UPDATE decks SET name = ?, description = ? WHERE id = ?',
-    [name, description, id]
-  );
+  if (language !== undefined) {
+    await database.runAsync(
+      'UPDATE decks SET name = ?, description = ?, language = ? WHERE id = ?',
+      [name, description, language, id]
+    );
+  } else {
+    await database.runAsync(
+      'UPDATE decks SET name = ?, description = ? WHERE id = ?',
+      [name, description, id]
+    );
+  }
 }
 
 export async function deleteDeck(id: number): Promise<void> {

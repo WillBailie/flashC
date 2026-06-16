@@ -1,5 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { getReverseMode, setReverseMode } from '../settings';
+import { getReverseMode, setReverseMode, clearSettingsCache } from '../settings';
 
 jest.mock('expo-file-system/legacy', () => ({
   documentDirectory: '/mock/documents/',
@@ -12,6 +12,7 @@ const mockedFs = jest.mocked(FileSystem);
 describe('settings', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    clearSettingsCache();
   });
 
   describe('getReverseMode', () => {
@@ -40,7 +41,7 @@ describe('settings', () => {
       await setReverseMode(true);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: true })
+        JSON.stringify({ reverseMode: true, aiEnabled: false, apiKey: '' })
       );
     });
 
@@ -49,7 +50,7 @@ describe('settings', () => {
       await setReverseMode(false);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: false })
+        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '' })
       );
     });
 
@@ -60,7 +61,7 @@ describe('settings', () => {
       await setReverseMode(false);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: false, futureSetting: 'keep' })
+        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', futureSetting: 'keep' })
       );
     });
 
