@@ -48,7 +48,9 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
   const [reverseMode, setReverseModeState] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [displayName, setDisplayName] = useState(deckName);
+  const [searchQuery, setSearchQuery] = useState('');
   const titleInputRef = React.useRef<TextInput>(null);
+  const searchInputRef = React.useRef<TextInput>(null);
   const { colors } = useTheme();
 
   const loadCards = useCallback(async () => {
@@ -64,6 +66,24 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
     }
     setTemplateFieldsMap(map);
   }, [deckId]);
+
+  const filteredCards = useMemo(() => {
+    if (!searchQuery.trim()) return cards;
+    const q = searchQuery.toLowerCase().trim();
+    return cards.filter((card) => {
+      if (card.front_text.toLowerCase().includes(q)) return true;
+      if (card.back_text.toLowerCase().includes(q)) return true;
+      if (card.field_values) {
+        try {
+          const vals = JSON.parse(card.field_values);
+          for (const v of Object.values(vals)) {
+            if (String(v).toLowerCase().includes(q)) return true;
+          }
+        } catch {}
+      }
+      return false;
+    });
+  }, [cards, searchQuery]);
 
   useFocusEffect(
     useCallback(() => {
@@ -254,11 +274,11 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
     },
     listContent: {
       padding: spacing.md,
-      paddingTop: spacing.xxl + spacing.xl + spacing.sm + 44 + spacing.sm,
+      paddingTop: 0,
     },
     emptyContainer: {
       flexGrow: 1,
-      paddingTop: spacing.xxl + spacing.xl + spacing.sm + 44 + spacing.sm,
+      paddingTop: 0,
     },
     cardItem: {
       backgroundColor: colors.surface,
@@ -480,6 +500,36 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       color: colors.textSecondary,
       fontWeight: '600',
     },
+    searchContainer: {
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.xxl + spacing.xl + spacing.sm + 44 + spacing.sm,
+      paddingBottom: spacing.sm,
+    },
+    searchRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: spacing.md,
+      height: 44,
+    },
+    searchInput: {
+      flex: 1,
+      fontSize: fontSize.md,
+      color: colors.text,
+      paddingVertical: 0,
+    },
+    searchClear: {
+      padding: spacing.xs,
+    },
+    searchCount: {
+      fontSize: fontSize.sm,
+      color: colors.textSecondary,
+      marginTop: spacing.xs,
+      paddingHorizontal: spacing.xs,
+    },
   }), [colors]);
 
   return (
@@ -520,8 +570,42 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
         </View>
         <View style={styles.floatingSpacer} />
       </View>
+      <View style={styles.searchContainer}>
+        <View style={styles.searchRow}>
+          <Ionicons name="search" size={18} color={colors.textSecondary} />
+          <TextInput
+            ref={searchInputRef}
+            style={styles.searchInput}
+            placeholder="Search cards..."
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
+            autoCorrect={false}
+            clearButtonMode="never"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              style={styles.searchClear}
+              onPress={() => {
+                setSearchQuery('');
+                searchInputRef.current?.focus();
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+            >
+              <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          )}
+        </View>
+        {searchQuery.trim().length > 0 && (
+          <Text style={styles.searchCount}>
+            {filteredCards.length} of {cards.length} cards
+          </Text>
+        )}
+      </View>
       <FlatList
-        data={cards}
+        data={filteredCards}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderCard}
         bounces={false}

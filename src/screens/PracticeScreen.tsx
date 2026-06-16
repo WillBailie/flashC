@@ -189,6 +189,17 @@ export default function PracticeScreen({ navigation, route }: Props) {
     const result = calculateSM2(card.ease_factor, card.interval, card.repetitions, quality);
     await updateReview(card.id, result.easeFactor, result.interval, result.repetitions, result.nextReviewDate);
 
+    if (mode === 'daily' && quality === 0) {
+      const newCards = [...cards];
+      const wasLast = currentIndex >= newCards.length - 1;
+      newCards.splice(currentIndex, 1);
+      newCards.push(card);
+      setCards(newCards);
+      setCurrentIndex(wasLast ? 0 : currentIndex);
+      setIsFlipped(false);
+      return;
+    }
+
     const newStats = { reviewed: stats.reviewed + 1 };
     setStats(newStats);
 

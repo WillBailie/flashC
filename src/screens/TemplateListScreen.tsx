@@ -147,11 +147,6 @@ export default function TemplateListScreen() {
           shadowRadius: 8,
           elevation: 6,
         },
-        fabText: {
-          fontSize: 28,
-          color: colors.surface,
-          lineHeight: 30,
-        },
       }),
     [colors]
   );
@@ -225,7 +220,7 @@ export default function TemplateListScreen() {
           }}
           style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
         >
-          <Text style={styles.fabText}>+</Text>
+          <Ionicons name="add" size={28} color={colors.surface} />
         </TouchableOpacity>
       </Animated.View>
     </View>

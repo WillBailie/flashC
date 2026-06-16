@@ -20,6 +20,7 @@ import {
   getDefaultTemplateId,
 } from '../storage/database';
 import { parseCSV, parseJSON, ImportedCard } from '../utils/importCards';
+import { emit, on } from '../utils/eventBus';
 import { Deck, Template, TemplateField } from '../models/types';
 
 export default function ImportScreen() {
@@ -55,6 +56,10 @@ export default function ImportScreen() {
 
   React.useEffect(() => {
     loadData();
+  }, [loadData]);
+
+  React.useEffect(() => {
+    return on('decks-changed', loadData);
   }, [loadData]);
 
   const handleTemplateSelect = async (templateId: number) => {
@@ -178,6 +183,7 @@ export default function ImportScreen() {
       setImportedCount(count);
       setImportSuccess(true);
       setPreviewCards([]);
+      emit('decks-changed');
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       Alert.alert('Import Failed', msg);

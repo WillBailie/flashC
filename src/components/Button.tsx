@@ -91,7 +91,7 @@ export function Button({
           borderWidth: v.border ? 1.5 : 0,
           borderColor: v.border ?? 'transparent',
           opacity: disabled ? 0.5 : 1,
-          alignSelf: fullWidth ? 'stretch' : undefined,
+          alignSelf: 'stretch',
         },
         text: {
           color: v.text,
@@ -100,15 +100,14 @@ export function Button({
         },
       });
     },
-    [colors, variant, size, disabled, fullWidth]
+    [colors, variant, size, disabled]
   );
 
   return (
-    <Animated.View style={[animatedStyle, fullWidth && { alignSelf: 'stretch' }]}>
+    <Animated.View style={[animatedStyle, style, fullWidth && { alignSelf: 'stretch' }]}>
       <Pressable
         style={({ pressed }) => [
           styles.button,
-          style,
           pressed && reduceMotion && { opacity: 0.7 },
         ]}
         onPress={onPress}

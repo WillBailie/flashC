@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Pressable, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Pressable, ScrollView, ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -122,7 +122,13 @@ export function Modal({
       >
         <Animated.View style={[styles.content, style, animatedSheet]}>
           {title ? <Text style={styles.title}>{title}</Text> : null}
-          {children}
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {children}
+          </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
     </Animated.View>

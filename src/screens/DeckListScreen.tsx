@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,7 @@ import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
 import { SkeletonCard } from '../components/Skeleton';
 import { createDeck, deleteDeck, getAllDecks, getDeckStats } from '../storage/database';
+import { on, emit } from '../utils/eventBus';
 import { Deck } from '../models/types';
 import { RootStackParamList, TabParamList } from '../navigation/AppNavigator';
 
@@ -62,6 +63,10 @@ export default function DeckListScreen({ navigation }: Props) {
       loadDecks();
     }, [loadDecks])
   );
+
+  useEffect(() => {
+    return on('decks-changed', loadDecks);
+  }, [loadDecks]);
 
   const styles = useMemo(
     () =>
@@ -141,6 +146,7 @@ export default function DeckListScreen({ navigation }: Props) {
       setNewDeckName('');
       setNewDeckDesc('');
       setModalVisible(false);
+      emit('decks-changed');
       await loadDecks();
     } catch (error: any) {
       Alert.alert('Error', error?.message || 'Failed to create deck.');
@@ -158,6 +164,7 @@ export default function DeckListScreen({ navigation }: Props) {
           style: 'destructive',
           onPress: async () => {
             await deleteDeck(deck.id);
+            emit('decks-changed');
             await loadDecks();
           },
         },
