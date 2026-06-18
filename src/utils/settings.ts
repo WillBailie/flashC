@@ -6,12 +6,14 @@ interface Settings {
   reverseMode: boolean;
   aiEnabled: boolean;
   apiKey: string;
+  appLanguage: 'en' | 'zh';
 }
 
 const DEFAULTS: Settings = {
   reverseMode: false,
   aiEnabled: false,
   apiKey: '',
+  appLanguage: 'en',
 };
 
 let cache: Settings | null = null;
@@ -74,5 +76,16 @@ export async function getApiKey(): Promise<string> {
 export async function setApiKey(value: string): Promise<void> {
   const settings = await readSettings();
   settings.apiKey = value;
+  await writeSettings(settings);
+}
+
+export async function getAppLanguage(): Promise<'en' | 'zh'> {
+  const settings = await readSettings();
+  return settings.appLanguage;
+}
+
+export async function setAppLanguage(lang: 'en' | 'zh'): Promise<void> {
+  const settings = await readSettings();
+  settings.appLanguage = lang;
   await writeSettings(settings);
 }

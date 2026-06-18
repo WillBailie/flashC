@@ -1,5 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { getReverseMode, setReverseMode, clearSettingsCache, getAiEnabled, setAiEnabled, getApiKey, setApiKey } from '../settings';
+import { getReverseMode, setReverseMode, clearSettingsCache, getAiEnabled, setAiEnabled, getApiKey, setApiKey, getAppLanguage, setAppLanguage } from '../settings';
 
 jest.mock('expo-file-system/legacy', () => ({
   documentDirectory: '/mock/documents/',
@@ -41,7 +41,7 @@ describe('settings', () => {
       await setReverseMode(true);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: true, aiEnabled: false, apiKey: '' })
+        JSON.stringify({ reverseMode: true, aiEnabled: false, apiKey: '', appLanguage: 'en' })
       );
     });
 
@@ -50,7 +50,7 @@ describe('settings', () => {
       await setReverseMode(false);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '' })
+        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en' })
       );
     });
 
@@ -61,7 +61,7 @@ describe('settings', () => {
       await setReverseMode(false);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', futureSetting: 'keep' })
+        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', futureSetting: 'keep' })
       );
     });
 
@@ -100,6 +100,20 @@ describe('settings', () => {
       expect(await getApiKey()).toBe('sk-test-key-123');
       await setApiKey('');
       expect(await getApiKey()).toBe('');
+    });
+  });
+
+  describe('App language', () => {
+    test('getAppLanguage returns en by default', async () => {
+      const lang = await getAppLanguage();
+      expect(lang).toBe('en');
+    });
+
+    test('setAppLanguage and getAppLanguage round-trip', async () => {
+      await setAppLanguage('zh');
+      expect(await getAppLanguage()).toBe('zh');
+      await setAppLanguage('en');
+      expect(await getAppLanguage()).toBe('en');
     });
   });
 });
