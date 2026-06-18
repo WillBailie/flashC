@@ -532,13 +532,13 @@ export default function HomeScreen({ navigation }: Props) {
             </Svg>
             <View style={styles.ringCenter}>
               <Animated.Text style={[styles.ringPct, dueAnimatedStyle]} adjustsFontSizeToFit numberOfLines={1}>{stats.dueCards}</Animated.Text>
-              <Text style={styles.ringPctLabel}>due</Text>
+              <Text style={styles.ringPctLabel}>{t('home.due')}</Text>
             </View>
           </View>
 
           <View style={styles.heroTextBlock}>
             <Text style={styles.heroStatValue}>{stats.reviewsToday}</Text>
-            <Text style={styles.heroStatLabel}>cards reviewed today</Text>
+             <Text style={styles.heroStatLabel}>{t('home.cardsReviewedToday')}</Text>
           </View>
         </View>
       </LinearGradient>
@@ -546,15 +546,15 @@ export default function HomeScreen({ navigation }: Props) {
       {/* ——— Mode Cards ——— */}
       <View style={styles.modeSection}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabelNoMargin}>Practice Mode</Text>
+          <Text style={styles.sectionLabelNoMargin}>{t('home.practiceMode')}</Text>
           <View style={styles.reverseToggle}>
-            <Text style={styles.reverseLabel}>Reverse</Text>
+            <Text style={styles.reverseLabel}>{t('practice.reverse')}</Text>
             <Switch
               value={reverseMode}
               onValueChange={handleReverseToggle}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={colors.surface}
-              accessibilityLabel="Reverse practice mode"
+              accessibilityLabel={t('a11y.reverseMode')}
             />
           </View>
         </View>
@@ -564,14 +564,14 @@ export default function HomeScreen({ navigation }: Props) {
             activeOpacity={1}
             onPress={() => navigation.navigate('Practice', { mode: 'daily', reverse: reverseMode })}
             accessibilityRole="button"
-            accessibilityLabel={`Daily Review. ${stats.dueCards} cards due today`}
+            accessibilityLabel={t('a11y.dailyReview', { count: String(stats.dueCards) })}
           >
             <View style={[styles.modeCardAccent, { backgroundColor: colors.primary }]} />
             <View style={[styles.modeCardIconWrap, { backgroundColor: withAlpha(colors.primary, 0.12) }]}>
               <Ionicons name="calendar" size={18} color={colors.primary} />
             </View>
             <Animated.Text style={[styles.modeCardValue, dueAnimatedStyle]}>{stats.dueCards}</Animated.Text>
-            <Text style={styles.modeCardLabel}>due today</Text>
+             <Text style={styles.modeCardLabel}>{t('home.dueToday')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -579,14 +579,14 @@ export default function HomeScreen({ navigation }: Props) {
             activeOpacity={1}
             onPress={() => setFreeflowModal(true)}
             accessibilityRole="button"
-            accessibilityLabel={`Freeflow. ${stats.totalCards} cards available`}
+            accessibilityLabel={t('a11y.freeflowAvailable', { count: String(stats.totalCards) })}
           >
             <View style={[styles.modeCardAccent, { backgroundColor: colors.secondary }]} />
             <View style={[styles.modeCardIconWrap, { backgroundColor: withAlpha(colors.secondary, 0.12) }]}>
               <Ionicons name="shuffle" size={18} color={colors.secondary} />
             </View>
             <Animated.Text style={[styles.modeCardValue, totalAnimatedStyle]}>{stats.totalCards}</Animated.Text>
-            <Text style={styles.modeCardLabel}>available</Text>
+             <Text style={styles.modeCardLabel}>{t('home.available')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -596,28 +596,28 @@ export default function HomeScreen({ navigation }: Props) {
         <View style={styles.statPill}>
           <Ionicons name="checkmark-done" size={14} color={colors.success} />
           <Text style={styles.statPillValue}>{stats.reviewsToday}</Text>
-          <Text style={styles.statPillLabel}>today</Text>
+          <Text style={styles.statPillLabel}>{t('home.today')}</Text>
         </View>
         <View style={styles.statPill}>
           <Ionicons name="folder" size={14} color={colors.primary} />
           <Text style={styles.statPillValue}>{stats.totalDecks}</Text>
-          <Text style={styles.statPillLabel}>decks</Text>
+          <Text style={styles.statPillLabel}>{t('home.decks')}</Text>
         </View>
         <View style={styles.statPill}>
           <Ionicons name="trophy" size={14} color={colors.warning} />
           <Text style={styles.statPillValue}>{masteredPct}%</Text>
-          <Text style={styles.statPillLabel}>mastered</Text>
+          <Text style={styles.statPillLabel}>{t('home.mastered')}</Text>
         </View>
         <View style={styles.statPill}>
           <Ionicons name="trending-up" size={14} color={colors.secondary} />
           <Text style={styles.statPillValue}>{stats.avgEaseFactor.toFixed(1)}×</Text>
-          <Text style={styles.statPillLabel}>avg ease</Text>
+          <Text style={styles.statPillLabel}>{t('home.avgEase')}</Text>
         </View>
       </View>
 
       {/* ——— Activity ——— */}
       <View style={styles.activitySection}>
-        <Text style={styles.sectionLabel}>Activity</Text>
+        <Text style={styles.sectionLabel}>{t('home.activity')}</Text>
         <View style={styles.activityCard}>
           <View style={[styles.activityIconWrap, streak > 0 && { backgroundColor: withAlpha(colors.warning, 0.15) }]}>
             <Ionicons
@@ -631,7 +631,7 @@ export default function HomeScreen({ navigation }: Props) {
               <>
                 <View style={styles.streakRow}>
                   <Text style={styles.streakCount}>{streak}</Text>
-                  <Text style={styles.activityValue}> day streak</Text>
+                  <Text style={styles.activityValue}> {t('home.dayStreak')}</Text>
                   <Text style={styles.streakMult}> {streakMultiplier}x</Text>
                 </View>
                 <View style={styles.streakBar}>
@@ -641,14 +641,14 @@ export default function HomeScreen({ navigation }: Props) {
                 </View>
                 <Text style={styles.activityLabel}>
                   {stats.reviewsToday > 0
-                    ? `${stats.reviewsToday} card${stats.reviewsToday !== 1 ? 's' : ''} reviewed today`
-                    : 'Review a card to keep your streak!'}
+                    ? t('home.streakCardReviewed', { count: String(stats.reviewsToday), s: stats.reviewsToday !== 1 ? 's' : '' })
+                    : t('home.keepStreak')}
                 </Text>
               </>
             ) : (
               <>
-                <Text style={styles.activityValue}>No streak yet</Text>
-                <Text style={styles.activityLabel}>Review at least 1 card today to start!</Text>
+                <Text style={styles.activityValue}>{t('home.noStreak')}</Text>
+                <Text style={styles.activityLabel}>{t('home.startStreak')}</Text>
               </>
             )}
           </View>
@@ -662,7 +662,7 @@ export default function HomeScreen({ navigation }: Props) {
         title={t('home.freeflow')}
       >
         <Text style={[styles.modeCardLabel, { fontSize: typography.fontSize.sm, marginBottom: spacing.md }]}>
-          How many random cards would you like to review from all decks?
+          {t('home.freeflowPrompt')}
         </Text>
         <View style={styles.countRow}>
           <TextInput
@@ -673,7 +673,7 @@ export default function HomeScreen({ navigation }: Props) {
             maxLength={3}
             selectTextOnFocus
             autoFocus
-            accessibilityLabel="Number of cards to review"
+            accessibilityLabel={t('a11y.cardCount')}
           />
           <Text style={styles.countMax}>
             / {Math.min(stats.totalCards, 99)}
@@ -681,7 +681,7 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
         <View style={styles.modalButtons}>
           <Button
-            title="Start Freeflow"
+            title={t('home.startFreeflow')}
             onPress={() => {
               const count = Math.max(1, Math.min(parseInt(freeflowCount) || 10, stats.totalCards, 99));
               setFreeflowModal(false);
@@ -689,10 +689,10 @@ export default function HomeScreen({ navigation }: Props) {
               navigation.navigate('Practice', { mode: 'freeflow', cardCount: count, reverse: reverseMode });
             }}
             fullWidth
-            accessibilityHint="Start a freeflow practice session"
+            accessibilityHint={t('a11y.startFreeflow')}
           />
           <Button
-            title="Cancel"
+            title={t('common.cancel')}
             variant="ghost"
             onPress={() => setFreeflowModal(false)}
             fullWidth

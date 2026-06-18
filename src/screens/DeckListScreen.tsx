@@ -362,13 +362,13 @@ export default function DeckListScreen({ navigation }: Props) {
         />
         <View style={styles.modalButtons}>
           <Button
-            title="Cancel"
+            title={t('common.cancel')}
             variant="secondary"
             onPress={() => setModalVisible(false)}
             style={{ flex: 1 }}
           />
           <Button
-            title="Create"
+            title={t('common.create')}
             onPress={handleCreateDeck}
             style={{ flex: 1 }}
           />

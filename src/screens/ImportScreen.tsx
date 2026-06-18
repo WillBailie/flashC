@@ -425,7 +425,7 @@ export default function ImportScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.sectionTitle}>1. Select a Deck</Text>
+       <Text style={styles.sectionTitle}>{t('import.step1Title')}</Text>
       <Text style={styles.sectionDesc}>
         Choose the deck where imported cards will be added.
       </Text>
@@ -456,13 +456,13 @@ export default function ImportScreen() {
           ))}
           {decks.length === 0 && (
             <Text style={styles.emptyChips}>
-              No decks available. Create a deck first.
+               {t('import.noDecks')}
             </Text>
           )}
         </View>
       </ScrollView>
 
-      <Text style={styles.sectionTitle}>2. Select a Template</Text>
+       <Text style={styles.sectionTitle}>{t('import.step2Title')}</Text>
       <Text style={styles.sectionDesc}>
         Choose which template to use for the imported cards.
       </Text>
@@ -507,7 +507,7 @@ export default function ImportScreen() {
         </View>
       )}
 
-      <Text style={styles.sectionTitle}>3. Choose a File</Text>
+       <Text style={styles.sectionTitle}>{t('import.step3Title')}</Text>
       <Text style={styles.sectionDesc}>
         CSV: comma-separated values per line — JSON: array of objects with field names as keys
       </Text>
@@ -528,7 +528,7 @@ export default function ImportScreen() {
       {fileName && fileContent.length > 0 && previewCards.length === 0 && (
         <TouchableOpacity style={styles.parseButton} onPress={handleParseFile}>
           <Text style={styles.parseButtonText}>
-            Parse & Preview
+             {t('import.parseAndPreview')}
           </Text>
         </TouchableOpacity>
       )}

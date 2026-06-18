@@ -867,7 +867,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
           style={{ marginTop: spacing.sm }}
         />
         <Button
-          title="Cancel"
+          title={t('common.cancel')}
           variant="ghost"
           onPress={() => setExportModalVisible(false)}
           fullWidth
@@ -878,7 +878,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       <ThemedModal
         visible={languageModalVisible}
         onClose={() => setLanguageModalVisible(false)}
-        title="Deck Language"
+        title={t('deckDetail.languageTitle')}
       >
         <View style={styles.langChipRow}>
           {commonLanguages.map((lang) => (
@@ -924,13 +924,13 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
         />
         <View style={{ flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md }}>
           <Button
-            title="Cancel"
+            title={t('common.cancel')}
             variant="secondary"
             onPress={() => setLanguageModalVisible(false)}
             style={{ flex: 1 }}
           />
           <Button
-            title="Save"
+            title={t('common.save')}
             onPress={handleSaveLanguage}
             style={{ flex: 1 }}
           />
@@ -1003,7 +1003,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
           Delete "{displayName}" and all its cards?
         </Text>
         <Button
-          title="Delete"
+          title={t('common.delete')}
           variant="danger"
           onPress={async () => {
             setDeleteConfirmVisible(false);
@@ -1018,7 +1018,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
           fullWidth
         />
         <Button
-          title="Cancel"
+          title={t('common.cancel')}
           variant="ghost"
           onPress={() => setDeleteConfirmVisible(false)}
           fullWidth

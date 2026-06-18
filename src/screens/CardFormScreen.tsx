@@ -622,7 +622,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
         />
         {isEditing && (
           <Button
-            title="Delete Card"
+            title={t('cardForm.deleteTitle')}
             variant="danger"
             onPress={() => setDeleteConfirmVisible(true)}
             fullWidth
@@ -636,19 +636,19 @@ export default function CardFormScreen({ navigation, route }: Props) {
       <Modal
         visible={deleteConfirmVisible}
         onClose={() => setDeleteConfirmVisible(false)}
-        title="Delete Card"
+        title={t('cardForm.deleteTitle')}
       >
         <Text style={{ fontSize: fontSize.md, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
           Are you sure you want to delete this card?
         </Text>
         <Button
-          title="Delete"
+           title={t('common.delete')}
           variant="danger"
           onPress={handleDeleteConfirmed}
           fullWidth
         />
         <Button
-          title="Cancel"
+           title={t('common.cancel')}
           variant="ghost"
           onPress={() => setDeleteConfirmVisible(false)}
           fullWidth

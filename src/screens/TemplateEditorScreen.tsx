@@ -505,7 +505,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
           renderItem={renderField}
           ListEmptyComponent={
             <EmptyState
-              title="No Fields Yet"
+              title={t('template.noFields')}
               subtitle={isNew ? 'Save the template name first, then add fields.' : 'Add fields to define what appears on each side.'}
             />
           }
@@ -576,20 +576,20 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
           setDeleteModalVisible(false);
           setFieldToDelete(null);
         }}
-        title="Delete Field"
+        title={t('template.deleteField')}
       >
         <Text style={{ fontSize: fontSize.md, color: colors.text, textAlign: 'center', marginBottom: spacing.lg }}>
           Remove "{fieldToDelete?.name}" from this template?
         </Text>
         <Button
-          title="Delete"
+          title={t('common.delete')}
           variant="danger"
           onPress={confirmDeleteField}
           fullWidth
         />
         <View style={{ height: spacing.sm }} />
         <Button
-          title="Cancel"
+          title={t('common.cancel')}
           variant="ghost"
           onPress={() => {
             setDeleteModalVisible(false);
