@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,166 +8,34 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useTheme, spacing, borderRadius, typography, withAlpha } from '../constants/theme';
-import { getGlobalStats } from '../storage/database';
 import { Card } from '../components/Card';
-import { Skeleton } from '../components/Skeleton';
 import { Input } from '../components/Input';
+import { Modal } from '../components/Modal';
+import { Button } from '../components/Button';
 import { getAiEnabled, setAiEnabled, getApiKey, setApiKey } from '../utils/settings';
 import { useTranslation } from '../i18n/TranslationContext';
-import ImportScreen from './ImportScreen';
-import TemplateListScreen from './TemplateListScreen';
+import { RootStackParamList, TabParamList } from '../navigation/AppNavigator';
 
-type Section = 'import' | 'stats' | 'templates';
-
-function StatCard({ label, value, icon, color }: {
-  label: string;
-  value: string | number;
-  icon: keyof typeof Ionicons.glyphMap;
-  color?: string;
-}) {
-  const { colors } = useTheme();
-  const finalColor = color ?? colors.primary;
-
-  const styles = useMemo(() => StyleSheet.create({
-    wrapper: {
-      flex: 1,
-      minWidth: '45%',
-      marginHorizontal: spacing.xs,
-      marginBottom: spacing.sm,
-    },
-    card: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.md,
-      padding: spacing.md,
-    },
-    iconWrapper: {
-      width: 44,
-      height: 44,
-      borderRadius: borderRadius.md,
-      backgroundColor: withAlpha(finalColor, 0.125),
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    content: {
-      flex: 1,
-    },
-    value: {
-      fontSize: typography.fontSize.xl,
-      fontWeight: typography.fontWeight.heavy,
-      color: finalColor,
-    },
-    label: {
-      fontSize: typography.fontSize.xs,
-      color: colors.textSecondary,
-      marginTop: 2,
-    },
-  }), [colors, finalColor]);
-
-  return (
-    <View style={styles.wrapper}>
-      <Card variant="outlined">
-        <View style={styles.card}>
-          <View style={styles.iconWrapper}>
-            <Ionicons name={icon} size={20} color={finalColor} />
-          </View>
-          <View style={styles.content}>
-            <Text style={styles.value}>{value}</Text>
-            <Text style={styles.label}>{label}</Text>
-          </View>
-        </View>
-      </Card>
-    </View>
-  );
-}
-
-function StatsView() {
-  const { colors } = useTheme();
-  const { t } = useTranslation();
-  const [stats, setStats] = useState<{
-    totalCards: number;
-    totalDecks: number;
-    totalTemplates: number;
-    newCards: number;
-    dueCards: number;
-    reviewsToday: number;
-    avgEaseFactor: number;
-    masteredCards: number;
-  } | null>(null);
-
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      getGlobalStats().then((s) => {
-        if (active) setStats(s);
-      });
-      return () => { active = false; };
-    }, [])
-  );
-
-  const containerStyles = useMemo(() => StyleSheet.create({
-    scroll: { flex: 1 },
-    content: { padding: spacing.lg, paddingBottom: spacing.xl },
-    row: { flexDirection: 'row', marginHorizontal: -spacing.xs },
-    loading: { flex: 1, alignItems: 'center', padding: spacing.xl, gap: spacing.md },
-    loadingText: { color: colors.textSecondary, fontSize: typography.fontSize.md },
-  }), [colors]);
-
-  if (!stats) {
-    return (
-      <View style={containerStyles.loading}>
-        <Skeleton width="100%" height={80} borderRadius={borderRadius.md} />
-        <Skeleton width="100%" height={80} borderRadius={borderRadius.md} />
-        <Skeleton width="100%" height={80} borderRadius={borderRadius.md} />
-        <Skeleton width="100%" height={80} borderRadius={borderRadius.md} />
-      </View>
-    );
-  }
-
-  const statRows = [
-    [
-      { label: t('settings.statsTotalCards'), value: stats.totalCards, icon: 'albums', color: colors.primary },
-      { label: t('settings.statsTotalDecks'), value: stats.totalDecks, icon: 'book', color: colors.textSecondary },
-    ],
-    [
-      { label: 'Due for Review', value: stats.dueCards, icon: 'alarm', color: stats.dueCards > 0 ? colors.danger : colors.primary },
-      { label: 'Reviews Today', value: stats.reviewsToday, icon: 'checkmark-done', color: colors.success },
-    ],
-    [
-      { label: 'New Cards', value: stats.newCards, icon: 'sparkles', color: colors.secondary },
-      { label: 'Mastered', value: stats.masteredCards, icon: 'star', color: colors.warning },
-    ],
-    [
-      { label: 'Templates', value: stats.totalTemplates, icon: 'layers', color: colors.primary },
-      { label: 'Avg Ease', value: stats.avgEaseFactor.toFixed(2), icon: 'trending-up', color: colors.easy },
-    ],
-  ] as const;
-
-  return (
-    <ScrollView style={containerStyles.scroll} contentContainerStyle={containerStyles.content}>
-      {statRows.map((row, i) => (
-        <View key={i} style={containerStyles.row}>
-          {row.map((s) => (
-            <StatCard key={s.label} {...s} />
-          ))}
-        </View>
-      ))}
-    </ScrollView>
-  );
-}
+type Nav = CompositeNavigationProp<
+  BottomTabNavigationProp<TabParamList, 'Settings'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 export default function SettingsScreen() {
-  const [section, setSection] = useState<Section>('import');
   const { colors, mode, setMode } = useTheme();
   const { t, language, setLanguage, availableLanguages } = useTranslation();
+  const navigation = useNavigation<Nav>();
   const [aiEnabled, setAiEnabledLocal] = useState(false);
   const [apiKey, setApiKeyLocal] = useState('');
   const [draftApiKey, setDraftApiKey] = useState('');
   const [apiKeyVisible, setApiKeyVisible] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'fail'>('idle');
+  const [apiKeySheetVisible, setApiKeySheetVisible] = useState(false);
 
   useEffect(() => {
     getAiEnabled().then(setAiEnabledLocal);
@@ -179,105 +47,52 @@ export default function SettingsScreen() {
 
   const styles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
-    segmentRow: {
+    scroll: { flex: 1 },
+    content: { padding: spacing.lg, paddingBottom: spacing.xl, gap: spacing.sm + 2 },
+    card: { padding: spacing.lg },
+    cardHeader: {
       flexDirection: 'row',
-      marginHorizontal: spacing.lg,
-      marginTop: spacing.lg,
-      backgroundColor: colors.border,
-      borderRadius: borderRadius.md,
-      padding: 4,
-    },
-    segmentButton: {
-      flex: 1,
-      paddingVertical: spacing.sm,
       alignItems: 'center',
-      borderRadius: borderRadius.sm,
+      gap: spacing.sm,
+      marginBottom: spacing.md,
     },
-    segmentActive: { backgroundColor: colors.surface },
-    segmentText: {
-      fontSize: typography.fontSize.sm,
+    cardTitle: {
+      fontSize: typography.fontSize.md,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text,
+    },
+    sectionLabel: {
+      fontSize: typography.fontSize.xs,
       color: colors.textSecondary,
       fontWeight: typography.fontWeight.semibold,
+      marginBottom: spacing.xs,
     },
-    segmentTextActive: {
-      color: colors.primary,
-      fontWeight: typography.fontWeight.bold,
-    },
-    themeRow: {
-      flexDirection: 'row',
-      marginHorizontal: spacing.lg,
-      marginTop: spacing.md,
-      marginBottom: spacing.sm,
-      gap: spacing.xs,
-      alignItems: 'center',
-    },
-    themeIcon: {
-      marginRight: spacing.xs,
-    },
-    themeOption: {
+    chipRow: { flexDirection: 'row', gap: spacing.sm },
+    themeChip: {
       flex: 1,
-      paddingVertical: spacing.xs + 2,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      paddingVertical: spacing.sm,
       borderRadius: borderRadius.sm,
       borderWidth: 1,
       borderColor: colors.border,
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      gap: 4,
+      backgroundColor: 'transparent',
     },
-    themeOptionActive: {
+    themeChipActive: {
       backgroundColor: colors.primary,
       borderColor: colors.primary,
     },
-    themeOptionText: {
+    themeChipText: {
       fontSize: typography.fontSize.xs,
-      color: colors.text,
-      fontWeight: typography.fontWeight.semibold,
-    },
-    themeOptionTextActive: { color: colors.surface },
-    aiSection: {
-      marginHorizontal: spacing.lg,
-      marginBottom: spacing.sm,
-      gap: spacing.sm,
-    },
-    aiToggleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: spacing.md,
-    },
-    aiTitle: {
-      fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.semibold,
       color: colors.text,
     },
-    aiDescription: {
-      fontSize: typography.fontSize.xs,
-      color: colors.textSecondary,
-      marginTop: 1,
-    },
-    section: {
-      marginHorizontal: spacing.lg,
-      marginTop: spacing.md,
-    },
-    sectionTitle: {
-      fontSize: typography.fontSize.sm,
-      fontWeight: typography.fontWeight.semibold,
-      color: colors.text,
-    },
-    sectionDescription: {
-      fontSize: typography.fontSize.xs,
-      color: colors.textSecondary,
-      marginTop: 2,
-    },
-    languageRow: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-      marginTop: spacing.sm,
-    },
+    themeChipTextActive: { color: colors.surface },
     langChip: {
       paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm + 2,
+      paddingVertical: spacing.xs + 4,
       borderRadius: borderRadius.full,
       backgroundColor: colors.surfaceVariant,
     },
@@ -285,12 +100,66 @@ export default function SettingsScreen() {
       backgroundColor: colors.primary,
     },
     langChipText: {
-      fontSize: typography.fontSize.md,
+      fontSize: typography.fontSize.sm,
       color: colors.text,
     },
     langChipTextSelected: {
       color: colors.surface,
       fontWeight: typography.fontWeight.semibold,
+    },
+    toolRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.sm + 2,
+    },
+    toolRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
+    toolRowLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    toolRowText: { fontSize: typography.fontSize.md, color: colors.text },
+    aiToggleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: spacing.md,
+      marginBottom: spacing.xs,
+    },
+    aiTitle: {
+      fontSize: typography.fontSize.md,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.text,
+    },
+    aiDescription: {
+      fontSize: typography.fontSize.xs,
+      color: colors.textSecondary,
+      flexShrink: 1,
+    },
+    apiKeyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: spacing.sm + 2,
+      marginTop: spacing.xs,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    apiKeyLabel: { fontSize: typography.fontSize.sm, color: colors.text },
+    apiKeyValue: {
+      fontSize: typography.fontSize.sm,
+      color: colors.textSecondary,
+      marginRight: spacing.xs,
+    },
+    version: {
+      textAlign: 'center',
+      fontSize: typography.fontSize.xs,
+      color: colors.border,
+      paddingVertical: spacing.md,
+    },
+    sheetContent: { gap: spacing.md },
+    testRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginTop: spacing.xs,
     },
   }), [colors]);
 
@@ -302,178 +171,230 @@ export default function SettingsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.segmentRow}>
-        {(['import', 'stats', 'templates'] as Section[]).map((s) => (
-          <TouchableOpacity
-            key={s}
-            style={[styles.segmentButton, section === s && styles.segmentActive]}
-            onPress={() => setSection(s)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: section === s }}
-            accessibilityLabel={`${s} tab`}
-          >
-            <Text style={[styles.segmentText, section === s && styles.segmentTextActive]}>
-              {s === 'import' ? t('settings.segmentImport') : s === 'stats' ? t('settings.segmentStats') : t('settings.segmentTemplates')}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
 
-      <View style={styles.themeRow}>
-        <Ionicons name={themeIcons[mode]} size={18} color={colors.textSecondary} style={styles.themeIcon} />
-        {(['system', 'light', 'dark'] as const).map((m) => (
+        {/* APPEARANCE CARD */}
+        <Card variant="elevated">
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Ionicons name="color-palette-outline" size={18} color={colors.primary} />
+              <Text style={styles.cardTitle}>{t('settings.appearance')}</Text>
+            </View>
+            <Text style={styles.sectionLabel}>{t('settings.themeLabel')}</Text>
+            <View style={styles.chipRow}>
+              {(['system', 'light', 'dark'] as const).map((m) => (
+                <TouchableOpacity
+                  key={m}
+                  style={[styles.themeChip, mode === m && styles.themeChipActive]}
+                  onPress={() => setMode(m)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: mode === m }}
+                >
+                  <Ionicons
+                    name={themeIcons[m]}
+                    size={14}
+                    color={mode === m ? colors.surface : colors.textSecondary}
+                  />
+                  <Text style={[styles.themeChipText, mode === m && styles.themeChipTextActive]}>
+                    {m === 'system' ? t('settings.themeSystem') : m === 'light' ? t('settings.themeLight') : t('settings.themeDark')}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={{ height: spacing.md }} />
+            <Text style={styles.sectionLabel}>{t('settings.languageLabel')}</Text>
+            <View style={styles.chipRow}>
+              {availableLanguages.map((lang) => (
+                <TouchableOpacity
+                  key={lang.code}
+                  style={[styles.langChip, language === lang.code && styles.langChipSelected]}
+                  onPress={() => setLanguage(lang.code)}
+                  accessibilityRole="button"
+                  accessibilityLabel={lang.label}
+                >
+                  <Text style={[styles.langChipText, language === lang.code && styles.langChipTextSelected]}>
+                    {lang.nativeLabel}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </Card>
+
+        {/* DATA & TOOLS CARD */}
+        <Card variant="elevated">
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Ionicons name="construct-outline" size={18} color={colors.primary} />
+              <Text style={styles.cardTitle}>{t('settings.dataTools')}</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.toolRow, styles.toolRowBorder]}
+              onPress={() => navigation.navigate('Stats')}
+              accessibilityRole="button"
+            >
+              <View style={styles.toolRowLeft}>
+                <Ionicons name="stats-chart-outline" size={18} color={colors.textSecondary} />
+                <Text style={styles.toolRowText}>{t('settings.stats')}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={colors.border} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toolRow, styles.toolRowBorder]}
+              onPress={() => navigation.navigate('Import')}
+              accessibilityRole="button"
+            >
+              <View style={styles.toolRowLeft}>
+                <Ionicons name="download-outline" size={18} color={colors.textSecondary} />
+                <Text style={styles.toolRowText}>{t('settings.import')}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={colors.border} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.toolRow, styles.toolRowBorder]}
+              onPress={() => navigation.navigate('TemplateList')}
+              accessibilityRole="button"
+            >
+              <View style={styles.toolRowLeft}>
+                <Ionicons name="layers-outline" size={18} color={colors.textSecondary} />
+                <Text style={styles.toolRowText}>{t('settings.templates')}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={colors.border} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.toolRow}
+              onPress={() => navigation.navigate('Export')}
+              accessibilityRole="button"
+            >
+              <View style={styles.toolRowLeft}>
+                <Ionicons name="share-outline" size={18} color={colors.textSecondary} />
+                <Text style={styles.toolRowText}>{t('settings.export')}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={colors.border} />
+            </TouchableOpacity>
+          </View>
+        </Card>
+
+        {/* AI ASSISTANT CARD */}
+        <Card variant="elevated">
+          <View style={styles.card}>
+            <View style={styles.aiToggleRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.aiTitle}>{t('settings.aiTitle')}</Text>
+              </View>
+              <Switch
+                value={aiEnabled}
+                onValueChange={(v) => {
+                  setAiEnabledLocal(v);
+                  setAiEnabled(v);
+                }}
+                trackColor={{ false: colors.border, true: withAlpha(colors.primary, 0.4) }}
+                thumbColor={aiEnabled ? colors.primary : colors.textSecondary}
+              />
+            </View>
+            <Text style={styles.aiDescription}>{t('settings.aiDescription')}</Text>
+
+            {aiEnabled && (
+              <TouchableOpacity
+                style={styles.apiKeyRow}
+                onPress={() => setApiKeySheetVisible(true)}
+                accessibilityRole="button"
+              >
+                <Text style={styles.apiKeyLabel}>{t('settings.apiKeyRow')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={styles.apiKeyValue}>
+                    {apiKey ? `sk-${'•'.repeat(4)}${apiKey.slice(-4)}` : t('settings.configureApiKey')}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={16} color={colors.border} />
+                </View>
+              </TouchableOpacity>
+            )}
+          </View>
+        </Card>
+
+        {/* VERSION */}
+        <Text style={styles.version}>
+          {t('settings.version')} v1.0.0 · Expo SDK 56
+        </Text>
+      </ScrollView>
+
+      {/* API KEY BOTTOM SHEET */}
+      <Modal
+        visible={apiKeySheetVisible}
+        onClose={() => setApiKeySheetVisible(false)}
+        title={t('settings.configureApiKey')}
+      >
+        <View style={styles.sheetContent}>
+          <Input
+            label={t('settings.apiKey')}
+            placeholder={t('settings.apiKeyPlaceholder')}
+            value={draftApiKey}
+            onChangeText={setDraftApiKey}
+            secureTextEntry={!apiKeyVisible}
+          />
           <TouchableOpacity
-            key={m}
-            style={[styles.themeOption, mode === m && styles.themeOptionActive]}
-            onPress={() => setMode(m)}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: mode === m }}
-            accessibilityLabel={`${m} theme`}
+            onPress={() => setApiKeyVisible(!apiKeyVisible)}
+            style={{
+              position: 'absolute',
+              right: spacing.sm + 4,
+              top: spacing.md + spacing.sm,
+            }}
           >
             <Ionicons
-              name={
-                m === 'system' ? 'phone-portrait' :
-                m === 'light' ? 'sunny' : 'moon'
-              }
-              size={14}
-              color={mode === m ? colors.surface : colors.textSecondary}
+              name={apiKeyVisible ? 'eye-off-outline' : 'eye-outline'}
+              size={20}
+              color={colors.textSecondary}
             />
-            <Text style={[styles.themeOptionText, mode === m && styles.themeOptionTextActive]}>
-              {m === 'system' ? t('settings.themeSystem') : m === 'light' ? t('settings.themeLight') : t('settings.themeDark')}
-            </Text>
           </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('settings.appLanguage')}</Text>
-        <Text style={styles.sectionDescription}>{t('settings.appLanguageDescription')}</Text>
-        <View style={styles.languageRow}>
-          {availableLanguages.map((lang) => (
-            <TouchableOpacity
-              key={lang.code}
-              style={[styles.langChip, language === lang.code && styles.langChipSelected]}
-              onPress={() => setLanguage(lang.code)}
-              accessibilityRole="button"
-              accessibilityLabel={lang.label}
-            >
-              <Text style={[styles.langChipText, language === lang.code && styles.langChipTextSelected]}>
-                {lang.nativeLabel}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.aiSection}>
-        <View style={styles.aiToggleRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.aiTitle}>{t('settings.aiTitle')}</Text>
-            <Text style={styles.aiDescription}>{t('settings.aiDescription')}</Text>
-          </View>
-          <Switch
-            value={aiEnabled}
-            onValueChange={(v) => {
-              setAiEnabledLocal(v);
-              setAiEnabled(v);
-            }}
-            trackColor={{ false: colors.border, true: withAlpha(colors.primary, 0.4) }}
-            thumbColor={aiEnabled ? colors.primary : colors.textSecondary}
-          />
-        </View>
-        {aiEnabled && (
-          <View>
-            <Input
-              label={t('settings.apiKey')}
-              placeholder={t('settings.apiKeyPlaceholder')}
-              value={draftApiKey}
-              onChangeText={setDraftApiKey}
-              secureTextEntry={!apiKeyVisible}
-            />
-            <TouchableOpacity
-              onPress={() => setApiKeyVisible(!apiKeyVisible)}
-              style={{ position: 'absolute', right: spacing.sm + 4, top: 28 }}
-            >
-              <Ionicons
-                name={apiKeyVisible ? 'eye-off-outline' : 'eye-outline'}
-                size={20}
-                color={colors.textSecondary}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
+          <View style={{ marginTop: spacing.sm }}>
+            <Button
+              title={t('common.save')}
               onPress={() => {
                 setApiKeyLocal(draftApiKey);
                 setApiKey(draftApiKey);
                 setTestStatus('idle');
               }}
-              style={{
-                marginTop: spacing.xs,
-                alignSelf: 'flex-end',
-                paddingHorizontal: spacing.md,
-                paddingVertical: spacing.xs + 2,
-                borderRadius: borderRadius.sm,
-                backgroundColor: draftApiKey !== apiKey ? colors.primary : colors.border,
-              }}
+              variant={draftApiKey !== apiKey ? 'primary' : 'secondary'}
               disabled={draftApiKey === apiKey}
-            >
-              <Text style={{
-                fontSize: typography.fontSize.xs,
-                fontWeight: typography.fontWeight.semibold,
-                color: draftApiKey !== apiKey ? colors.surface : colors.textSecondary,
-              }}>
-                Save
-              </Text>
-            </TouchableOpacity>
-            {apiKey !== '' && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
-                <TouchableOpacity
-                  onPress={async () => {
-                    setTesting(true);
-                    setTestStatus('idle');
-                    try {
-                      const res = await fetch(
-                        'https://api.deepseek.com/v1/models',
-                        {
-                          headers: { 'Authorization': `Bearer ${apiKey}` },
-                        }
-                      );
-                      setTestStatus(res.ok ? 'success' : 'fail');
-                    } catch {
-                      setTestStatus('fail');
-                    }
-                    setTesting(false);
-                  }}
-                  disabled={testing}
-                  style={{
-                    paddingHorizontal: spacing.md,
-                    paddingVertical: spacing.xs + 2,
-                    borderRadius: borderRadius.sm,
-                    backgroundColor: withAlpha(colors.primary, 0.1),
-                  }}
-                >
-                  <Text style={{
-                    fontSize: typography.fontSize.xs,
-                    fontWeight: typography.fontWeight.semibold,
-                    color: colors.primary,
-                  }}>
-                    {testing ? 'Testing...' : 'Test Key'}
-                  </Text>
-                </TouchableOpacity>
-                {testStatus === 'success' && (
-                  <Ionicons name="checkmark-circle" size={18} color={colors.success} />
-                )}
-                {testStatus === 'fail' && (
-                  <Ionicons name="close-circle" size={18} color={colors.danger} />
-                )}
-              </View>
-            )}
+              fullWidth
+            />
           </View>
-        )}
-      </View>
-
-      {section === 'import' && <ImportScreen />}
-      {section === 'stats' && <StatsView />}
-      {section === 'templates' && <TemplateListScreen />}
+          {apiKey !== '' && (
+            <View style={styles.testRow}>
+              <Button
+                title={testing ? t('common.loading') : t('settings.testConnection')}
+                onPress={async () => {
+                  setTesting(true);
+                  setTestStatus('idle');
+                  try {
+                    const res = await fetch('https://api.deepseek.com/v1/models', {
+                      headers: { 'Authorization': `Bearer ${apiKey}` },
+                    });
+                    setTestStatus(res.ok ? 'success' : 'fail');
+                  } catch {
+                    setTestStatus('fail');
+                  }
+                  setTesting(false);
+                }}
+                variant="secondary"
+                size="sm"
+                disabled={testing}
+              />
+              {testStatus === 'success' && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+                  <Text style={{ fontSize: typography.fontSize.xs, color: colors.success }}>
+                    {t('settings.connectionOk')}
+                  </Text>
+                </View>
+              )}
+              {testStatus === 'fail' && (
+                <Ionicons name="close-circle" size={18} color={colors.danger} />
+              )}
+            </View>
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }
