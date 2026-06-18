@@ -1,4 +1,4 @@
-import { advanceOnFlip, advanceOnSwipeLeft, SessionSnapshot } from '../practiceSession';
+import { advanceOnFlip, advanceOnSwipeLeft, advanceOnSwipeRight, SessionSnapshot } from '../practiceSession';
 import { CardWithReview } from '../../storage/database';
 
 function makeCard(id: number): CardWithReview {
@@ -96,5 +96,27 @@ describe('advanceOnSwipeLeft', () => {
     );
     expect(result.isComplete).toBe(true);
     expect(result.stats.reviewed).toBe(1);
+  });
+});
+
+describe('advanceOnSwipeRight', () => {
+  test('back → flips to front, index unchanged, stats unchanged', () => {
+    const result = advanceOnSwipeRight(snap({ isFlipped: true }));
+    expect(result.isFlipped).toBe(false);
+    expect(result.currentIndex).toBe(0);
+    expect(result.stats.reviewed).toBe(0);
+    expect(result.isComplete).toBe(false);
+  });
+
+  test('front → no-op', () => {
+    const result = advanceOnSwipeRight(snap({ isFlipped: false }));
+    expect(result.isFlipped).toBe(false);
+    expect(result.currentIndex).toBe(0);
+    expect(result.stats.reviewed).toBe(0);
+  });
+
+  test('stats never increment', () => {
+    const result = advanceOnSwipeRight(snap({ isFlipped: true, stats: { reviewed: 5 } }));
+    expect(result.stats.reviewed).toBe(5);
   });
 });

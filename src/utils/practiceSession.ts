@@ -61,7 +61,13 @@ export function advanceOnSwipeLeft(
 export function advanceOnSwipeRight(
   snapshot: SessionSnapshot
 ): AdvanceResult {
-  return { ...snapshot, isComplete: false };
+  const { cards, currentIndex, isFlipped, stats } = snapshot;
+
+  if (!isFlipped) {
+    return { cards, currentIndex, isFlipped, stats, isComplete: false };
+  }
+
+  return { cards, currentIndex, isFlipped: false, stats, isComplete: false };
 }
 
 export function advanceOnRate(
