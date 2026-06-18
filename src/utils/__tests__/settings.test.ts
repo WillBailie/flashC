@@ -1,5 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { getReverseMode, setReverseMode, clearSettingsCache } from '../settings';
+import { getReverseMode, setReverseMode, clearSettingsCache, getAiEnabled, setAiEnabled, getApiKey, setApiKey } from '../settings';
 
 jest.mock('expo-file-system/legacy', () => ({
   documentDirectory: '/mock/documents/',
@@ -69,6 +69,37 @@ describe('settings', () => {
       mockedFs.readAsStringAsync.mockResolvedValue(JSON.stringify({ reverseMode: false }));
       mockedFs.writeAsStringAsync.mockRejectedValue(new Error('disk full'));
       await expect(setReverseMode(true)).resolves.not.toThrow();
+    });
+  });
+
+  describe('AI settings', () => {
+    beforeEach(async () => {
+      await setAiEnabled(false);
+      await setApiKey('');
+    });
+
+    test('getAiEnabled returns false when not set', async () => {
+      const enabled = await getAiEnabled();
+      expect(enabled).toBe(false);
+    });
+
+    test('setAiEnabled and getAiEnabled round-trip', async () => {
+      await setAiEnabled(true);
+      expect(await getAiEnabled()).toBe(true);
+      await setAiEnabled(false);
+      expect(await getAiEnabled()).toBe(false);
+    });
+
+    test('getApiKey returns empty string when not set', async () => {
+      const key = await getApiKey();
+      expect(key).toBe('');
+    });
+
+    test('setApiKey and getApiKey round-trip', async () => {
+      await setApiKey('sk-test-key-123');
+      expect(await getApiKey()).toBe('sk-test-key-123');
+      await setApiKey('');
+      expect(await getApiKey()).toBe('');
     });
   });
 });
