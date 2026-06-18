@@ -37,6 +37,7 @@ import { exportDeckToCSV, exportDeckToJSON } from '../utils/exportCards';
 import { getReverseMode, setReverseMode } from '../utils/settings';
 import { parseFieldValues } from '../utils/cards';
 import { emit } from '../utils/eventBus';
+import { useTranslation } from '../i18n/TranslationContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DeckDetail'>;
 
@@ -63,6 +64,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const titleInputRef = React.useRef<TextInput>(null);
   const searchInputRef = React.useRef<TextInput>(null);
+  const { t } = useTranslation();
   const { colors } = useTheme();
 
   const loadCards = useCallback(async () => {
@@ -699,7 +701,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
           <TextInput
             ref={searchInputRef}
             style={styles.searchInput}
-            placeholder="Search cards..."
+            placeholder={t('deckDetail.searchPlaceholder')}
             placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -738,8 +740,8 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
         }
         ListEmptyComponent={
           <EmptyState
-            title="No Cards Yet"
-            subtitle="Add cards to this deck to start studying."
+            title={t('deckDetail.emptyTitle')}
+            subtitle={t('deckDetail.emptySubtitle')}
           />
         }
       />
@@ -749,7 +751,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
           style={styles.practiceButton}
           onPress={() => navigation.navigate('CardForm', { deckId })}
         >
-          <Text style={styles.practiceButtonText}>+ Add Card</Text>
+          <Text style={styles.practiceButtonText}>+ {t('deckDetail.addCard')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -764,7 +766,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Choose Practice Mode</Text>
+            <Text style={styles.modalTitle}>{t('deckDetail.practiceTitle')}</Text>
 
             <View style={styles.reverseRow}>
               <Text style={styles.reverseModalLabel}>Reverse</Text>
@@ -806,7 +808,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
                   Pick random cards to practice regardless of schedule
                 </Text>
                 <View style={styles.freeflowRow}>
-                  <Text style={styles.freeflowLabel}>Cards to review:</Text>
+                  <Text style={styles.freeflowLabel}>{t('deckDetail.freeflowCount')}:</Text>
                   <TextInput
                     style={styles.freeflowInput}
                     keyboardType="numeric"
@@ -847,18 +849,18 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       <ThemedModal
         visible={exportModalVisible}
         onClose={() => setExportModalVisible(false)}
-        title="Export Deck"
+        title={t('deckDetail.exportTitle')}
       >
         <Text style={{ fontSize: fontSize.sm, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
           Choose a format to export {deckName}
         </Text>
         <Button
-          title="Export as CSV"
+          title={t('deckDetail.exportCSV')}
           onPress={() => handleExport('csv')}
           fullWidth
         />
         <Button
-          title="Export as JSON"
+          title={t('deckDetail.exportJSON')}
           variant="secondary"
           onPress={() => handleExport('json')}
           fullWidth
@@ -955,7 +957,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
               }}
             >
               <Ionicons name="play" size={20} color={colors.primary} />
-              <Text style={styles.menuItemText}>Practice</Text>
+              <Text style={styles.menuItemText}>{t('deckDetail.menuPractice')}</Text>
             </Pressable>
             <Pressable
               style={styles.menuItem}
@@ -965,7 +967,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
               }}
             >
               <Ionicons name="language" size={20} color={colors.primary} />
-              <Text style={styles.menuItemText}>Language</Text>
+              <Text style={styles.menuItemText}>{t('deckDetail.menuLanguage')}</Text>
             </Pressable>
             <Pressable
               style={styles.menuItem}
@@ -975,7 +977,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
               }}
             >
               <Ionicons name="share-outline" size={20} color={colors.primary} />
-              <Text style={styles.menuItemText}>Export</Text>
+              <Text style={styles.menuItemText}>{t('deckDetail.menuExport')}</Text>
             </Pressable>
             <View style={styles.modeDivider} />
             <Pressable
@@ -986,7 +988,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
               }}
             >
               <Ionicons name="trash-outline" size={20} color={colors.danger} />
-              <Text style={[styles.menuItemText, styles.menuItemDanger]}>Delete Deck</Text>
+              <Text style={[styles.menuItemText, styles.menuItemDanger]}>{t('deckDetail.deleteTitle')}</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -995,7 +997,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       <ThemedModal
         visible={deleteConfirmVisible}
         onClose={() => setDeleteConfirmVisible(false)}
-        title="Delete Deck"
+        title={t('deckDetail.deleteTitle')}
       >
         <Text style={{ fontSize: fontSize.md, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
           Delete "{displayName}" and all its cards?

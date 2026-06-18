@@ -24,6 +24,7 @@ import { Modal } from '../components/Modal';
 import { SkeletonCard } from '../components/Skeleton';
 import { createDeck, deleteDeck, getAllDecks, getDeckStats } from '../storage/database';
 import { on, emit } from '../utils/eventBus';
+import { useTranslation } from '../i18n/TranslationContext';
 import { Deck } from '../models/types';
 import { RootStackParamList, TabParamList } from '../navigation/AppNavigator';
 
@@ -39,6 +40,7 @@ interface DeckWithStats extends Deck {
 }
 
 export default function DeckListScreen({ navigation }: Props) {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const [decks, setDecks] = useState<DeckWithStats[]>([]);
   const [loading, setLoading] = useState(true);
@@ -239,8 +241,8 @@ export default function DeckListScreen({ navigation }: Props) {
       ) : null}
       <View style={styles.statsRow}>
         <Badge text={`${item.totalCards} total`} color={colors.primary} />
-        <Badge text={`${item.newCards} new`} color={colors.success} />
-        {item.dueCards > 0 && <Badge text={`${item.dueCards} due`} color={colors.warning} />}
+        <Badge text={`${item.newCards} ${t('deckList.new')}`} color={colors.success} />
+        {item.dueCards > 0 && <Badge text={`${item.dueCards} ${t('deckList.due')}`} color={colors.warning} />}
       </View>
     </Card>
     </Animated.View>
@@ -280,8 +282,8 @@ export default function DeckListScreen({ navigation }: Props) {
           contentContainerStyle={decks.length === 0 ? styles.emptyContainer : styles.listContent}
           ListEmptyComponent={
             <EmptyState
-              title="No Decks Yet"
-              subtitle="Create your first deck to start learning."
+              title={t('deckList.emptyTitle')}
+              subtitle={t('deckList.emptySubtitle')}
             />
           }
         />
@@ -308,23 +310,23 @@ export default function DeckListScreen({ navigation }: Props) {
       <Modal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        title="Create New Deck"
+        title={t('deckList.newDeckTitle')}
       >
         <Input
-          label="Deck Name"
+          label={t('deckList.deckName')}
           placeholder="e.g., Spanish Verbs"
           value={newDeckName}
           onChangeText={setNewDeckName}
           autoFocus
         />
         <Input
-          label="Description"
+          label={t('deckList.description')}
           placeholder="Optional"
           value={newDeckDesc}
           onChangeText={setNewDeckDesc}
           multiline
         />
-        <Text style={styles.languageLabel}>Language</Text>
+        <Text style={styles.languageLabel}>{t('deckList.language')}</Text>
         <View style={styles.languageChips}>
           {commonLanguages.map((lang) => (
             <Pressable
@@ -350,7 +352,7 @@ export default function DeckListScreen({ navigation }: Props) {
           ))}
         </View>
         <Input
-          label="Or enter custom language"
+          label={t('deckList.customLanguagePlaceholder')}
           placeholder="e.g., Finnish"
           value={customLanguage}
           onChangeText={(text) => {

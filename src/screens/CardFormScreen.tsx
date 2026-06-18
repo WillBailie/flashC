@@ -26,6 +26,7 @@ import {
 } from '../storage/database';
 import { Button } from '../components/Button';
 import { Modal } from '../components/Modal';
+import { useTranslation } from '../i18n/TranslationContext';
 import { Template, TemplateField, Review } from '../models/types';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
@@ -46,6 +47,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
   const [deleting, setDeleting] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const { t } = useTranslation();
   const { colors } = useTheme();
 
   const loadTemplates = useCallback(async () => {
@@ -449,7 +451,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
         <View style={styles.floatingPill}>
           <View style={styles.floatingPillInner}>
             <Text style={styles.floatingPillText} numberOfLines={1}>
-              {isEditing ? 'Edit Card' : 'New Card'}
+              {isEditing ? t('cardForm.editTitle') : t('cardForm.newTitle')}
             </Text>
           </View>
         </View>
@@ -471,7 +473,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.templateSelector}>
-        <Text style={styles.label}>Template</Text>
+        <Text style={styles.label}>{t('cardForm.template')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.templateChips}>
             {templates.map((t) => (
@@ -505,7 +507,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
 
       {isBasicTemplate || !hasTemplateFields ? (
         <>
-          <Text style={styles.label}>Front Side</Text>
+          <Text style={styles.label}>{t('cardForm.frontText')}</Text>
           <TextInput
             style={styles.input}
             placeholder="e.g., Hello"
@@ -515,7 +517,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
             multiline
             autoFocus={!isEditing}
           />
-          <Text style={styles.label}>Back Side</Text>
+          <Text style={styles.label}>{t('cardForm.backText')}</Text>
           <TextInput
             style={styles.input}
             placeholder="e.g., Hola"
@@ -577,20 +579,20 @@ export default function CardFormScreen({ navigation, route }: Props) {
 
       {isEditing && review && (
         <View style={styles.reviewSection}>
-          <Text style={styles.reviewSectionTitle}>Review Schedule</Text>
+          <Text style={styles.reviewSectionTitle}>{t('cardForm.schedule')}</Text>
           <View style={styles.reviewCard}>
             <View style={styles.reviewRow}>
               <View style={styles.reviewRowIcon}>
                 <Ionicons name="trending-up-outline" size={16} color={colors.primary} />
               </View>
-              <Text style={styles.reviewRowLabel}>Ease Factor</Text>
+              <Text style={styles.reviewRowLabel}>{t('cardForm.easeFactor')}</Text>
               <Text style={styles.reviewRowValue}>{review.ease_factor.toFixed(2)}</Text>
             </View>
             <View style={styles.reviewRow}>
               <View style={styles.reviewRowIcon}>
                 <Ionicons name="repeat-outline" size={16} color={colors.primary} />
               </View>
-              <Text style={styles.reviewRowLabel}>Interval</Text>
+              <Text style={styles.reviewRowLabel}>{t('cardForm.interval')}</Text>
               <Text style={styles.reviewRowValue}>
                 {review.interval === 0 ? 'New' : `${review.interval} day${review.interval !== 1 ? 's' : ''}`}
               </Text>
@@ -599,7 +601,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
               <View style={styles.reviewRowIcon}>
                 <Ionicons name="calendar-outline" size={16} color={colors.primary} />
               </View>
-              <Text style={styles.reviewRowLabel}>Next Review</Text>
+              <Text style={styles.reviewRowLabel}>{t('cardForm.nextReview')}</Text>
               <Text style={styles.reviewRowValue}>
                 {review.next_review_date.startsWith('1970-01-01')
                   ? 'Pending'

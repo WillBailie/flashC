@@ -32,6 +32,7 @@ import { getGlobalStats, getStreak } from '../storage/database';
 import { getReverseMode, setReverseMode } from '../utils/settings';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
+import { useTranslation } from '../i18n/TranslationContext';
 import { RootStackParamList, TabParamList } from '../navigation/AppNavigator';
 
 type Props = CompositeScreenProps<
@@ -55,10 +56,11 @@ export default function HomeScreen({ navigation }: Props) {
   });
   const [freeflowModal, setFreeflowModal] = useState(false);
   const [freeflowCount, setFreeflowCount] = useState('10');
-  const [greeting, setGreeting] = useState('');
   const [streak, setStreak] = useState(0);
   const [streakMultiplier, setStreakMultiplier] = useState(1);
   const [reverseMode, setReverseModeState] = useState(false);
+  const { t } = useTranslation();
+  const greeting = t('home.greeting');
   const { colors } = useTheme();
 
   const RING_RADIUS = 48;
@@ -99,13 +101,6 @@ export default function HomeScreen({ navigation }: Props) {
       withSpring(1, SPRING_CONFIG),
     );
   };
-
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good morning');
-    else if (hour < 18) setGreeting('Good afternoon');
-    else setGreeting('Good evening');
-  }, []);
 
   const prevDue = useRef(stats.dueCards);
   const prevTotal = useRef(stats.totalCards);
@@ -664,7 +659,7 @@ export default function HomeScreen({ navigation }: Props) {
       <Modal
         visible={freeflowModal}
         onClose={() => setFreeflowModal(false)}
-        title="Freeflow"
+        title={t('home.freeflow')}
       >
         <Text style={[styles.modeCardLabel, { fontSize: typography.fontSize.sm, marginBottom: spacing.md }]}>
           How many random cards would you like to review from all decks?
