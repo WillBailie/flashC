@@ -72,10 +72,10 @@ async function initializeDatabase(database: SQLite.SQLiteDatabase): Promise<void
 }
 
 async function migrateDatabase(database: SQLite.SQLiteDatabase): Promise<void> {
-  try { await database.runAsync('ALTER TABLE cards ADD COLUMN template_id INTEGER'); } catch {}
-  try { await database.runAsync('ALTER TABLE cards ADD COLUMN field_values TEXT'); } catch {}
-  try { await database.runAsync('ALTER TABLE cards ADD COLUMN modified_at TEXT'); } catch {}
-  try { await database.runAsync('ALTER TABLE decks ADD COLUMN language TEXT NOT NULL DEFAULT \'\''); } catch {}
+  try { await database.execAsync('ALTER TABLE cards ADD COLUMN template_id INTEGER'); } catch {}
+  try { await database.execAsync('ALTER TABLE cards ADD COLUMN field_values TEXT'); } catch {}
+  try { await database.execAsync('ALTER TABLE cards ADD COLUMN modified_at TEXT'); } catch {}
+  try { await database.execAsync('ALTER TABLE decks ADD COLUMN language TEXT NOT NULL DEFAULT \'\''); } catch {}
 }
 
 async function seedDefaultTemplate(database: SQLite.SQLiteDatabase): Promise<void> {
