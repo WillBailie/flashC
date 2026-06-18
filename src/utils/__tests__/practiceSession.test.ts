@@ -1,4 +1,4 @@
-import { advanceOnFlip, SessionSnapshot } from '../practiceSession';
+import { advanceOnFlip, advanceOnSwipeLeft, SessionSnapshot } from '../practiceSession';
 import { CardWithReview } from '../../storage/database';
 
 function makeCard(id: number): CardWithReview {
@@ -61,5 +61,40 @@ describe('advanceOnFlip', () => {
     expect(result.isComplete).toBe(true);
     expect(result.stats.reviewed).toBe(1);
     expect(result.isFlipped).toBe(false);
+  });
+});
+
+describe('advanceOnSwipeLeft', () => {
+  test('daily, back → advances, isFlipped false, stats incremented', () => {
+    const result = advanceOnSwipeLeft(snap({ isFlipped: true }), 'daily');
+    expect(result.isFlipped).toBe(false);
+    expect(result.currentIndex).toBe(1);
+    expect(result.stats.reviewed).toBe(1);
+    expect(result.isComplete).toBe(false);
+  });
+
+  test('freeflow, back → advances, stats incremented', () => {
+    const result = advanceOnSwipeLeft(snap({ isFlipped: true }), 'freeflow');
+    expect(result.isFlipped).toBe(false);
+    expect(result.currentIndex).toBe(1);
+    expect(result.stats.reviewed).toBe(1);
+    expect(result.isComplete).toBe(false);
+  });
+
+  test('front → no-op', () => {
+    const result = advanceOnSwipeLeft(snap({ isFlipped: false }), 'daily');
+    expect(result.isFlipped).toBe(false);
+    expect(result.currentIndex).toBe(0);
+    expect(result.stats.reviewed).toBe(0);
+    expect(result.isComplete).toBe(false);
+  });
+
+  test('last card back → complete', () => {
+    const result = advanceOnSwipeLeft(
+      snap({ isFlipped: true, currentIndex: 1 }),
+      'daily'
+    );
+    expect(result.isComplete).toBe(true);
+    expect(result.stats.reviewed).toBe(1);
   });
 });
