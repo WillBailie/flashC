@@ -405,7 +405,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
               { color: item.side === 'front' ? colors.primary : colors.secondary },
             ]}
           >
-            {item.side}
+            {item.side === 'front' ? t('template.sideFront') : t('template.sideBack')}
           </Text>
         </View>
       </View>

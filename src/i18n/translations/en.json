@@ -215,5 +215,15 @@
   "template.editTemplate": "Edit Template",
   "deckDetail.customLanguagePlaceholder": "Or enter custom language...",
   "deckList.customLangPlaceholder": "e.g., Finnish",
-  "cardForm.fieldPlaceholder": "Enter {{name}}..."
+  "cardForm.fieldPlaceholder": "Enter {{name}}...",
+  "cardForm.sideFront": "FRONT",
+  "cardForm.sideBack": "BACK",
+  "practice.dailyDesc": "Review cards that are due based on your spaced repetition schedule",
+  "practice.freeflowDesc": "Pick random cards to practice regardless of schedule",
+  "practice.noCardsAlertTitle": "No Cards",
+  "practice.noCardsAlertMessage": "Add cards to this deck first.",
+  "deckDetail.cardCount": "{{filtered}} of {{total}} cards",
+  "cardForm.preview": "Preview",
+  "cardForm.frontSidePlaceholder": "Front side...",
+  "cardForm.backSidePlaceholder": "Back side..."
 }

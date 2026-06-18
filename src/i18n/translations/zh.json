@@ -215,5 +215,15 @@
   "template.editTemplate": "编辑模板",
   "deckDetail.customLanguagePlaceholder": "或输入自定义语言...",
   "deckList.customLangPlaceholder": "例如：芬兰语",
-  "cardForm.fieldPlaceholder": "输入{{name}}..."
+  "cardForm.fieldPlaceholder": "输入{{name}}...",
+  "cardForm.sideFront": "正面",
+  "cardForm.sideBack": "背面",
+  "practice.dailyDesc": "根据间隔重复计划复习到期的卡片",
+  "practice.freeflowDesc": "随机挑选卡片进行练习，不受计划限制",
+  "practice.noCardsAlertTitle": "无卡片",
+  "practice.noCardsAlertMessage": "请先向此牌组添加卡片。",
+  "deckDetail.cardCount": "共 {{total}} 张，显示 {{filtered}} 张",
+  "cardForm.preview": "预览",
+  "cardForm.frontSidePlaceholder": "正面内容...",
+  "cardForm.backSidePlaceholder": "背面内容..."
 }

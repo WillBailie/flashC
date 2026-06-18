@@ -725,7 +725,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
         </View>
         {searchQuery.trim().length > 0 && (
           <Text style={styles.searchCount}>
-            {filteredCards.length} of {cards.length} cards
+            {t('deckDetail.cardCount', { filtered: String(filteredCards.length), total: String(cards.length) })}
           </Text>
         )}
       </View>
@@ -788,9 +788,9 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
             >
               <Text style={styles.modeIcon}><Ionicons name="calendar" size={28} color={colors.primary} /></Text>
               <View style={styles.modeInfo}>
-                <Text style={styles.modeTitle}>Daily Review</Text>
+                <Text style={styles.modeTitle}>{t('practice.dailyReview')}</Text>
                 <Text style={styles.modeDesc}>
-                  Review cards that are due based on your spaced repetition schedule
+                  {t('practice.dailyDesc')}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -803,9 +803,9 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
             >
               <Text style={styles.modeIcon}><Ionicons name="shuffle" size={28} color={colors.secondary} /></Text>
               <View style={styles.modeInfo}>
-                <Text style={styles.modeTitle}>Freeflow</Text>
+                <Text style={styles.modeTitle}>{t('practice.freeflow')}</Text>
                 <Text style={styles.modeDesc}>
-                  Pick random cards to practice regardless of schedule
+                  {t('practice.freeflowDesc')}
                 </Text>
                 <View style={styles.freeflowRow}>
                   <Text style={styles.freeflowLabel}>{t('deckDetail.freeflowCount')}:</Text>
@@ -823,7 +823,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
                   onPress={() => {
                     const count = Math.max(1, Math.min(parseInt(freeflowCount) || 10, cards.length, 99));
                     if (cards.length === 0) {
-                      Alert.alert('No Cards', 'Add cards to this deck first.');
+                      Alert.alert(t('practice.noCardsAlertTitle'), t('practice.noCardsAlertMessage'));
                       return;
                     }
                     setModeModalVisible(false);

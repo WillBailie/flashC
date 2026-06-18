@@ -530,20 +530,20 @@ export default function CardFormScreen({ navigation, route }: Props) {
       ) : (
         <>
           <View style={styles.sideSection}>
-            <Text style={styles.sideLabel}>FRONT</Text>
+            <Text style={styles.sideLabel}>{t('cardForm.sideFront')}</Text>
             {frontFields.map(renderField)}
           </View>
           <View style={styles.sideSection}>
-            <Text style={styles.sideLabel}>BACK</Text>
+            <Text style={styles.sideLabel}>{t('cardForm.sideBack')}</Text>
             {backFields.map(renderField)}
           </View>
         </>
       )}
 
       <View style={styles.preview}>
-        <Text style={styles.previewLabel}>Preview</Text>
+        <Text style={styles.previewLabel}>{t('cardForm.preview')}</Text>
         <View style={styles.previewCard}>
-          <Text style={styles.previewSideLabel}>FRONT</Text>
+          <Text style={styles.previewSideLabel}>{t('cardForm.sideFront')}</Text>
           {frontFields.length > 0 && !isBasicTemplate ? (
             frontFields.map((f) => (
               <View key={f.name} style={styles.previewFieldRow}>
@@ -555,11 +555,11 @@ export default function CardFormScreen({ navigation, route }: Props) {
             ))
           ) : (
             <Text style={styles.previewText}>
-              {frontText || 'Front side...'}
+              {frontText || t('cardForm.frontSidePlaceholder')}
             </Text>
           )}
           <View style={styles.previewDivider} />
-          <Text style={styles.previewSideLabel}>BACK</Text>
+          <Text style={styles.previewSideLabel}>{t('cardForm.sideBack')}</Text>
           {backFields.length > 0 && !isBasicTemplate ? (
             backFields.map((f) => (
               <View key={f.name} style={styles.previewFieldRow}>
@@ -571,7 +571,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
             ))
           ) : (
             <Text style={styles.previewText}>
-              {backText || 'Back side...'}
+              {backText || t('cardForm.backSidePlaceholder')}
             </Text>
           )}
         </View>
