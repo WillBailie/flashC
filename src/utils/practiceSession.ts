@@ -74,5 +74,26 @@ export function advanceOnRate(
   snapshot: SessionSnapshot,
   quality: Quality
 ): AdvanceResult {
-  return { ...snapshot, isComplete: false };
+  const { cards, currentIndex, isFlipped, stats } = snapshot;
+
+  if (quality === 0) {
+    const newCards = [...cards];
+    const [card] = newCards.splice(currentIndex, 1);
+    newCards.push(card);
+    const wasLast = currentIndex >= cards.length - 1;
+    return {
+      cards: newCards,
+      currentIndex: wasLast ? 0 : currentIndex,
+      isFlipped: false,
+      stats,
+      isComplete: false,
+    };
+  }
+
+  const newStats = { reviewed: stats.reviewed + 1 };
+  const nextIndex = currentIndex + 1;
+  if (nextIndex >= cards.length) {
+    return { cards, currentIndex, isFlipped: false, stats: newStats, isComplete: true };
+  }
+  return { cards, currentIndex: nextIndex, isFlipped: false, stats: newStats, isComplete: false };
 }
