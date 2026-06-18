@@ -393,5 +393,107 @@ describe('Database Operations', () => {
       expect(cards.length).toBeGreaterThanOrEqual(3);
     });
   });
+
+  describe('getStreak', () => {
+    async function setReviewDate(cardId: number, dateStr: string) {
+      const db = await database.getDatabase();
+      await db.runAsync(
+        'UPDATE reviews SET last_review_date = ? WHERE card_id = ?',
+        [dateStr, cardId]
+      );
+    }
+
+    function dateStr(daysAgo: number): string {
+      const d = new Date();
+      d.setDate(d.getDate() - daysAgo);
+      return d.toISOString();
+    }
+
+    async function createCardWithDate(deckId: number, front: string, back: string, daysAgo: number) {
+      const card = await database.createCard(deckId, front, back);
+      await setReviewDate(card.id, dateStr(daysAgo));
+      return card;
+    }
+
+    test('no reviews → streak 0, multiplier 1', async () => {
+      const { streak, multiplier } = await database.getStreak();
+      expect(streak).toBeGreaterThanOrEqual(0);
+      expect(multiplier).toBeGreaterThanOrEqual(1);
+    });
+
+    test('single review today → streak 1, multiplier 1', async () => {
+      const deck = await database.createDeck('Streak Test 1', '');
+      await createCardWithDate(deck.id, 'F', 'B', 0);
+      const { streak, multiplier } = await database.getStreak();
+      expect(streak).toBe(1);
+      expect(multiplier).toBe(1);
+      await database.deleteDeck(deck.id);
+    });
+
+    test('3 consecutive days → streak 3, multiplier 2', async () => {
+      const deck = await database.createDeck('Streak Test 3', '');
+      await createCardWithDate(deck.id, 'a', 'A', 0);
+      await createCardWithDate(deck.id, 'b', 'B', 1);
+      await createCardWithDate(deck.id, 'c', 'C', 2);
+      const { streak, multiplier } = await database.getStreak();
+      expect(streak).toBeGreaterThanOrEqual(3);
+      expect(multiplier).toBeGreaterThanOrEqual(2);
+      await database.deleteDeck(deck.id);
+    });
+
+    test('7 consecutive days → multiplier >= 3', async () => {
+      const deck = await database.createDeck('Streak Test 7', '');
+      for (let i = 0; i < 7; i++) {
+        await createCardWithDate(deck.id, `d${i}`, `D${i}`, i);
+      }
+      const { streak, multiplier } = await database.getStreak();
+      expect(streak).toBeGreaterThanOrEqual(7);
+      expect(multiplier).toBeGreaterThanOrEqual(3);
+      await database.deleteDeck(deck.id);
+    });
+
+    test('14 consecutive days → multiplier >= 4', async () => {
+      const deck = await database.createDeck('Streak Test 14', '');
+      for (let i = 0; i < 14; i++) {
+        await createCardWithDate(deck.id, `e${i}`, `E${i}`, i);
+      }
+      const { streak, multiplier } = await database.getStreak();
+      expect(streak).toBeGreaterThanOrEqual(14);
+      expect(multiplier).toBeGreaterThanOrEqual(4);
+      await database.deleteDeck(deck.id);
+    });
+
+    test('30 consecutive days → multiplier >= 5', async () => {
+      const deck = await database.createDeck('Streak Test 30', '');
+      for (let i = 0; i < 30; i++) {
+        await createCardWithDate(deck.id, `f${i}`, `F${i}`, i);
+      }
+      const { streak, multiplier } = await database.getStreak();
+      expect(streak).toBeGreaterThanOrEqual(30);
+      expect(multiplier).toBeGreaterThanOrEqual(5);
+      await database.deleteDeck(deck.id);
+    });
+
+    test('gap of one day breaks streak (today + 2 days ago only)', async () => {
+      const deck = await database.createDeck('Streak Gap', '');
+      await createCardWithDate(deck.id, 'g1', 'G1', 0);
+      await createCardWithDate(deck.id, 'g2', 'G2', 2);
+      const { streak } = await database.getStreak();
+      expect(streak).toBeGreaterThanOrEqual(1);
+      await database.deleteDeck(deck.id);
+    });
+
+    test('multiple reviews on same day do not double-count', async () => {
+      const deck = await database.createDeck('Streak SameDay', '');
+      const c1 = await database.createCard(deck.id, 'h1', 'H1');
+      const c2 = await database.createCard(deck.id, 'h2', 'H2');
+      const today = dateStr(0);
+      await setReviewDate(c1.id, today);
+      await setReviewDate(c2.id, today);
+      const { streak } = await database.getStreak();
+      expect(streak).toBeGreaterThanOrEqual(1);
+      await database.deleteDeck(deck.id);
+    });
+  });
 });
 

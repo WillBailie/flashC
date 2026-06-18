@@ -240,12 +240,21 @@ class MockDatabase {
 
         // Cascade delete: remove rows from child tables
         if (parsed.table === 'decks') {
-          for (const childTable of ['cards', 'reviews']) {
-            if (tables[childTable]) {
-              tables[childTable].rows = tables[childTable].rows.filter(
-                (r) => !deletedIds.includes(r.deck_id) && !deletedIds.includes(r.card_id)
-              );
-            }
+          // Collect card IDs that belong to deleted decks
+          const childCardIds = (tables['cards']?.rows || [])
+            .filter((c) => deletedIds.includes(c.deck_id))
+            .map((c) => c.id);
+          // Remove cards
+          if (tables['cards']) {
+            tables['cards'].rows = tables['cards'].rows.filter(
+              (r) => !deletedIds.includes(r.deck_id)
+            );
+          }
+          // Remove reviews for those cards
+          if (tables['reviews']) {
+            tables['reviews'].rows = tables['reviews'].rows.filter(
+              (r) => !childCardIds.includes(r.card_id)
+            );
           }
         }
         if (parsed.table === 'cards') {
@@ -380,6 +389,27 @@ class MockDatabase {
       result = result.filter((r) => String(r[col]) === String(val));
     }
 
+    // Handle IS NULL / IS NOT NULL
+    for (const m of sql.matchAll(/(\w+)\s+IS\s+NOT\s+NULL/gi)) {
+      const col = m[1];
+      result = result.filter((r: any) => r[col] !== null && r[col] !== undefined);
+    }
+    for (const m of sql.matchAll(/(\w+)\s+IS\s+NULL/gi)) {
+      const col = m[1];
+      result = result.filter((r: any) => r[col] === null || r[col] === undefined);
+    }
+
+    // DISTINCT
+    if (/SELECT\s+DISTINCT/i.test(sql)) {
+      const seen = new Set<string>();
+      result = result.filter((r: any) => {
+        const key = Object.values(r).join('\x00');
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
     const orderMatch = sql.match(/ORDER BY (\w+) (\w+)/i);
     if (orderMatch) {
       const [, col, dir] = orderMatch;
@@ -393,6 +423,29 @@ class MockDatabase {
     const limitMatch = sql.match(/LIMIT (\d+)/i);
     if (limitMatch) {
       result = result.slice(0, parseInt(limitMatch[1]));
+    }
+
+    // Column aliases (e.g., last_review_date as review_date)
+    const selectMatch = sql.match(/SELECT\s+(?:DISTINCT\s+)?(.+?)\s+FROM/i);
+    if (selectMatch) {
+      const cols = selectMatch[1].split(',').map((c: string) => c.trim());
+      const aliasMap = new Map<string, string>();
+      for (const col of cols) {
+        const aliasMatch = col.match(/^(\w+)\s+as\s+(\w+)$/i);
+        if (aliasMatch) {
+          aliasMap.set(aliasMatch[1].toLowerCase(), aliasMatch[2]);
+        }
+      }
+      if (aliasMap.size > 0) {
+        result = result.map((r: any) => {
+          const mapped: any = {};
+          for (const [key, val] of Object.entries(r)) {
+            const alias = aliasMap.get(key.toLowerCase());
+            mapped[alias || key] = val;
+          }
+          return mapped;
+        });
+      }
     }
 
     return Promise.resolve(result as T[]);
