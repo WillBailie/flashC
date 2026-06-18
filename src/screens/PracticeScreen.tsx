@@ -35,6 +35,7 @@ import { generateExample } from '../utils/ai';
 import { getAiEnabled, getApiKey } from '../utils/settings';
 import { Quality, TemplateField } from '../models/types';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { advanceOnFlip, advanceOnSwipeLeft, advanceOnSwipeRight, advanceOnRate } from '../utils/practiceSession';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Practice'>;
 
@@ -167,43 +168,49 @@ export default function PracticeScreen({ navigation, route }: Props) {
   }, [currentIndex, cards.length, reduceMotion]);
 
   const handleFlip = () => {
-    if (mode === 'freeflow' && isFlipped) {
-      setStats((prev) => ({ reviewed: prev.reviewed + 1 }));
-      setExampleSentence('');
-      setExampleTranslation('');
-      setExamplePinyin('');
-      if (currentIndex + 1 < cards.length) {
-        setCurrentIndex(currentIndex + 1);
-        setIsFlipped(false);
-      } else {
-        setSessionComplete(true);
-      }
-      return;
+    const result = advanceOnFlip({ cards, currentIndex, isFlipped, stats }, mode);
+    setCards(result.cards);
+    setCurrentIndex(result.currentIndex);
+    setIsFlipped(result.isFlipped);
+    setStats(result.stats);
+    setExampleSentence('');
+    setExampleTranslation('');
+    setExamplePinyin('');
+    if (result.isComplete) {
+      setSessionComplete(true);
+      setShowConfetti(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
-    setIsFlipped((prev) => !prev);
   };
 
   const handleSwipeLeft = () => {
     if (!isFlipped) return;
-    if (mode === 'freeflow') {
-      setStats((prev) => ({ reviewed: prev.reviewed + 1 }));
-      setExampleSentence('');
-      setExampleTranslation('');
-      setExamplePinyin('');
-      if (currentIndex + 1 < cards.length) {
-        setCurrentIndex(currentIndex + 1);
-        setIsFlipped(false);
-      } else {
-        setSessionComplete(true);
-      }
-    } else {
-      handleRate(0);
+    const card = cards[currentIndex];
+    const result = advanceOnSwipeLeft({ cards, currentIndex, isFlipped, stats }, mode);
+    setCards(result.cards);
+    setCurrentIndex(result.currentIndex);
+    setIsFlipped(result.isFlipped);
+    setStats(result.stats);
+    setExampleSentence('');
+    setExampleTranslation('');
+    setExamplePinyin('');
+    if (result.isComplete) {
+      setSessionComplete(true);
+      setShowConfetti(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    if (mode === 'daily' && card) {
+      const sm2Result = calculateSM2(card.ease_factor, card.interval, card.repetitions, 0);
+      try { updateReview(card.id, sm2Result.easeFactor, sm2Result.interval, sm2Result.repetitions, sm2Result.nextReviewDate); } catch {}
     }
   };
 
   const handleSwipeRight = () => {
     if (!isFlipped) return;
-    setIsFlipped(false);
+    const result = advanceOnSwipeRight({ cards, currentIndex, isFlipped, stats });
+    setCards(result.cards);
+    setCurrentIndex(result.currentIndex);
+    setIsFlipped(result.isFlipped);
   };
 
   const handleGenerateExample = async () => {
@@ -226,34 +233,22 @@ export default function PracticeScreen({ navigation, route }: Props) {
     if (!card) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    const result = calculateSM2(card.ease_factor, card.interval, card.repetitions, quality);
-    await updateReview(card.id, result.easeFactor, result.interval, result.repetitions, result.nextReviewDate);
-
-    if (mode === 'daily' && quality === 0) {
-      const newCards = [...cards];
-      const wasLast = currentIndex >= newCards.length - 1;
-      newCards.splice(currentIndex, 1);
-      newCards.push(card);
-      setCards(newCards);
-      setCurrentIndex(wasLast ? 0 : currentIndex);
-      setIsFlipped(false);
-      setExampleSentence('');
-      setExampleTranslation('');
-      setExamplePinyin('');
-      return;
+    const sm2Result = calculateSM2(card.ease_factor, card.interval, card.repetitions, quality);
+    try {
+      await updateReview(card.id, sm2Result.easeFactor, sm2Result.interval, sm2Result.repetitions, sm2Result.nextReviewDate);
+    } catch {
+      // Card advancement should not be blocked by database errors
     }
 
-    const newStats = { reviewed: stats.reviewed + 1 };
-    setStats(newStats);
-
+    const result = advanceOnRate({ cards, currentIndex, isFlipped, stats }, quality);
+    setCards(result.cards);
+    setCurrentIndex(result.currentIndex);
+    setIsFlipped(result.isFlipped);
+    setStats(result.stats);
     setExampleSentence('');
     setExampleTranslation('');
     setExamplePinyin('');
-
-    if (currentIndex + 1 < cards.length) {
-      setCurrentIndex(currentIndex + 1);
-      setIsFlipped(false);
-    } else {
+    if (result.isComplete) {
       setSessionComplete(true);
     }
   };
@@ -443,21 +438,6 @@ export default function PracticeScreen({ navigation, route }: Props) {
     },
   }), [colors, insets]);
 
-  const iconAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: completeScale.value }],
-    opacity: completeOpacity.value,
-  }));
-
-  const statsAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: statsOpacity.value,
-    transform: [{ translateY: withTiming(statsOpacity.value > 0 ? 0 : 20) }],
-  }));
-
-  const buttonsAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: buttonsOpacity.value,
-    transform: [{ translateY: withTiming(buttonsOpacity.value > 0 ? 0 : 20) }],
-  }));
-
   if (sessionComplete) {
     return (
       <View style={styles.container}>
@@ -479,13 +459,13 @@ export default function PracticeScreen({ navigation, route }: Props) {
         </View>
         <Confetti trigger={showConfetti} />
         <View style={styles.completeContainer}>
-          <Animated.View style={[styles.completeIconWrap, iconAnimatedStyle]}>
+          <View style={styles.completeIconWrap}>
             <Ionicons name="trophy" size={56} color={colors.warning} />
-          </Animated.View>
-          <Animated.Text style={[styles.completeTitle, iconAnimatedStyle]}>
+          </View>
+          <Text style={styles.completeTitle}>
             Session Complete
-          </Animated.Text>
-          <Animated.View style={[statsAnimatedStyle, { alignItems: 'center' }]}>
+          </Text>
+          <View style={{ alignItems: 'center' }}>
             <Text style={styles.completeStat}>
               {stats.reviewed} {stats.reviewed === 1 ? 'card' : 'cards'} reviewed
             </Text>
@@ -494,8 +474,8 @@ export default function PracticeScreen({ navigation, route }: Props) {
                 Repetitions saved for next review
               </Text>
             )}
-          </Animated.View>
-          <Animated.View style={[styles.completeButtons, buttonsAnimatedStyle]}>
+          </View>
+          <View style={styles.completeButtons}>
             <Button
               title="Done"
               onPress={() => {
@@ -511,7 +491,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
               }}
               style={{ marginTop: spacing.sm }}
             />
-          </Animated.View>
+          </View>
         </View>
       </View>
     );
