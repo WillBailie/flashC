@@ -14,6 +14,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '../i18n/TranslationContext';
 import { useTheme, spacing, fontSize, borderRadius, withAlpha, typography } from '../constants/theme';
 import { EmptyState } from '../components/EmptyState';
 import { Button } from '../components/Button';
@@ -45,6 +46,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
   const [fieldToDelete, setFieldToDelete] = useState<TemplateField | null>(null);
 
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const styles = useMemo(() => StyleSheet.create({
     floatingHeader: {
@@ -437,7 +439,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
         <View style={styles.floatingSpacer} />
       </View>
       <View style={styles.nameSection}>
-        <Text style={styles.label}>Template Name</Text>
+        <Text style={styles.label}>{t('template.templateName')}</Text>
         <TextInput
           style={styles.nameInput}
           placeholder="e.g., Chinese Vocabulary"
@@ -521,9 +523,9 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Field</Text>
+            <Text style={styles.modalTitle}>{t('template.addField')}</Text>
 
-            <Text style={styles.modalLabel}>Field Name</Text>
+            <Text style={styles.modalLabel}>{t('template.fieldName')}</Text>
             <TextInput
               style={styles.input}
               placeholder="e.g., Hanzi, Pinyin, Translation"
@@ -540,7 +542,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
                 onPress={() => setNewFieldSide('front')}
               >
                 <Text style={[styles.sideOptionText, newFieldSide === 'front' && styles.sideOptionTextActive]}>
-                  Front
+                  {t('template.sideFront')}
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -548,7 +550,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
                 onPress={() => setNewFieldSide('back')}
               >
                 <Text style={[styles.sideOptionText, newFieldSide === 'back' && styles.sideOptionTextActive]}>
-                  Back
+                  {t('template.sideBack')}
                 </Text>
               </TouchableOpacity>
             </View>

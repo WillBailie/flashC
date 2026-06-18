@@ -11,6 +11,7 @@ import {
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '../i18n/TranslationContext';
 import { useTheme, spacing, fontSize, borderRadius, withAlpha } from '../constants/theme';
 import {
   getAllDecks,
@@ -38,6 +39,7 @@ export default function ImportScreen() {
   const [fileName, setFileName] = useState('');
   const [fileContent, setFileContent] = useState('');
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const loadData = React.useCallback(async () => {
     const [allDecks, allTemplates, defaultId] = await Promise.all([
@@ -186,7 +188,7 @@ export default function ImportScreen() {
       emit('decks-changed');
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
-      Alert.alert('Import Failed', msg);
+      Alert.alert(t('import.error'), msg);
     } finally {
       setImporting(false);
     }
@@ -249,7 +251,7 @@ export default function ImportScreen() {
           disabled={importing || selectedDeckId === null}
         >
           <Text style={styles.importButtonText}>
-            {importing ? 'Importing...' : `Import ${previewCards.length} Cards`}
+            {importing ? t('import.importing') : `Import ${previewCards.length} Cards`}
           </Text>
         </TouchableOpacity>
       </View>
@@ -518,7 +520,7 @@ export default function ImportScreen() {
         ) : (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
             <Ionicons name="folder-open" size={16} color={colors.primary} />
-            <Text style={styles.pickFileButtonText}>Select File</Text>
+            <Text style={styles.pickFileButtonText}>{t('import.selectFile')}</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -536,7 +538,7 @@ export default function ImportScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
             <Ionicons name="checkmark-circle" size={20} color={colors.success} />
             <Text style={[styles.pickFileButtonText, { color: colors.success }]}>
-              Successfully imported {importedCount} card{importedCount !== 1 ? 's' : ''}
+              {importedCount} {t('import.success')}
             </Text>
           </View>
         </View>

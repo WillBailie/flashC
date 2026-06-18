@@ -11,6 +11,7 @@ import Animated, { FadeInUp, useSharedValue, useAnimatedStyle, withSpring } from
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '../i18n/TranslationContext';
 import { useTheme, spacing, fontSize, borderRadius, withAlpha } from '../constants/theme';
 import { EmptyState } from '../components/EmptyState';
 import * as Haptics from 'expo-haptics';
@@ -32,6 +33,7 @@ export default function TemplateListScreen() {
   const [fieldCounts, setFieldCounts] = useState<Record<number, number>>({});
   const [defaultId, setDefaultId] = useState<number | null>(null);
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const loadTemplates = useCallback(async () => {
     const allTemplates = await getAllTemplates();
@@ -203,8 +205,8 @@ export default function TemplateListScreen() {
         }
         ListEmptyComponent={
           <EmptyState
-            title="No Templates"
-            subtitle="Create a template to define custom fields for your flashcards."
+            title={t('template.emptyTitle')}
+            subtitle={t('template.emptySubtitle')}
           />
         }
       />

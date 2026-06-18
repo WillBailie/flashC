@@ -14,6 +14,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '../i18n/TranslationContext';
 import { useTheme, spacing, borderRadius, typography, withAlpha } from '../constants/theme';
 import { useReduceMotion, SPRING_CONFIG } from '../utils/animation';
 import { EmptyState } from '../components/EmptyState';
@@ -49,6 +50,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
   const [currentFields, setCurrentFields] = useState<TemplateField[]>([]);
   const [currentValues, setCurrentValues] = useState<Record<string, string>>({});
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
   const completeScale = useSharedValue(0);
@@ -87,11 +89,11 @@ export default function PracticeScreen({ navigation, route }: Props) {
   }, [navigation]);
 
   const title = useMemo(() => {
-    const label = mode === 'freeflow' ? 'Freeflow' : 'Daily Review';
-    const deckLabel = deckName ? `: ${deckName}` : ': All Decks';
-    const reverseLabel = reverse ? ' (Reverse)' : '';
+    const label = mode === 'freeflow' ? t('practice.freeflow') : t('practice.dailyReview');
+    const deckLabel = deckName ? `: ${deckName}` : `: ${t('practice.allDecks')}`;
+    const reverseLabel = reverse ? ` (${t('practice.reverse')})` : '';
     return `${label}${deckLabel}${reverseLabel}`;
-  }, [deckName, mode, reverse]);
+  }, [deckName, mode, reverse, t]);
 
   const displayFields = useMemo(
     () => applyReverseSwap(currentFields, !!reverse),
@@ -446,7 +448,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
             style={styles.floatingBackButton}
             onPress={() => navigation.goBack()}
             accessibilityRole="button"
-            accessibilityLabel="Go back"
+            accessibilityLabel={t('a11y.goBack')}
           >
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
@@ -463,27 +465,27 @@ export default function PracticeScreen({ navigation, route }: Props) {
             <Ionicons name="trophy" size={56} color={colors.warning} />
           </View>
           <Text style={styles.completeTitle}>
-            Session Complete
+            {t('practice.sessionComplete')}
           </Text>
           <View style={{ alignItems: 'center' }}>
             <Text style={styles.completeStat}>
-              {stats.reviewed} {stats.reviewed === 1 ? 'card' : 'cards'} reviewed
+              {stats.reviewed} {stats.reviewed === 1 ? t('practice.cardReviewed') : t('practice.cardsReviewed')}
             </Text>
             {mode === 'daily' && (
               <Text style={styles.completeSubtitle}>
-                Repetitions saved for next review
+                {t('practice.repetitionsSaved')}
               </Text>
             )}
           </View>
           <View style={styles.completeButtons}>
             <Button
-              title="Done"
+              title={t('common.done')}
               onPress={() => {
                 navigation.goBack();
               }}
             />
             <Button
-              title="Review Again"
+              title={t('practice.reviewAgain')}
               variant="secondary"
               onPress={() => {
                 setShowConfetti(false);
@@ -505,7 +507,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
             style={styles.floatingBackButton}
             onPress={() => navigation.goBack()}
             accessibilityRole="button"
-            accessibilityLabel="Go back"
+            accessibilityLabel={t('a11y.goBack')}
           >
             <Ionicons name="chevron-back" size={24} color={colors.text} />
           </TouchableOpacity>
@@ -517,8 +519,8 @@ export default function PracticeScreen({ navigation, route }: Props) {
           <View style={styles.floatingSpacer} />
         </View>
         <EmptyState
-          title="No Cards"
-          subtitle="Add some cards to this deck first, then come back to practice."
+          title={t('practice.noCardsTitle')}
+          subtitle={t('practice.noCardsSubtitle')}
         />
       </View>
     );
@@ -572,7 +574,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
           onPress={handleGenerateExample}
           disabled={generating}
           accessibilityRole="button"
-          accessibilityLabel="Generate example sentence"
+          accessibilityLabel={t('a11y.generateExample')}
         >
           <Ionicons
             name={generating ? 'hourglass-outline' : 'sparkles-outline'}
@@ -580,7 +582,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
             color={colors.primary}
           />
           <Text style={styles.generateButtonText}>
-            {generating ? 'Generating...' : 'Example'}
+            {generating ? t('practice.generating') : t('practice.example')}
           </Text>
         </TouchableOpacity>
       )}
@@ -596,7 +598,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
 
       {isFlipped && mode === 'daily' && (
         <View style={styles.ratingContainer}>
-          <Text style={styles.ratingLabel}>How well did you know this?</Text>
+          <Text style={styles.ratingLabel}>{t('practice.ratingLabel')}</Text>
           <View style={styles.ratingButtons}>
             <Animated.View style={[againAnimatedStyle, { flex: 1 }]}>
               <Pressable
@@ -610,10 +612,10 @@ export default function PracticeScreen({ navigation, route }: Props) {
                   if (!reduceMotion) againScale.value = withSpring(1, SPRING_CONFIG);
                 }}
                 accessibilityRole="button"
-                accessibilityLabel="Rate: Again"
+                accessibilityLabel={t('a11y.rateAgain')}
               >
-                <Text style={styles.rateButtonText}>Again</Text>
-                <Text style={styles.rateInterval}>&lt;1m</Text>
+                <Text style={styles.rateButtonText}>{t('practice.again')}</Text>
+                <Text style={styles.rateInterval}>{t('practice.intervalAgain')}</Text>
               </Pressable>
             </Animated.View>
             <Animated.View style={[hardAnimatedStyle, { flex: 1 }]}>
@@ -628,10 +630,10 @@ export default function PracticeScreen({ navigation, route }: Props) {
                   if (!reduceMotion) hardScale.value = withSpring(1, SPRING_CONFIG);
                 }}
                 accessibilityRole="button"
-                accessibilityLabel="Rate: Hard"
+                accessibilityLabel={t('a11y.rateHard')}
               >
-                <Text style={styles.rateButtonText}>Hard</Text>
-                <Text style={styles.rateInterval}>~1d</Text>
+                <Text style={styles.rateButtonText}>{t('practice.hard')}</Text>
+                <Text style={styles.rateInterval}>{t('practice.intervalHard')}</Text>
               </Pressable>
             </Animated.View>
             <Animated.View style={[goodAnimatedStyle, { flex: 1 }]}>
@@ -646,10 +648,10 @@ export default function PracticeScreen({ navigation, route }: Props) {
                   if (!reduceMotion) goodScale.value = withSpring(1, SPRING_CONFIG);
                 }}
                 accessibilityRole="button"
-                accessibilityLabel="Rate: Good"
+                accessibilityLabel={t('a11y.rateGood')}
               >
-                <Text style={styles.rateButtonText}>Good</Text>
-                <Text style={styles.rateInterval}>~3d</Text>
+                <Text style={styles.rateButtonText}>{t('practice.good')}</Text>
+                <Text style={styles.rateInterval}>{t('practice.intervalGood')}</Text>
               </Pressable>
             </Animated.View>
             <Animated.View style={[easyAnimatedStyle, { flex: 1 }]}>
@@ -664,10 +666,10 @@ export default function PracticeScreen({ navigation, route }: Props) {
                   if (!reduceMotion) easyScale.value = withSpring(1, SPRING_CONFIG);
                 }}
                 accessibilityRole="button"
-                accessibilityLabel="Rate: Easy"
+                accessibilityLabel={t('a11y.rateEasy')}
               >
-                <Text style={styles.rateButtonText}>Easy</Text>
-                <Text style={styles.rateInterval}>~7d</Text>
+                <Text style={styles.rateButtonText}>{t('practice.easy')}</Text>
+                <Text style={styles.rateInterval}>{t('practice.intervalEasy')}</Text>
               </Pressable>
             </Animated.View>
           </View>
