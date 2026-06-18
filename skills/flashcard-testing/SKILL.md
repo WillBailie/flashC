@@ -17,15 +17,27 @@ npx tsc --noEmit && npx jest --passWithNoTests
 
 This MUST pass before claiming work is complete. If it doesn't pass, work is not done.
 
-## What Gets Tested By Change Type
+## The Iron Rule
 
-| Change type | Minimum test requirement |
-|-------------|--------------------------|
-| New database query (SELECT/INSERT/UPDATE/DELETE) | Tests in `src/storage/__tests__/database.test.ts` covering happy path, empty results, edge params |
-| New utility function (`src/utils/`) | Tests in `src/utils/__tests__/<name>.test.ts` for every branch |
-| Modified database schema (ALTER TABLE) | Migration test proving the migration is idempotent (runs successfully on already-migrated database) |
-| Practice screen behavior change | Extract logic into `src/utils/practiceSession.ts` first, test the function, then wire into screen |
-| New logic embedded in a screen component | Ask: can this be extracted to a pure function in `src/utils/`? If yes, extract and test. If no, document why in a comment. |
+**Every new function, every new branch, every new parameter gets a test. Period.**
+
+You write the test BEFORE the implementation. Run it, watch it fail, then implement. This is non-negotiable. If you skip testing, you ship broken features.
+
+## What Gets Tested — Explicit Mapping
+
+When you make a change, match it to this table and do what it says. No exceptions.
+
+| You are... | You MUST... | Where |
+|------------|-------------|-------|
+| Adding a new `export async function` in `database.ts` | Write tests for: happy path, empty/null results, edge params, error cases | `src/storage/__tests__/database.test.ts` |
+| Adding a new `export function` in any `src/utils/` file | Create `src/utils/__tests__/<name>.test.ts`, test every branch and edge case | New test file |
+| Modifying an existing function's behavior or return value | Add or update tests for the new behavior BEFORE changing the implementation | Existing test file for that module |
+| Adding a new parameter to an exported function | Add tests exercising the new parameter (both provided and default/omitted) | Existing test file for that module |
+| Adding a column via ALTER TABLE | Use `execAsync` (NEVER `runAsync`), add a migration idempotency test | `src/storage/__tests__/database.test.ts` |
+| Changing `handleRate`/`handleFlip`/`handleSwipeLeft`/`handleSwipeRight` flow | Update the matching function in `practiceSession.ts`, add/update tests in `practiceSession.test.ts`, THEN wire the screen | `src/utils/practiceSession.ts` + test |
+| Adding logic inside any screen component | First: can this be extracted to a pure function in `src/utils/`? If yes, extract and test. If genuinely not extractable, add a comment explaining why | `src/utils/` or comment |
+| Adding a new screen that calls database functions | The database functions themselves must already be tested. Screen-level UI tests are optional per AGENTS.md | — |
+| Adding error handling (try/catch) to existing code | Test both the success path AND the failure path (make it fail, verify recovery) | Existing test file |
 
 ## Database Migration Rule
 
@@ -61,17 +73,17 @@ src/utils/foo.ts        → src/utils/__tests__/foo.test.ts
 
 Database tests use `jest.mock('expo-sqlite')` (in-memory mock at `__mocks__/expo-sqlite.ts`). Pure utility tests don't need mocks.
 
-## Red Flags — Changes That MUST Add Tests
+## Red Flags — Stop And Add Tests Now
 
-Any of these changes requires new or updated tests:
+If you did ANY of these without adding tests, your work is incomplete. Stop and add them before proceeding:
 
-- Adding `export async function` or `export function` in `database.ts`
-- Adding `export function` in any `src/utils/` file
-- Changing the behavior of `handleRate`, `handleFlip`, `handleSwipeLeft`, or `handleSwipeRight`
-- Adding a column via ALTER TABLE
-- Adding a new parameter to an existing exported function
-- Changing the Practice screen mode logic (daily vs freeflow rules)
-- Adding a new screen that calls database functions
+- Added `export function` or `export async function` anywhere → must have corresponding tests
+- Modified function behavior (new branch, changed return, different side effects) → must update tests
+- Added a new parameter to a function signature → must test both with and without the parameter
+- Added `ALTER TABLE` or changed schema → must use `execAsync` and add idempotency test
+- Touched `handleRate`/`handleFlip`/`handleSwipeLeft`/`handleSwipeRight` → must update `practiceSession.ts` + tests first
+- Changed mode-dependent behavior (daily vs freeflow rules) → must test both modes
+- The `npx jest` count didn't increase after your change → you forgot tests
 
 ## Quick Reference — Common Test Patterns
 
@@ -104,9 +116,14 @@ expect(result.currentIndex).toBe(1);
 
 ## Before Claiming Completion
 
+Run this checklist. Every box must be checked:
+
 - [ ] `npx tsc --noEmit` passes
 - [ ] `npx jest --passWithNoTests` passes
-- [ ] New database exports have tests
-- [ ] New utility exports have tests
-- [ ] Migrations use `execAsync` not `runAsync`
-- [ ] Practice screen changes use `practiceSession` functions
+- [ ] Every new `export function` has a test (happy path + at least one edge case)
+- [ ] Every new database query has a test (happy path + empty results + edge params)
+- [ ] Every ALTER TABLE migration uses `execAsync` and has an idempotency test
+- [ ] Every Practice screen logic change went through `practiceSession.ts` + tests first
+- [ ] Every new function parameter has a test exercising it
+- [ ] Modified functions have updated tests reflecting the new behavior
+- [ ] The jest test count increased if you added logic (stayed same = you forgot tests)
