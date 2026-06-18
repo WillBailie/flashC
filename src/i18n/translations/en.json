@@ -2,7 +2,6 @@
   "tab.home": "Home",
   "tab.decks": "Decks",
   "tab.settings": "Settings",
-
   "common.ok": "OK",
   "common.confirm": "Confirm",
   "common.cancel": "Cancel",
@@ -17,7 +16,6 @@
   "common.create": "Create",
   "common.add": "Add",
   "common.edit": "Edit",
-
   "home.greeting": "Welcome back",
   "home.todayProgress": "Today's Progress",
   "home.cardsDue": "cards due",
@@ -46,7 +44,6 @@
   "home.startStreak": "Review at least 1 card today to start!",
   "home.freeflowPrompt": "How many random cards would you like to review from all decks?",
   "home.startFreeflow": "Start Freeflow",
-
   "deckList.title": "My Decks",
   "deckList.emptyTitle": "No Decks",
   "deckList.emptySubtitle": "Create your first deck to get started",
@@ -61,7 +58,6 @@
   "deckList.cards": "cards",
   "deckList.due": "due",
   "deckList.new": "new",
-
   "deckDetail.emptyTitle": "No Cards",
   "deckDetail.emptySubtitle": "Add some cards to this deck first",
   "deckDetail.addCard": "Add Card",
@@ -85,7 +81,6 @@
   "deckDetail.practiceTitle": "Practice Options",
   "deckDetail.menuTitle": "Deck Options",
   "deckDetail.freeflowCount": "Cards to review",
-
   "cardForm.newTitle": "New Card",
   "cardForm.editTitle": "Edit Card",
   "cardForm.frontText": "Front Text",
@@ -100,7 +95,6 @@
   "cardForm.createCard": "Create Card",
   "cardForm.updateCard": "Update Card",
   "cardForm.deleteTitle": "Delete Card",
-
   "practice.dailyReview": "Daily Review",
   "practice.freeflow": "Freeflow",
   "practice.allDecks": "All Decks",
@@ -123,7 +117,6 @@
   "practice.cardsReviewed": "cards reviewed",
   "practice.repetitionsSaved": "Repetitions saved for next review",
   "practice.reviewAgain": "Review Again",
-
   "settings.title": "Settings",
   "settings.appLanguage": "App Language",
   "settings.appLanguageDescription": "Change the language of the app interface",
@@ -158,7 +151,6 @@
   "settings.statsMastered": "Mastered",
   "settings.statsTemplates": "Templates",
   "settings.statsAvgEase": "Avg Ease",
-
   "import.title": "Import Cards",
   "import.selectFile": "Select File",
   "import.csvOrJson": "CSV or JSON file",
@@ -178,7 +170,6 @@
   "import.preview": "Preview",
   "import.noDecks": "No decks available. Create a deck first.",
   "import.importCount": "Import {{count}} Cards",
-
   "template.title": "Templates",
   "template.newTemplate": "New Template",
   "template.templateName": "Template Name",
@@ -190,7 +181,6 @@
   "template.emptySubtitle": "Create a template to customize card layouts",
   "template.noFields": "No Fields Yet",
   "template.deleteField": "Delete Field",
-
   "a11y.goBack": "Go back",
   "a11y.rateAgain": "Rate: Again",
   "a11y.rateHard": "Rate: Hard",
@@ -204,5 +194,23 @@
   "a11y.dailyReview": "Daily Review. {{count}} cards due today",
   "a11y.freeflowAvailable": "Freeflow. {{count}} cards available",
   "a11y.cardCount": "Number of cards to review",
-  "a11y.startFreeflow": "Start a freeflow practice session"
+  "a11y.startFreeflow": "Start a freeflow practice session",
+  "template.saveName": "Save Name",
+  "template.fields": "Fields",
+  "template.previewFront": "FRONT",
+  "template.previewBack": "BACK",
+  "template.fieldPlaceholder": "value...",
+  "template.noFrontFields": "No front fields",
+  "template.noBackFields": "No back fields",
+  "template.saveFirstAddLater": "Save the template name first, then add fields.",
+  "template.addLater": "Add fields to define what appears on each side.",
+  "template.displayOn": "Display On",
+  "template.fieldModalPlaceholder": "e.g., Hanzi, Pinyin, Translation",
+  "template.namePlaceholder": "e.g., Chinese Vocabulary",
+  "template.nameRequiredError": "Template name is required.",
+  "template.fieldNameRequiredError": "Field name is required.",
+  "template.saveFirstError": "Save the template first, then add fields.",
+  "template.deleteFieldError": "Failed to delete field. Please try again.",
+  "template.removeFieldConfirm": "Remove \"{{name}}\" from this template?",
+  "template.editTemplate": "Edit Template"
 }

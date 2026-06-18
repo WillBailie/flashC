@@ -343,7 +343,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Template name is required.');
+      Alert.alert(t('common.error'), t('template.nameRequiredError'));
       return;
     }
     if (isNew) {
@@ -354,11 +354,11 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
 
   const handleAddField = async () => {
     if (!newFieldName.trim()) {
-      Alert.alert('Error', 'Field name is required.');
+      Alert.alert(t('common.error'), t('template.fieldNameRequiredError'));
       return;
     }
     if (!editingTemplateId) {
-      Alert.alert('Error', 'Save the template first, then add fields.');
+      Alert.alert(t('common.error'), t('template.saveFirstError'));
       return;
     }
     const nextPos = fields.filter((f) => f.side === newFieldSide).length;
@@ -379,7 +379,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
       await deleteTemplateField(fieldToDelete.id);
       setFields((prev) => prev.filter((f) => f.id !== fieldToDelete.id));
     } catch {
-      Alert.alert('Error', 'Failed to delete field. Please try again.');
+      Alert.alert(t('common.error'), t('template.deleteFieldError'));
     } finally {
       setDeleteModalVisible(false);
       setFieldToDelete(null);
@@ -433,7 +433,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
         </TouchableOpacity>
         <View style={styles.floatingPill}>
           <View style={styles.floatingPillInner}>
-            <Text style={styles.floatingPillText} numberOfLines={1}>Edit Template</Text>
+            <Text style={styles.floatingPillText} numberOfLines={1}>{isNew ? t('template.newTemplate') : t('template.editTemplate')}</Text>
           </View>
         </View>
         <View style={styles.floatingSpacer} />
@@ -442,59 +442,59 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
         <Text style={styles.label}>{t('template.templateName')}</Text>
         <TextInput
           style={styles.nameInput}
-          placeholder="e.g., Chinese Vocabulary"
+          placeholder={t('template.namePlaceholder')}
           placeholderTextColor={colors.textSecondary}
           value={name}
           onChangeText={setName}
         />
         {isNew && (
           <TouchableOpacity style={styles.saveNameButton} onPress={handleSave}>
-            <Text style={styles.saveNameButtonText}>Save Name</Text>
+            <Text style={styles.saveNameButtonText}>{t('template.saveName')}</Text>
           </TouchableOpacity>
         )}
       </View>
 
       <View style={styles.fieldsSection}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Fields</Text>
+          <Text style={styles.sectionTitle}>{t('template.fields')}</Text>
           {editingTemplateId && (
             <TouchableOpacity
               style={styles.addFieldButton}
               onPress={() => setModalVisible(true)}
             >
-              <Text style={styles.addFieldButtonText}>+ Add Field</Text>
+              <Text style={styles.addFieldButtonText}>+ {t('template.addField')}</Text>
             </TouchableOpacity>
           )}
         </View>
 
         <View style={styles.previewCard}>
           <View style={styles.previewSide}>
-            <Text style={styles.previewSideLabel}>FRONT</Text>
+            <Text style={styles.previewSideLabel}>{t('template.previewFront')}</Text>
             {frontFields.map((f) => (
               <View key={f.id} style={styles.previewField}>
                 <Text style={styles.previewFieldLabel}>{f.name}</Text>
                 <Text style={styles.previewFieldPlaceholder}>
-                  {f.name} value...
+                  {f.name} {t('template.fieldPlaceholder')}
                 </Text>
               </View>
             ))}
             {frontFields.length === 0 && (
-              <Text style={styles.previewEmpty}>No front fields</Text>
+              <Text style={styles.previewEmpty}>{t('template.noFrontFields')}</Text>
             )}
           </View>
           <View style={styles.previewDivider} />
           <View style={styles.previewSide}>
-            <Text style={styles.previewSideLabel}>BACK</Text>
+            <Text style={styles.previewSideLabel}>{t('template.previewBack')}</Text>
             {backFields.map((f) => (
               <View key={f.id} style={styles.previewField}>
                 <Text style={styles.previewFieldLabel}>{f.name}</Text>
                 <Text style={styles.previewFieldPlaceholder}>
-                  {f.name} value...
+                  {f.name} {t('template.fieldPlaceholder')}
                 </Text>
               </View>
             ))}
             {backFields.length === 0 && (
-              <Text style={styles.previewEmpty}>No back fields</Text>
+              <Text style={styles.previewEmpty}>{t('template.noBackFields')}</Text>
             )}
           </View>
         </View>
@@ -506,7 +506,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
           ListEmptyComponent={
             <EmptyState
               title={t('template.noFields')}
-              subtitle={isNew ? 'Save the template name first, then add fields.' : 'Add fields to define what appears on each side.'}
+              subtitle={isNew ? t('template.saveFirstAddLater') : t('template.addLater')}
             />
           }
         />
@@ -528,14 +528,14 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
             <Text style={styles.modalLabel}>{t('template.fieldName')}</Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g., Hanzi, Pinyin, Translation"
+              placeholder={t('template.fieldModalPlaceholder')}
               placeholderTextColor={colors.textSecondary}
               value={newFieldName}
               onChangeText={setNewFieldName}
               autoFocus
             />
 
-            <Text style={styles.modalLabel}>Display On</Text>
+            <Text style={styles.modalLabel}>{t('template.displayOn')}</Text>
             <View style={styles.sideToggle}>
               <TouchableOpacity
                 style={[styles.sideOption, newFieldSide === 'front' && styles.sideOptionActive]}
@@ -560,10 +560,10 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
                 style={styles.cancelButton}
                 onPress={() => setModalVisible(false)}
               >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
+                <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.addButton} onPress={handleAddField}>
-                <Text style={styles.addButtonText}>Add</Text>
+                <Text style={styles.addButtonText}>{t('common.add')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -579,7 +579,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
         title={t('template.deleteField')}
       >
         <Text style={{ fontSize: fontSize.md, color: colors.text, textAlign: 'center', marginBottom: spacing.lg }}>
-          Remove "{fieldToDelete?.name}" from this template?
+          {t('template.removeFieldConfirm', { name: fieldToDelete?.name ?? '' })}
         </Text>
         <Button
           title={t('common.delete')}

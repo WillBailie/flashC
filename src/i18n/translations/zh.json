@@ -2,7 +2,6 @@
   "tab.home": "首页",
   "tab.decks": "牌组",
   "tab.settings": "设置",
-
   "common.ok": "确定",
   "common.confirm": "确认",
   "common.cancel": "取消",
@@ -17,7 +16,6 @@
   "common.create": "创建",
   "common.add": "添加",
   "common.edit": "编辑",
-
   "home.greeting": "欢迎回来",
   "home.todayProgress": "今日进度",
   "home.cardsDue": "张卡片待复习",
@@ -46,7 +44,6 @@
   "home.startStreak": "今天至少复习一张卡片开始吧！",
   "home.freeflowPrompt": "您想从所有牌组中随机复习多少张卡片？",
   "home.startFreeflow": "开始自由浏览",
-
   "deckList.title": "我的牌组",
   "deckList.emptyTitle": "没有牌组",
   "deckList.emptySubtitle": "创建您的第一个牌组开始使用",
@@ -61,7 +58,6 @@
   "deckList.cards": "张卡片",
   "deckList.due": "待复习",
   "deckList.new": "新卡片",
-
   "deckDetail.emptyTitle": "没有卡片",
   "deckDetail.emptySubtitle": "先向此牌组添加一些卡片",
   "deckDetail.addCard": "添加卡片",
@@ -85,7 +81,6 @@
   "deckDetail.practiceTitle": "练习选项",
   "deckDetail.menuTitle": "牌组选项",
   "deckDetail.freeflowCount": "复习卡片数",
-
   "cardForm.newTitle": "新建卡片",
   "cardForm.editTitle": "编辑卡片",
   "cardForm.createCard": "创建卡片",
@@ -100,7 +95,6 @@
   "cardForm.interval": "间隔",
   "cardForm.nextReview": "下次复习",
   "cardForm.deleteTitle": "删除卡片",
-
   "practice.dailyReview": "每日复习",
   "practice.freeflow": "自由浏览",
   "practice.allDecks": "全部牌组",
@@ -123,7 +117,6 @@
   "practice.cardsReviewed": "张卡片已复习",
   "practice.repetitionsSaved": "复习记录已保存",
   "practice.reviewAgain": "再复习一次",
-
   "settings.title": "设置",
   "settings.appLanguage": "应用语言",
   "settings.appLanguageDescription": "更改应用界面的语言",
@@ -158,7 +151,6 @@
   "settings.statsMastered": "已掌握",
   "settings.statsTemplates": "模板",
   "settings.statsAvgEase": "平均简易度",
-
   "import.title": "导入卡片",
   "import.selectFile": "选择文件",
   "import.csvOrJson": "CSV 或 JSON 文件",
@@ -178,7 +170,6 @@
   "import.preview": "预览",
   "import.noDecks": "没有可用的牌组。请先创建一个牌组。",
   "import.importCount": "导入 {{count}} 张卡片",
-
   "template.title": "模板",
   "template.newTemplate": "新建模板",
   "template.templateName": "模板名称",
@@ -190,7 +181,6 @@
   "template.emptySubtitle": "创建模板以自定义卡片布局",
   "template.noFields": "还没有字段",
   "template.deleteField": "删除字段",
-
   "a11y.goBack": "返回",
   "a11y.rateAgain": "评分: 再来",
   "a11y.rateHard": "评分: 困难",
@@ -204,5 +194,23 @@
   "a11y.dailyReview": "每日复习。{{count}} 张卡片今日待复习",
   "a11y.freeflowAvailable": "自由浏览。{{count}} 张卡片可用",
   "a11y.cardCount": "要复习的卡片数量",
-  "a11y.startFreeflow": "开始自由浏览练习"
+  "a11y.startFreeflow": "开始自由浏览练习",
+  "template.saveName": "保存名称",
+  "template.fields": "字段",
+  "template.previewFront": "正面",
+  "template.previewBack": "背面",
+  "template.fieldPlaceholder": "值...",
+  "template.noFrontFields": "无正面字段",
+  "template.noBackFields": "无背面字段",
+  "template.saveFirstAddLater": "请先保存模板名称，然后添加字段。",
+  "template.addLater": "添加字段以定义每面显示的内容。",
+  "template.displayOn": "显示位置",
+  "template.fieldModalPlaceholder": "例如：汉字、拼音、翻译",
+  "template.namePlaceholder": "例如：中文词汇",
+  "template.nameRequiredError": "模板名称不能为空。",
+  "template.fieldNameRequiredError": "字段名称不能为空。",
+  "template.saveFirstError": "请先保存模板，然后添加字段。",
+  "template.deleteFieldError": "删除字段失败，请重试。",
+  "template.removeFieldConfirm": "确定要从此模板中移除 \"{{name}}\" 吗？",
+  "template.editTemplate": "编辑模板"
 }
