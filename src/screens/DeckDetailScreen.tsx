@@ -914,7 +914,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
             color: colors.text,
             backgroundColor: colors.background,
           }}
-          placeholder="Or enter custom language..."
+          placeholder={t('deckDetail.customLanguagePlaceholder')}
           placeholderTextColor={colors.textSecondary}
           value={editingCustomLang}
           onChangeText={(text) => {

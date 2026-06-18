@@ -314,14 +314,14 @@ export default function DeckListScreen({ navigation }: Props) {
       >
         <Input
           label={t('deckList.deckName')}
-          placeholder="e.g., Spanish Verbs"
+          placeholder={t('deckList.deckNamePlaceholder')}
           value={newDeckName}
           onChangeText={setNewDeckName}
           autoFocus
         />
         <Input
           label={t('deckList.description')}
-          placeholder="Optional"
+          placeholder={t('deckList.descriptionPlaceholder')}
           value={newDeckDesc}
           onChangeText={setNewDeckDesc}
           multiline
@@ -353,7 +353,7 @@ export default function DeckListScreen({ navigation }: Props) {
         </View>
         <Input
           label={t('deckList.customLanguagePlaceholder')}
-          placeholder="e.g., Finnish"
+          placeholder={t('deckList.customLangPlaceholder')}
           value={customLanguage}
           onChangeText={(text) => {
             setCustomLanguage(text);

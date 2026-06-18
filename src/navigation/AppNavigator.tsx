@@ -105,19 +105,13 @@ export default function AppNavigator() {
         <Stack.Screen
           name="CardForm"
           component={CardFormScreen}
-          options={({ route }) => ({
-            headerTitle: route.params.cardId ? 'Edit Card' : 'New Card',
-            headerBackTitle: 'Back',
-          })}
+          options={{ headerBackTitle: 'Back' }}
         />
         <Stack.Screen name="Practice" component={PracticeScreen} options={{ headerBackTitle: 'Back' }} />
         <Stack.Screen
           name="TemplateEditor"
           component={TemplateEditorScreen}
-          options={({ route }) => ({
-            headerTitle: route.params.templateId ? 'Edit Template' : 'New Template',
-            headerBackTitle: 'Back',
-          })}
+          options={{ headerBackTitle: 'Back' }}
         />
         <Stack.Screen
           name="Import"

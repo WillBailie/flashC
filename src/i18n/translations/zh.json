@@ -212,5 +212,8 @@
   "template.saveFirstError": "请先保存模板，然后添加字段。",
   "template.deleteFieldError": "删除字段失败，请重试。",
   "template.removeFieldConfirm": "确定要从此模板中移除 \"{{name}}\" 吗？",
-  "template.editTemplate": "编辑模板"
+  "template.editTemplate": "编辑模板",
+  "deckDetail.customLanguagePlaceholder": "或输入自定义语言...",
+  "deckList.customLangPlaceholder": "例如：芬兰语",
+  "cardForm.fieldPlaceholder": "输入{{name}}..."
 }

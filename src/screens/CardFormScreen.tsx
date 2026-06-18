@@ -191,7 +191,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
       <Text style={styles.templateFieldLabel}>{field.name}</Text>
       <TextInput
         style={styles.templateFieldInput}
-        placeholder={`Enter ${field.name.toLowerCase()}...`}
+        placeholder={t('cardForm.fieldPlaceholder', { name: field.name.toLowerCase() })}
         placeholderTextColor={colors.textSecondary}
         value={fieldValues[field.name] ?? ''}
         onChangeText={(text) => handleFieldChange(field.name, text)}
@@ -510,7 +510,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
           <Text style={styles.label}>{t('cardForm.frontText')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g., Hello"
+            placeholder={t('cardForm.frontTextPlaceholder')}
             placeholderTextColor={colors.textSecondary}
             value={frontText}
             onChangeText={setFrontText}
@@ -520,7 +520,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
           <Text style={styles.label}>{t('cardForm.backText')}</Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g., Hola"
+            placeholder={t('cardForm.backTextPlaceholder')}
             placeholderTextColor={colors.textSecondary}
             value={backText}
             onChangeText={setBackText}

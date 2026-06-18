@@ -212,5 +212,8 @@
   "template.saveFirstError": "Save the template first, then add fields.",
   "template.deleteFieldError": "Failed to delete field. Please try again.",
   "template.removeFieldConfirm": "Remove \"{{name}}\" from this template?",
-  "template.editTemplate": "Edit Template"
+  "template.editTemplate": "Edit Template",
+  "deckDetail.customLanguagePlaceholder": "Or enter custom language...",
+  "deckList.customLangPlaceholder": "e.g., Finnish",
+  "cardForm.fieldPlaceholder": "Enter {{name}}..."
 }
