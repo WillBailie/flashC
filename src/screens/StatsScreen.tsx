@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useLayoutEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,14 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, spacing, borderRadius, typography, withAlpha } from '../constants/theme';
 import { getGlobalStats } from '../storage/database';
 import { Card } from '../components/Card';
 import { Skeleton } from '../components/Skeleton';
 import { useTranslation } from '../i18n/TranslationContext';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
 function StatCard({ label, value, icon, color }: {
   label: string;
@@ -78,6 +80,12 @@ function StatCard({ label, value, icon, color }: {
 export default function StatsScreen() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'Stats'>>();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerTitle: t('settings.stats') });
+  }, [navigation, t]);
+
   const [stats, setStats] = useState<{
     totalCards: number;
     totalDecks: number;

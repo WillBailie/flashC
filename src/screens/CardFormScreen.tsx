@@ -616,7 +616,7 @@ export default function CardFormScreen({ navigation, route }: Props) {
 
       <View style={styles.bottomBar}>
         <Button
-          title={isEditing ? 'Update Card' : 'Create Card'}
+          title={isEditing ? t('cardForm.updateCard') : t('cardForm.createCard')}
           onPress={handleSave}
           fullWidth
         />

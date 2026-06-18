@@ -948,7 +948,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
           onPress={() => setMenuVisible(false)}
         >
           <View style={styles.menuSheet}>
-            <Text style={styles.menuTitle}>Deck Options</Text>
+            <Text style={styles.menuTitle}>{t('deckDetail.menuTitle')}</Text>
             <Pressable
               style={styles.menuItem}
               onPress={() => {

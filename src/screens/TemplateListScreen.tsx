@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,7 @@ import {
 import { Template, TemplateField } from '../models/types';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'TemplateList'>;
 
 export default function TemplateListScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -34,6 +34,10 @@ export default function TemplateListScreen() {
   const [defaultId, setDefaultId] = useState<number | null>(null);
   const { colors } = useTheme();
   const { t } = useTranslation();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerTitle: t('settings.templates') });
+  }, [navigation, t]);
 
   const loadTemplates = useCallback(async () => {
     const allTemplates = await getAllTemplates();

@@ -122,22 +122,22 @@ export default function AppNavigator() {
         <Stack.Screen
           name="Import"
           component={ImportScreen}
-          options={{ headerTitle: 'Import', headerBackTitle: 'Back' }}
+          options={{ headerBackTitle: 'Back' }}
         />
         <Stack.Screen
           name="TemplateList"
           component={TemplateListScreen}
-          options={{ headerTitle: 'Templates', headerBackTitle: 'Back' }}
+          options={{ headerBackTitle: 'Back' }}
         />
         <Stack.Screen
           name="Stats"
           component={StatsScreen}
-          options={{ headerTitle: 'Stats', headerBackTitle: 'Back' }}
+          options={{ headerBackTitle: 'Back' }}
         />
         <Stack.Screen
           name="Export"
           component={ExportScreen}
-          options={{ headerTitle: 'Export', headerBackTitle: 'Back' }}
+          options={{ headerBackTitle: 'Back' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

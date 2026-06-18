@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,14 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../i18n/TranslationContext';
 import { useTheme, spacing, fontSize, borderRadius, withAlpha } from '../constants/theme';
+import { RootStackParamList } from '../navigation/AppNavigator';
 import {
   getAllDecks,
   importCards,
@@ -40,6 +43,11 @@ export default function ImportScreen() {
   const [fileContent, setFileContent] = useState('');
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'Import'>>();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerTitle: t('settings.import') });
+  }, [navigation, t]);
 
   const loadData = React.useCallback(async () => {
     const [allDecks, allTemplates, defaultId] = await Promise.all([

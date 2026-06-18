@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useLayoutEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useTheme, spacing, borderRadius, typography } from '../constants/theme';
@@ -21,10 +22,17 @@ import { Skeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
 import { useTranslation } from '../i18n/TranslationContext';
 import { Deck } from '../models/types';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
 export default function ExportScreen() {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'Export'>>();
+
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerTitle: t('settings.export') });
+  }, [navigation, t]);
+
   const [decks, setDecks] = useState<Deck[] | null>(null);
   const [selectedDeck, setSelectedDeck] = useState<Deck | null>(null);
   const [modalVisible, setModalVisible] = useState(false);

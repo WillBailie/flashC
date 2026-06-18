@@ -15,6 +15,8 @@
   "common.loading": "加载中...",
   "common.error": "错误",
   "common.create": "创建",
+  "common.add": "添加",
+  "common.edit": "编辑",
 
   "home.greeting": "欢迎回来",
   "home.todayProgress": "今日进度",
@@ -81,10 +83,13 @@
   "deckDetail.exportCSV": "导出为 CSV",
   "deckDetail.exportJSON": "导出为 JSON",
   "deckDetail.practiceTitle": "练习选项",
+  "deckDetail.menuTitle": "牌组选项",
   "deckDetail.freeflowCount": "复习卡片数",
 
   "cardForm.newTitle": "新建卡片",
   "cardForm.editTitle": "编辑卡片",
+  "cardForm.createCard": "创建卡片",
+  "cardForm.updateCard": "更新卡片",
   "cardForm.frontText": "正面文字",
   "cardForm.frontTextPlaceholder": "输入正面文字...",
   "cardForm.backText": "背面文字",
