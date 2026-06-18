@@ -16,6 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useTheme, typography, borderRadius, withAlpha } from '../constants/theme';
+import { useTranslation } from '../i18n/TranslationContext';
 import { TemplateField } from '../models/types';
 
 interface FlipCardProps {
@@ -56,6 +57,7 @@ export function FlipCard({
   examplePinyin,
 }: FlipCardProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const rotation = useSharedValue(0);
   const translateX = useSharedValue(0);
   const cardOpacity = useSharedValue(1);
@@ -347,7 +349,7 @@ export function FlipCard({
 
   return (
     <GestureDetector gesture={composedGesture}>
-      <Animated.View style={[styles.wrapper, containerStyle]}>
+      <Animated.View style={[styles.wrapper, containerStyle]} accessibilityRole="button" accessibilityLabel={t('a11y.flipCard')}>
         <View style={styles.cardContainer}>
           <Animated.View style={[styles.face, styles.frontFace, frontStyle]}>
             {renderFront()}

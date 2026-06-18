@@ -15,6 +15,7 @@ import { Card } from '../components/Card';
 import { Skeleton } from '../components/Skeleton';
 import { Input } from '../components/Input';
 import { getAiEnabled, setAiEnabled, getApiKey, setApiKey } from '../utils/settings';
+import { useTranslation } from '../i18n/TranslationContext';
 import ImportScreen from './ImportScreen';
 import TemplateListScreen from './TemplateListScreen';
 
@@ -84,6 +85,7 @@ function StatCard({ label, value, icon, color }: {
 
 function StatsView() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [stats, setStats] = useState<{
     totalCards: number;
     totalDecks: number;
@@ -126,8 +128,8 @@ function StatsView() {
 
   const statRows = [
     [
-      { label: 'Total Cards', value: stats.totalCards, icon: 'albums', color: colors.primary },
-      { label: 'Decks', value: stats.totalDecks, icon: 'book', color: colors.textSecondary },
+      { label: t('settings.statsTotalCards'), value: stats.totalCards, icon: 'albums', color: colors.primary },
+      { label: t('settings.statsTotalDecks'), value: stats.totalDecks, icon: 'book', color: colors.textSecondary },
     ],
     [
       { label: 'Due for Review', value: stats.dueCards, icon: 'alarm', color: stats.dueCards > 0 ? colors.danger : colors.primary },
@@ -159,6 +161,7 @@ function StatsView() {
 export default function SettingsScreen() {
   const [section, setSection] = useState<Section>('import');
   const { colors, mode, setMode } = useTheme();
+  const { t, language, setLanguage, availableLanguages } = useTranslation();
   const [aiEnabled, setAiEnabledLocal] = useState(false);
   const [apiKey, setApiKeyLocal] = useState('');
   const [draftApiKey, setDraftApiKey] = useState('');
@@ -253,6 +256,42 @@ export default function SettingsScreen() {
       color: colors.textSecondary,
       marginTop: 1,
     },
+    section: {
+      marginHorizontal: spacing.lg,
+      marginTop: spacing.md,
+    },
+    sectionTitle: {
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.semibold,
+      color: colors.text,
+    },
+    sectionDescription: {
+      fontSize: typography.fontSize.xs,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    languageRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    langChip: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.surfaceVariant,
+    },
+    langChipSelected: {
+      backgroundColor: colors.primary,
+    },
+    langChipText: {
+      fontSize: typography.fontSize.md,
+      color: colors.text,
+    },
+    langChipTextSelected: {
+      color: colors.surface,
+      fontWeight: typography.fontWeight.semibold,
+    },
   }), [colors]);
 
   const themeIcons: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -274,7 +313,7 @@ export default function SettingsScreen() {
             accessibilityLabel={`${s} tab`}
           >
             <Text style={[styles.segmentText, section === s && styles.segmentTextActive]}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
+              {s === 'import' ? t('settings.segmentImport') : s === 'stats' ? t('settings.segmentStats') : t('settings.segmentTemplates')}
             </Text>
           </TouchableOpacity>
         ))}
@@ -300,17 +339,37 @@ export default function SettingsScreen() {
               color={mode === m ? colors.surface : colors.textSecondary}
             />
             <Text style={[styles.themeOptionText, mode === m && styles.themeOptionTextActive]}>
-              {m === 'system' ? 'Auto' : m === 'light' ? 'Light' : 'Dark'}
+              {m === 'system' ? t('settings.themeSystem') : m === 'light' ? t('settings.themeLight') : t('settings.themeDark')}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('settings.appLanguage')}</Text>
+        <Text style={styles.sectionDescription}>{t('settings.appLanguageDescription')}</Text>
+        <View style={styles.languageRow}>
+          {availableLanguages.map((lang) => (
+            <TouchableOpacity
+              key={lang.code}
+              style={[styles.langChip, language === lang.code && styles.langChipSelected]}
+              onPress={() => setLanguage(lang.code)}
+              accessibilityRole="button"
+              accessibilityLabel={lang.label}
+            >
+              <Text style={[styles.langChipText, language === lang.code && styles.langChipTextSelected]}>
+                {lang.nativeLabel}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
       <View style={styles.aiSection}>
         <View style={styles.aiToggleRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.aiTitle}>AI Example Generation</Text>
-            <Text style={styles.aiDescription}>Generate example sentences during practice</Text>
+            <Text style={styles.aiTitle}>{t('settings.aiTitle')}</Text>
+            <Text style={styles.aiDescription}>{t('settings.aiDescription')}</Text>
           </View>
           <Switch
             value={aiEnabled}
@@ -325,8 +384,8 @@ export default function SettingsScreen() {
         {aiEnabled && (
           <View>
             <Input
-              label="DeepSeek API Key"
-              placeholder="Enter your API key"
+              label={t('settings.apiKey')}
+              placeholder={t('settings.apiKeyPlaceholder')}
               value={draftApiKey}
               onChangeText={setDraftApiKey}
               secureTextEntry={!apiKeyVisible}

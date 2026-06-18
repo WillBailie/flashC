@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../constants/theme';
+import { useTranslation } from '../i18n/TranslationContext';
 import DeckListScreen from '../screens/DeckListScreen';
 import DeckDetailScreen from '../screens/DeckDetailScreen';
 import CardFormScreen from '../screens/CardFormScreen';
@@ -32,6 +33,7 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 function MainTabs() {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const tabIcons: Record<string, { focused: keyof typeof Ionicons.glyphMap; unfocused: keyof typeof Ionicons.glyphMap }> = {
     Home: { focused: 'home', unfocused: 'home-outline' },
@@ -44,6 +46,10 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
+        tabBarLabel: route.name === 'Home' ? t('tab.home')
+          : route.name === 'DeckList' ? t('tab.decks')
+          : route.name === 'Settings' ? t('tab.settings')
+          : route.name,
         tabBarIcon: ({ focused, size }) => {
           const icons = tabIcons[route.name];
           return (
@@ -66,9 +72,9 @@ function MainTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="DeckList" component={DeckListScreen} options={{ tabBarLabel: 'Decks' }} />
-      <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarLabel: 'Settings' }} />
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="DeckList" component={DeckListScreen} />
+      <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
     </SafeAreaView>
   );
