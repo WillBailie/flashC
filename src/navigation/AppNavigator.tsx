@@ -13,6 +13,10 @@ import PracticeScreen from '../screens/PracticeScreen';
 import TemplateEditorScreen from '../screens/TemplateEditorScreen';
 import HomeScreen from '../screens/HomeScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import ImportScreen from '../screens/ImportScreen';
+import TemplateListScreen from '../screens/TemplateListScreen';
+import StatsScreen from '../screens/StatsScreen';
+import ExportScreen from '../screens/ExportScreen';
 
 export type RootStackParamList = {
   MainTabs: undefined;
@@ -20,6 +24,10 @@ export type RootStackParamList = {
   CardForm: { deckId: number; cardId?: number };
   Practice: { deckId?: number; deckName?: string; mode?: 'daily' | 'freeflow'; cardCount?: number; reverse?: boolean };
   TemplateEditor: { templateId?: number };
+  Import: undefined;
+  TemplateList: undefined;
+  Stats: undefined;
+  Export: undefined;
 };
 
 export type TabParamList = {
@@ -110,6 +118,26 @@ export default function AppNavigator() {
             headerTitle: route.params.templateId ? 'Edit Template' : 'New Template',
             headerBackTitle: 'Back',
           })}
+        />
+        <Stack.Screen
+          name="Import"
+          component={ImportScreen}
+          options={{ headerTitle: 'Import', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="TemplateList"
+          component={TemplateListScreen}
+          options={{ headerTitle: 'Templates', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="Stats"
+          component={StatsScreen}
+          options={{ headerTitle: 'Stats', headerBackTitle: 'Back' }}
+        />
+        <Stack.Screen
+          name="Export"
+          component={ExportScreen}
+          options={{ headerTitle: 'Export', headerBackTitle: 'Back' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
