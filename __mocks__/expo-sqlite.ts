@@ -265,6 +265,17 @@ class MockDatabase {
           }
         }
 
+        // Cascade SET NULL: deleting a template sets card.template_id to NULL
+        if (parsed.table === 'templates') {
+          if (tables['cards']) {
+            for (const row of tables['cards'].rows) {
+              if (deletedIds.includes(row.template_id)) {
+                row.template_id = null;
+              }
+            }
+          }
+        }
+
         return Promise.resolve({ lastInsertRowId: 0, changes: before - table.rows.length });
       }
     }
@@ -303,6 +314,17 @@ class MockDatabase {
           const [, col, op] = wm;
           const val = params.shift();
           results = results.filter((r) => evalOp(r[col], val, op));
+        }
+
+        // Handle NOT IN (id NOT IN (?, ?, ...))
+        const notInMatch = sql.match(/AND\s+(?:c\.)?(\w+)\s+NOT\s+IN\s+\(([^)]+)\)/i);
+        if (notInMatch) {
+          const col = notInMatch[1];
+          const placeholderCount = (notInMatch[2].match(/\?/g) || []).length;
+          const excludeVals = params.splice(0, placeholderCount);
+          results = results.filter((r) =>
+            !excludeVals.some((v: any) => String(r[col]) === String(v))
+          );
         }
 
         // ORDER BY

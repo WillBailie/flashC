@@ -48,6 +48,35 @@ describe('Database Operations', () => {
       const found = await database.getDeckById(tempDeck.id);
       expect(found).toBeNull();
     });
+
+    test('createDeck with language param', async () => {
+      const d = await database.createDeck('Lang Deck', '', 'zh-CN');
+      expect(d.language).toBe('zh-CN');
+      await database.deleteDeck(d.id);
+    });
+
+    test('createDeck with only name defaults description and language', async () => {
+      const d = await database.createDeck('Minimal');
+      expect(d.description).toBe('');
+      expect(d.language).toBe('');
+      await database.deleteDeck(d.id);
+    });
+
+    test('updateDeck with language param sets language', async () => {
+      const d = await database.createDeck('Lang Test', '', 'en');
+      await database.updateDeck(d.id, 'Updated', 'Desc', 'fr');
+      const updated = await database.getDeckById(d.id);
+      expect(updated!.language).toBe('fr');
+      await database.deleteDeck(d.id);
+    });
+
+    test('updateDeck without language preserves existing language', async () => {
+      const d = await database.createDeck('Preserve', '', 'ja');
+      await database.updateDeck(d.id, 'New Name', 'New Desc');
+      const updated = await database.getDeckById(d.id);
+      expect(updated!.language).toBe('ja');
+      await database.deleteDeck(d.id);
+    });
   });
 
   describe('Card operations', () => {
@@ -108,6 +137,47 @@ describe('Database Operations', () => {
       await database.deleteDeck(cascadeDeck.id);
       const cards = await database.getCardsByDeckId(cascadeDeck.id);
       expect(cards.length).toBe(0);
+    });
+
+    test('deleting template sets card template_id to NULL', async () => {
+      const template = await database.createTemplate('Cascade Test');
+      const deck = await database.createDeck('Cascade Deck', '');
+      const card = await database.createCard(deck.id, 'F', 'B', template.id);
+      expect(card.template_id).toBe(template.id);
+      await database.deleteTemplate(template.id);
+      const updated = await database.getCardById(card.id);
+      expect(updated!.template_id).toBeNull();
+      await database.deleteDeck(deck.id);
+    });
+
+    test('createCard without templateId uses default template', async () => {
+      const deck = await database.createDeck('Default Template Test', '');
+      const card = await database.createCard(deck.id, 'NoTemplate', 'Back');
+      expect(card.template_id).toBeGreaterThan(0);
+      const template = await database.getTemplateById(card.template_id!);
+      expect(template!.name).toBe('Basic');
+      await database.deleteDeck(deck.id);
+    });
+
+    test('updateCard can set template_id to null', async () => {
+      const deck = await database.createDeck('Null Template', '');
+      const card = await database.createCard(deck.id, 'F', 'B');
+      await database.updateCard(card.id, 'F2', 'B2', undefined);
+      const updated = await database.getCardById(card.id);
+      expect(updated!.template_id).toBeNull();
+      await database.deleteDeck(deck.id);
+    });
+
+    test('card with extra field_values not in template is handled', async () => {
+      const deck = await database.createDeck('Extra Fields', '');
+      const card = await database.createCard(
+        deck.id, 'hello', 'hola', undefined,
+        { Front: 'hello', Back: 'hola', Extra: 'unused' }
+      );
+      const parsed = JSON.parse(card.field_values!);
+      expect(parsed.Front).toBe('hello');
+      expect(parsed.Extra).toBe('unused');
+      await database.deleteDeck(deck.id);
     });
   });
 
@@ -264,6 +334,37 @@ describe('Database Operations', () => {
       const templates = await database.getAllTemplates();
       expect(templates.some((t) => t.id === template.id)).toBe(false);
     });
+
+    test('getTemplateById returns template for valid ID', async () => {
+      const defaultId = await database.getDefaultTemplateId();
+      const template = await database.getTemplateById(defaultId);
+      expect(template).not.toBeNull();
+      expect(template!.name).toBe('Basic');
+    });
+
+    test('getTemplateById returns null for non-existent ID', async () => {
+      const template = await database.getTemplateById(99999);
+      expect(template).toBeNull();
+    });
+
+    test('getDefaultTemplate returns the seeded Basic template', async () => {
+      const template = await database.getDefaultTemplate();
+      expect(template).toBeDefined();
+      expect(template.name).toBe('Basic');
+    });
+
+    test('template fields preserve side position ordering', async () => {
+      const template = await database.createTemplate('Order Test');
+      await database.addTemplateField(template.id, 'First', 'front', 0);
+      await database.addTemplateField(template.id, 'Second', 'front', 1);
+      await database.addTemplateField(template.id, 'Third', 'back', 0);
+      const fields = await database.getTemplateFields(template.id);
+      const frontFields = fields.filter((f) => f.side === 'front');
+      const backFields = fields.filter((f) => f.side === 'back');
+      expect(frontFields.map((f) => f.position)).toEqual([0, 1]);
+      expect(backFields.map((f) => f.position)).toEqual([0]);
+      await database.deleteTemplate(template.id);
+    });
   });
 
   describe('Card with template', () => {
@@ -394,6 +495,54 @@ describe('Database Operations', () => {
     });
   });
 
+  describe('getExtraCardsForReview', () => {
+    let deck: Deck;
+
+    beforeAll(async () => {
+      deck = await database.createDeck('Extra Cards Deck', '');
+      await database.createCard(deck.id, 'X1', 'Y1');
+      await database.createCard(deck.id, 'X2', 'Y2');
+      await database.createCard(deck.id, 'X3', 'Y3');
+    });
+
+    afterAll(async () => {
+      await database.deleteDeck(deck.id);
+    });
+
+    test('returns cards not in exclude list', async () => {
+      const all = await database.getCardsByDeckId(deck.id);
+      const excludedId = all[0].id;
+      const extra = await database.getExtraCardsForReview(deck.id, [excludedId], 10);
+      expect(extra.every((c) => c.id !== excludedId)).toBe(true);
+      expect(extra.length).toBe(2);
+    });
+
+    test('respects deck filter', async () => {
+      const otherDeck = await database.createDeck('Other Extra', '');
+      await database.createCard(otherDeck.id, 'OX', 'OY');
+      const extra = await database.getExtraCardsForReview(deck.id, [], 10);
+      expect(extra.every((c) => c.deck_id === deck.id)).toBe(true);
+      await database.deleteDeck(otherDeck.id);
+    });
+
+    test('respects limit', async () => {
+      const extra = await database.getExtraCardsForReview(deck.id, [], 1);
+      expect(extra.length).toBe(1);
+    });
+
+    test('exclude all cards returns empty', async () => {
+      const all = await database.getCardsByDeckId(deck.id);
+      const allIds = all.map((c) => c.id);
+      const extra = await database.getExtraCardsForReview(deck.id, allIds, 10);
+      expect(extra).toEqual([]);
+    });
+
+    test('empty exclude list returns all', async () => {
+      const extra = await database.getExtraCardsForReview(deck.id, [], 10);
+      expect(extra.length).toBe(3);
+    });
+  });
+
   describe('getStreak', () => {
     async function setReviewDate(cardId: number, dateStr: string) {
       const db = await database.getDatabase();
@@ -492,6 +641,26 @@ describe('Database Operations', () => {
       await setReviewDate(c2.id, today);
       const { streak } = await database.getStreak();
       expect(streak).toBeGreaterThanOrEqual(1);
+      await database.deleteDeck(deck.id);
+    });
+  });
+
+  describe('Migration idempotency', () => {
+    test('calling getDatabase twice does not error', async () => {
+      const db1 = await database.getDatabase();
+      const db2 = await database.getDatabase();
+      expect(db1).toBe(db2);
+    });
+
+    test('migrations are idempotent (run on already-migrated database)', async () => {
+      await expect(database.getDatabase()).resolves.toBeDefined();
+    });
+
+    test('language column exists on decks after migration', async () => {
+      const deck = await database.createDeck('Migration Test', '');
+      const fetched = await database.getDeckById(deck.id);
+      expect(fetched).toHaveProperty('language');
+      expect(fetched!.language).toBe('');
       await database.deleteDeck(deck.id);
     });
   });
