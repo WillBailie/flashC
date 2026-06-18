@@ -345,5 +345,53 @@ describe('Database Operations', () => {
       expect(stats.dueCards).toBeGreaterThanOrEqual(0);
     });
   });
+
+  describe('getRandomCardsForReview', () => {
+    let deck: Deck;
+
+    beforeAll(async () => {
+      deck = await database.createDeck('Random Review Deck', '');
+      await database.createCard(deck.id, 'A', 'AA');
+      await database.createCard(deck.id, 'B', 'BB');
+      await database.createCard(deck.id, 'C', 'CC');
+    });
+
+    afterAll(async () => {
+      await database.deleteDeck(deck.id);
+    });
+
+    test('returns cards from specified deck', async () => {
+      const cards = await database.getRandomCardsForReview(deck.id, 10);
+      expect(cards.length).toBe(3);
+      expect(cards.every((c) => c.deck_id === deck.id)).toBe(true);
+    });
+
+    test('respects count limit', async () => {
+      const cards = await database.getRandomCardsForReview(deck.id, 2);
+      expect(cards.length).toBe(2);
+    });
+
+    test('returns CardWithReview fields', async () => {
+      const cards = await database.getRandomCardsForReview(deck.id, 1);
+      const c = cards[0];
+      expect(c).toHaveProperty('ease_factor');
+      expect(c).toHaveProperty('interval');
+      expect(c).toHaveProperty('repetitions');
+      expect(c).toHaveProperty('next_review_date');
+      expect(c).toHaveProperty('last_review_date');
+    });
+
+    test('returns empty array when no cards in deck', async () => {
+      const emptyDeck = await database.createDeck('Empty Random', '');
+      const cards = await database.getRandomCardsForReview(emptyDeck.id, 10);
+      expect(cards).toEqual([]);
+      await database.deleteDeck(emptyDeck.id);
+    });
+
+    test('without deckId, returns cards from all decks', async () => {
+      const cards = await database.getRandomCardsForReview(undefined, 50);
+      expect(cards.length).toBeGreaterThanOrEqual(3);
+    });
+  });
 });
 

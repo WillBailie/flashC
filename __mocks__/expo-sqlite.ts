@@ -52,7 +52,8 @@ function getOrCreateTable(name: string, columnDefs?: ColumnDef[]): Table {
 
 function applyDefaults(table: Table, row: Record<string, any>): void {
   for (const col of table.columns) {
-    if (row[col.name] === undefined && col.hasDefault) {
+    if (row[col.name] !== undefined) continue;
+    if (col.hasDefault) {
       if (col.name === 'created_at' || col.name === 'modified_at') {
         row[col.name] = new Date().toISOString();
       } else if (col.defaultValue === 'datetime(\'now\')') {
@@ -67,9 +68,9 @@ function applyDefaults(table: Table, row: Record<string, any>): void {
         row[col.name] = '1970-01-01T00:00:00.000Z';
       } else if (col.defaultValue && col.defaultValue !== '') {
         row[col.name] = col.defaultValue;
-      } else if (!col.hasDefault) {
-        row[col.name] = '';
       }
+    } else {
+      row[col.name] = null;
     }
   }
 }
@@ -295,13 +296,6 @@ class MockDatabase {
           results = results.filter((r) => evalOp(r[col], val, op));
         }
 
-        // Handle compound WHERE with AND (like `c.deck_id = ? AND ...`)
-        const deckIdMatch_ = sql.match(/c\.deck_id = \?/i);
-        if (deckIdMatch_ && params.length > 0) {
-          const deckIdVal = params.shift();
-          results = results.filter((r) => String(r.deck_id) === String(deckIdVal));
-        }
-
         // ORDER BY
         const orderMatch = sql.match(/ORDER BY (?:r\.)?(\w+) (\w+)/i);
         if (orderMatch) {
@@ -314,9 +308,15 @@ class MockDatabase {
         }
 
         // LIMIT
+        let limit: number | undefined;
         const limitMatch = sql.match(/LIMIT (\d+)/i);
         if (limitMatch) {
-          results = results.slice(0, parseInt(limitMatch[1]));
+          limit = parseInt(limitMatch[1]);
+        } else if (/LIMIT \?/i.test(sql) && params.length > 0) {
+          limit = params.shift() as number;
+        }
+        if (limit !== undefined) {
+          results = results.slice(0, limit);
         }
 
         return Promise.resolve(results as T[]);
