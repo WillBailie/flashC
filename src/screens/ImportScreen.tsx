@@ -426,8 +426,8 @@ export default function ImportScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
        <Text style={styles.sectionTitle}>{t('import.step1Title')}</Text>
-      <Text style={styles.sectionDesc}>
-        Choose the deck where imported cards will be added.
+       <Text style={styles.sectionDesc}>
+        {t('import.step1Desc')}
       </Text>
       <ScrollView
         horizontal
@@ -464,7 +464,7 @@ export default function ImportScreen() {
 
        <Text style={styles.sectionTitle}>{t('import.step2Title')}</Text>
       <Text style={styles.sectionDesc}>
-        Choose which template to use for the imported cards.
+        {t('import.step2Desc')}
       </Text>
       <ScrollView
         horizontal
@@ -509,7 +509,7 @@ export default function ImportScreen() {
 
        <Text style={styles.sectionTitle}>{t('import.step3Title')}</Text>
       <Text style={styles.sectionDesc}>
-        CSV: comma-separated values per line — JSON: array of objects with field names as keys
+        {t('import.step3Desc')}
       </Text>
       <TouchableOpacity style={styles.pickFileButton} onPress={handlePickFile}>
         {fileName ? (
