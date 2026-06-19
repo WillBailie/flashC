@@ -1,21 +1,24 @@
-interface ExampleResult {
-  sentence: string;
-  translation: string;
-  pinyin: string;
-}
-
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
 
-function buildPrompt(word: string, language: string): string {
-  return `Generate a natural ${language} sentence (max 15 words) using the word "${word}". Return ONLY valid JSON with no markdown formatting: {"sentence":"...","translation":"...","pinyin":"..."}`;
+export interface DeepSeekOptions {
+  maxTokens?: number;
+  temperature?: number;
+  model?: string;
 }
 
-export async function generateExample(
-  word: string,
-  language: string,
-  apiKey: string
-): Promise<ExampleResult | null> {
+export async function callDeepSeek(
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string,
+  options?: DeepSeekOptions
+): Promise<string | null> {
   try {
+    const messages: { role: string; content: string }[] = [];
+    if (systemPrompt) {
+      messages.push({ role: 'system', content: systemPrompt });
+    }
+    messages.push({ role: 'user', content: userPrompt });
+
     const response = await fetch(DEEPSEEK_URL, {
       method: 'POST',
       headers: {
@@ -23,12 +26,10 @@ export async function generateExample(
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'deepseek-v4-flash',
-        messages: [
-          { role: 'user', content: buildPrompt(word, language) },
-        ],
-        max_tokens: 256,
-        temperature: 0.7,
+        model: options?.model ?? 'deepseek-v4-flash',
+        messages,
+        max_tokens: options?.maxTokens ?? 256,
+        temperature: options?.temperature ?? 0.7,
         thinking: { type: 'disabled' },
       }),
     });
@@ -43,6 +44,39 @@ export async function generateExample(
       throw new Error('No response from AI');
     }
 
+    return rawText;
+  } catch (error: any) {
+    const { Alert } = require('react-native');
+    Alert.alert(
+      'Generation Failed',
+      error?.message || 'Could not generate content. Please try again.'
+    );
+    return null;
+  }
+}
+
+interface ExampleResult {
+  sentence: string;
+  translation: string;
+  pinyin: string;
+}
+
+export async function generateExample(
+  word: string,
+  language: string,
+  apiKey: string
+): Promise<ExampleResult | null> {
+  const systemPrompt = '';
+  const userPrompt = `Generate a natural ${language} sentence (max 15 words) using the word "${word}". Return ONLY valid JSON with no markdown formatting: {"sentence":"...","translation":"...","pinyin":"..."}`;
+
+  const rawText = await callDeepSeek(apiKey, systemPrompt, userPrompt, {
+    maxTokens: 256,
+    temperature: 0.7,
+  });
+
+  if (!rawText) return null;
+
+  try {
     const cleaned = rawText.replace(/```(?:json)?\s*/g, '').trim();
     const parsed = JSON.parse(cleaned) as ExampleResult;
     if (!parsed.sentence || !parsed.translation) {
