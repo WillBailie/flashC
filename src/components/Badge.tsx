@@ -25,7 +25,7 @@ export function Badge({ text, color, variant = 'subtle', style }: BadgeProps) {
         text: {
           fontSize: typography.fontSize.xs,
           fontWeight: typography.fontWeight.bold,
-          color: variant === 'filled' ? colors.surface : bg,
+          color: variant === 'filled' ? colors.textInverse : bg,
         },
       }),
     [colors, bg, variant]

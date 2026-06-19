@@ -195,7 +195,7 @@ export default function SettingsScreen() {
                   <Ionicons
                     name={themeIcons[m]}
                     size={14}
-                    color={mode === m ? colors.surface : colors.textSecondary}
+                    color={mode === m ? colors.textInverse : colors.textSecondary}
                   />
                   <Text style={[styles.themeChipText, mode === m && styles.themeChipTextActive]}>
                     {m === 'system' ? t('settings.themeSystem') : m === 'light' ? t('settings.themeLight') : t('settings.themeDark')}

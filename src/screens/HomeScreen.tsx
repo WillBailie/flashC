@@ -203,17 +203,17 @@ export default function HomeScreen({ navigation }: Props) {
     },
     heroBlob1: {
       width: 160, height: 160,
-      backgroundColor: withAlpha(colors.surface, 0.06),
+      backgroundColor: withAlpha(colors.textInverse, 0.06),
       top: -40, right: -30,
     },
     heroBlob2: {
       width: 100, height: 100,
-      backgroundColor: withAlpha(colors.surface, 0.08),
+      backgroundColor: withAlpha(colors.textInverse, 0.08),
       bottom: 10, left: -20,
     },
     heroBlob3: {
       width: 70, height: 70,
-      backgroundColor: withAlpha(colors.surface, 0.05),
+      backgroundColor: withAlpha(colors.textInverse, 0.05),
       top: '50%', left: '60%',
       transform: [{ translateX: -35 }, { translateY: -35 }],
     },
@@ -594,7 +594,7 @@ export default function HomeScreen({ navigation }: Props) {
                 cy={RING_SIZE / 2}
                 r={RING_RADIUS}
                 fill="none"
-                stroke={withAlpha(colors.surface, 0.15)}
+                stroke={withAlpha(colors.textInverse, 0.15)}
                 strokeWidth={RING_STROKE}
               />
               <AnimatedCircle
@@ -602,7 +602,7 @@ export default function HomeScreen({ navigation }: Props) {
                 cy={RING_SIZE / 2}
                 r={RING_RADIUS}
                 fill="none"
-                stroke={colors.surface}
+                stroke={colors.textInverse}
                 strokeWidth={RING_STROKE}
                 strokeDasharray={circumference}
                 strokeLinecap="round"
@@ -633,7 +633,7 @@ export default function HomeScreen({ navigation }: Props) {
               value={reverseMode}
               onValueChange={handleReverseToggle}
               trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.surface}
+              thumbColor={colors.textInverse}
               accessibilityLabel={t('a11y.reverseMode')}
             />
           </View>

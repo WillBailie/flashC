@@ -774,7 +774,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
                 value={reverseMode}
                 onValueChange={handleReverseToggle}
                 trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={colors.surface}
+                thumbColor={colors.textInverse}
                 accessibilityLabel="Reverse practice mode"
               />
             </View>
