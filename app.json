@@ -25,7 +25,8 @@
     "plugins": [
       "expo-sqlite",
       "expo-asset",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-font"
     ],
     "updates": {
       "url": "https://u.expo.dev/5cdf6502-d017-40de-87ee-decc88c1858c",

@@ -221,6 +221,7 @@ export default function HomeScreen({ navigation }: Props) {
       paddingBottom: spacing.xl,
     },
     heroGreeting: {
+      fontFamily: colors.headingFontFamily,
       fontSize: typography.fontSize.xxl,
       fontWeight: typography.fontWeight.heavy,
       color: colors.text,
