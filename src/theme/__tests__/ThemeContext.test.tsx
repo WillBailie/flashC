@@ -45,7 +45,7 @@ describe('ColorScheme - light palette (Warm Minimal)', () => {
       'success', 'danger', 'warning', 'again', 'hard', 'good', 'easy',
       'shadow', 'overlay', 'tabBarBackground', 'tabActive', 'tabInactive',
       'toastBackground', 'toastText', 'canvasAlpha',
-      'headingFontFamily', 'numFontFamily',
+      'headingFontFamily', 'numFontFamily', 'ringTrack', 'ringFill',
     ];
     for (const key of requiredKeys) {
       expect(lightColors[key]).toBeDefined();

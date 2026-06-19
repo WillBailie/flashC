@@ -30,6 +30,8 @@ export interface ColorScheme {
   canvasAlpha: number;
   headingFontFamily: string;
   numFontFamily: string;
+  ringTrack: string;
+  ringFill: string;
 }
 
 export const lightColors: ColorScheme = {
@@ -60,6 +62,8 @@ export const lightColors: ColorScheme = {
   canvasAlpha: 0,
   headingFontFamily: 'Playfair Display',
   numFontFamily: 'Space Grotesk',
+  ringTrack: '#EDE6DC',
+  ringFill: '#C45D3E',
 };
 
 export const darkColors: ColorScheme = {
@@ -90,6 +94,8 @@ export const darkColors: ColorScheme = {
   canvasAlpha: 1,
   headingFontFamily: 'Space Grotesk',
   numFontFamily: 'JetBrains Mono',
+  ringTrack: 'rgba(255,255,255,0.06)',
+  ringFill: '#00E5A0',
 };
 
 type ThemeMode = 'system' | 'light' | 'dark';

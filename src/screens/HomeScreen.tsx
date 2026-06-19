@@ -73,18 +73,44 @@ export default function HomeScreen({ navigation }: Props) {
   const [newDeckModalVisible, setNewDeckModalVisible] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const { t } = useTranslation();
-  const greeting = t('home.greeting');
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
-  const RING_RADIUS = 48;
-  const RING_STROKE = 8;
+  const RING_RADIUS = 72;
+  const RING_STROKE = 6;
   const RING_SIZE = (RING_RADIUS + RING_STROKE) * 2;
   const circumference = 2 * Math.PI * RING_RADIUS;
-  const dashOffset = stats.totalCards > 0
-    ? circumference * (1 - Math.min(stats.dueCards, stats.totalCards) / stats.totalCards)
-    : circumference;
+  const maxDue = stats.totalCards > 0 ? stats.totalCards : 800;
+  const dashOffset = circumference * (1 - Math.min(stats.dueCards, maxDue) / maxDue);
 
   const reduceMotion = useReduceMotion();
+
+  const [displayDue, setDisplayDue] = useState(0);
+
+  useEffect(() => {
+    if (stats.dueCards === 0) {
+      setDisplayDue(0);
+      return;
+    }
+    let start: number | null = null;
+    const duration = 1000;
+    const from = displayDue;
+    const to = stats.dueCards;
+    let rafId: number;
+
+    const animate = (timestamp: number) => {
+      if (!start) start = timestamp;
+      const elapsed = timestamp - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayDue(Math.round(from + (to - from) * eased));
+      if (progress < 1) {
+        rafId = requestAnimationFrame(animate);
+      }
+    };
+
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
+  }, [stats.dueCards]);
 
   const dueScale = useSharedValue(1);
   const totalScale = useSharedValue(1);
@@ -218,18 +244,18 @@ export default function HomeScreen({ navigation }: Props) {
       transform: [{ translateX: -35 }, { translateY: -35 }],
     },
     heroGreeting: {
-      fontSize: typography.fontSize.md,
-      color: withAlpha(colors.textInverse, 0.7),
-      fontWeight: typography.fontWeight.medium,
-      marginBottom: spacing.lg,
-      letterSpacing: 0.3,
+      fontFamily: colors.headingFontFamily,
+      fontSize: typography.fontSize.xxl,
+      fontWeight: typography.fontWeight.heavy,
+      color: colors.textInverse,
+      textAlign: 'center',
+      marginBottom: spacing.xl,
       position: 'relative',
       zIndex: 1,
     },
     heroBody: {
-      flexDirection: 'row',
       alignItems: 'center',
-      gap: spacing.lg,
+      marginBottom: spacing.xl,
       position: 'relative',
       zIndex: 1,
     },
@@ -237,7 +263,7 @@ export default function HomeScreen({ navigation }: Props) {
       width: RING_SIZE,
       height: RING_SIZE,
       position: 'relative',
-      flexShrink: 0,
+      alignSelf: 'center',
     },
     ringCenter: {
       position: 'absolute',
@@ -249,33 +275,27 @@ export default function HomeScreen({ navigation }: Props) {
       alignItems: 'center',
     },
     ringPct: {
-      fontSize: typography.fontSize.xl,
-      fontWeight: typography.fontWeight.heavy,
+      fontFamily: colors.numFontFamily,
+      fontSize: 40,
+      fontWeight: typography.fontWeight.bold,
       color: colors.textInverse,
-      lineHeight: typography.fontSize.xl * typography.lineHeight.tight,
+      lineHeight: 44,
     },
     ringPctLabel: {
       fontSize: typography.fontSize.xs,
       color: withAlpha(colors.textInverse, 0.65),
       fontWeight: typography.fontWeight.medium,
       textTransform: 'uppercase',
-      letterSpacing: 0.5,
-      marginTop: 2,
+      letterSpacing: 1,
+      marginTop: 4,
     },
-    heroTextBlock: {
-      flex: 1,
-    },
-    heroStatValue: {
-      fontSize: typography.fontSize.xxxl,
-      fontWeight: typography.fontWeight.heavy,
-      color: colors.textInverse,
-      lineHeight: typography.fontSize.xxxl * typography.lineHeight.tight,
-    },
-    heroStatLabel: {
+    heroSubtitle: {
       fontSize: typography.fontSize.sm,
       color: withAlpha(colors.textInverse, 0.7),
       fontWeight: typography.fontWeight.medium,
-      marginTop: spacing.xs,
+      textAlign: 'center',
+      position: 'relative',
+      zIndex: 1,
     },
 
     sectionLabel: {
@@ -583,10 +603,16 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         )}
 
-        <Text style={styles.heroGreeting}>{greeting} 👋</Text>
+        <Text style={styles.heroGreeting}>Welcome back</Text>
 
         <View style={styles.heroBody}>
-          <View style={styles.ringContainer}>
+          <View style={[styles.ringContainer, isDark && {
+            shadowColor: colors.ringFill,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 8,
+          }]}>
             <Svg width={RING_SIZE} height={RING_SIZE}>
               <G transform={`rotate(-90, ${RING_SIZE / 2}, ${RING_SIZE / 2})`}>
               <Circle
@@ -594,7 +620,7 @@ export default function HomeScreen({ navigation }: Props) {
                 cy={RING_SIZE / 2}
                 r={RING_RADIUS}
                 fill="none"
-                stroke={withAlpha(colors.textInverse, 0.15)}
+                stroke={colors.ringTrack}
                 strokeWidth={RING_STROKE}
               />
               <AnimatedCircle
@@ -602,7 +628,7 @@ export default function HomeScreen({ navigation }: Props) {
                 cy={RING_SIZE / 2}
                 r={RING_RADIUS}
                 fill="none"
-                stroke={colors.textInverse}
+                stroke={colors.ringFill}
                 strokeWidth={RING_STROKE}
                 strokeDasharray={circumference}
                 strokeLinecap="round"
@@ -611,16 +637,13 @@ export default function HomeScreen({ navigation }: Props) {
               </G>
             </Svg>
             <View style={styles.ringCenter}>
-              <Animated.Text style={[styles.ringPct, dueAnimatedStyle]} adjustsFontSizeToFit numberOfLines={1}>{stats.dueCards}</Animated.Text>
-              <Text style={styles.ringPctLabel}>{t('home.due')}</Text>
+              <Animated.Text style={[styles.ringPct, dueAnimatedStyle]}>{displayDue}</Animated.Text>
+              <Text style={styles.ringPctLabel}>DUE</Text>
             </View>
           </View>
-
-          <View style={styles.heroTextBlock}>
-            <Text style={styles.heroStatValue}>{stats.reviewsToday}</Text>
-             <Text style={styles.heroStatLabel}>{t('home.cardsReviewedToday')}</Text>
-          </View>
         </View>
+
+        <Text style={styles.heroSubtitle}>{stats.reviewsToday} cards reviewed today</Text>
       </LinearGradient>
 
       {/* ——— Mode Cards ——— */}
