@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, Dimensions } from 'react-native';
+import { useTheme } from '../constants/theme';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,7 +10,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 
-const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9', '#F1948A', '#82E0AA'];
+
 const PARTICLE_COUNT = 120;
 const BURST_DURATION = 1000;
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
@@ -25,7 +26,7 @@ interface Particle {
   startX: number;
 }
 
-function generateParticles(): Particle[] {
+function generateParticles(palette: string[]): Particle[] {
   return Array.from({ length: PARTICLE_COUNT }, (_, i) => {
     const angle = (Math.random() - 0.5) * Math.PI * 0.7;
     const distance = 150 + Math.random() * 350;
@@ -33,7 +34,7 @@ function generateParticles(): Particle[] {
       id: i,
       dx: Math.sin(angle) * distance,
       dy: -(Math.cos(angle) * distance),
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      color: palette[Math.floor(Math.random() * palette.length)],
       size: 4 + Math.random() * 8,
       delay: Math.random() * 300,
       rotation: Math.random() * 360,
@@ -102,7 +103,20 @@ interface ConfettiProps {
 }
 
 export function Confetti({ trigger, onComplete }: ConfettiProps) {
-  const particles = useMemo(() => generateParticles(), []);
+  const { colors } = useTheme();
+
+  const confettiPalette = useMemo(() => [
+    colors.primary,
+    colors.secondary,
+    colors.success,
+    colors.danger,
+    colors.warning,
+    colors.easy,
+    colors.good,
+    colors.hard,
+  ], [colors]);
+
+  const particles = useMemo(() => generateParticles(confettiPalette), [confettiPalette]);
 
   useEffect(() => {
     if (trigger && onComplete) {

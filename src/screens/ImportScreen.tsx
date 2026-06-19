@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
-  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -334,7 +333,7 @@ export default function ImportScreen() {
     templateHintText: {
       fontSize: 12,
       color: colors.textSecondary,
-      fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+      fontFamily: colors.numFontFamily,
       lineHeight: 18,
     },
     pickFileButton: {
