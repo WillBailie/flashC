@@ -229,7 +229,6 @@ export function FlipCard({
         exampleText: {
           fontSize: typography.fontSize.xl,
           color: colors.text,
-          fontStyle: 'italic',
           textAlign: 'center',
           lineHeight: typography.fontSize.xl * 1.25,
           flexShrink: 1,
