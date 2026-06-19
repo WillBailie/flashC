@@ -1,5 +1,5 @@
 import * as SQLite from 'expo-sqlite';
-import { Deck, Card, Review, Template, TemplateField } from '../models/types';
+import { Deck, Card, Review, Template, TemplateField, AnchorCard } from '../models/types';
 
 let db: SQLite.SQLiteDatabase | null = null;
 
@@ -562,4 +562,45 @@ export async function getStreak(): Promise<{ streak: number; multiplier: number 
   else multiplier = 1;
 
   return { streak, multiplier };
+}
+
+// ========== Daily words queries ==========
+
+export async function getAnchorCards(language: string): Promise<AnchorCard[]> {
+  const database = await getDatabase();
+  return database.getAllAsync<AnchorCard>(
+    `SELECT c.front_text, c.back_text
+     FROM cards c
+     INNER JOIN decks d ON c.deck_id = d.id
+     INNER JOIN reviews r ON c.id = r.card_id
+     WHERE d.language = ? AND r.last_review_date IS NOT NULL
+     ORDER BY r.last_review_date DESC
+     LIMIT 3`,
+    [language]
+  );
+}
+
+export async function getAllFrontTextsByLanguage(language: string): Promise<string[]> {
+  const database = await getDatabase();
+  const rows = await database.getAllAsync<{ front_text: string }>(
+    `SELECT c.front_text
+     FROM cards c
+     INNER JOIN decks d ON c.deck_id = d.id
+     WHERE d.language = ?`,
+    [language]
+  );
+  return rows.map((r) => r.front_text);
+}
+
+export async function getAvgIntervalByLanguage(language: string): Promise<number> {
+  const database = await getDatabase();
+  const row = await database.getFirstAsync<{ avg: number }>(
+    `SELECT COALESCE(AVG(r.interval), 0) as avg
+     FROM reviews r
+     INNER JOIN cards c ON c.id = r.card_id
+     INNER JOIN decks d ON c.deck_id = d.id
+     WHERE d.language = ?`,
+    [language]
+  );
+  return row?.avg ?? 0;
 }

@@ -645,6 +645,66 @@ describe('Database Operations', () => {
     });
   });
 
+  describe('Daily words queries', () => {
+    beforeAll(async () => {
+      const deck = await database.createDeck('French Deck', '', 'French');
+      await database.createCard(deck.id, 'bonjour', 'hello');
+      await database.createCard(deck.id, 'merci', 'thank you');
+      await database.createCard(deck.id, 'au revoir', 'goodbye');
+      await database.createCard(deck.id, 'oui', 'yes');
+
+      const cards = await database.getCardsByDeckId(deck.id);
+      for (const card of cards) {
+        await database.updateReview(card.id, 2.5, 1, 1, '2026-06-20');
+      }
+    });
+
+    describe('getAnchorCards', () => {
+      test('returns cards reviewed in the given language', async () => {
+        const anchors = await database.getAnchorCards('French');
+        expect(anchors.length).toBeGreaterThanOrEqual(1);
+        expect(anchors[0]).toHaveProperty('front_text');
+        expect(anchors[0]).toHaveProperty('back_text');
+      });
+
+      test('returns empty array for language with no cards', async () => {
+        const anchors = await database.getAnchorCards('Klingon');
+        expect(anchors).toEqual([]);
+      });
+
+      test('returns at most 3 anchors', async () => {
+        const anchors = await database.getAnchorCards('French');
+        expect(anchors.length).toBeLessThanOrEqual(3);
+      });
+    });
+
+    describe('getAllFrontTextsByLanguage', () => {
+      test('returns all front_text for the language', async () => {
+        const texts = await database.getAllFrontTextsByLanguage('French');
+        expect(texts.length).toBeGreaterThanOrEqual(1);
+        expect(texts).toContain('bonjour');
+        expect(texts).toContain('merci');
+      });
+
+      test('returns empty array for language with no decks', async () => {
+        const texts = await database.getAllFrontTextsByLanguage('Esperanto');
+        expect(texts).toEqual([]);
+      });
+    });
+
+    describe('getAvgIntervalByLanguage', () => {
+      test('returns average interval for the language', async () => {
+        const avg = await database.getAvgIntervalByLanguage('French');
+        expect(typeof avg).toBe('number');
+      });
+
+      test('returns 0 for language with no cards', async () => {
+        const avg = await database.getAvgIntervalByLanguage('Esperanto');
+        expect(avg).toBe(0);
+      });
+    });
+  });
+
   describe('Migration idempotency', () => {
     test('calling getDatabase twice does not error', async () => {
       const db1 = await database.getDatabase();
