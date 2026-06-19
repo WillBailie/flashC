@@ -222,7 +222,7 @@ export default function HomeScreen({ navigation }: Props) {
     },
     heroGreeting: {
       fontFamily: colors.headingFontFamily,
-      fontSize: typography.fontSize.xxl,
+      fontSize: typography.fontSize.xxxl,
       fontWeight: typography.fontWeight.heavy,
       color: colors.text,
       textAlign: 'left',
