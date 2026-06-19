@@ -16,7 +16,7 @@ import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
-import { getAiEnabled, setAiEnabled, getApiKey, setApiKey } from '../utils/settings';
+import { getAiEnabled, setAiEnabled, getApiKey, setApiKey, getDailyLanguage, setDailyLanguage } from '../utils/settings';
 import { useTranslation } from '../i18n/TranslationContext';
 import { RootStackParamList, TabParamList } from '../navigation/AppNavigator';
 
@@ -36,6 +36,7 @@ export default function SettingsScreen() {
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'fail'>('idle');
   const [apiKeySheetVisible, setApiKeySheetVisible] = useState(false);
+  const [dailyLanguage, setDailyLanguageState] = useState('');
 
   useEffect(() => {
     getAiEnabled().then(setAiEnabledLocal);
@@ -43,6 +44,7 @@ export default function SettingsScreen() {
       setApiKeyLocal(key);
       setDraftApiKey(key);
     });
+    getDailyLanguage().then(setDailyLanguageState);
   }, []);
 
   const styles = useMemo(() => StyleSheet.create({
@@ -293,6 +295,44 @@ export default function SettingsScreen() {
               />
             </View>
             <Text style={styles.aiDescription}>{t('settings.aiDescription')}</Text>
+
+            {aiEnabled && (
+              <View style={{ paddingTop: spacing.sm + 2, marginTop: spacing.xs, borderTopWidth: 1, borderTopColor: colors.border }}>
+                <Text style={styles.sectionLabel}>{t('settings.dailyLanguage')}</Text>
+                <Text style={[styles.aiDescription, { marginBottom: spacing.sm }]}>
+                  {t('settings.dailyLanguageDescription')}
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
+                  {(['', 'French', 'Spanish', 'German', 'Italian', 'Portuguese', 'Japanese', 'Korean', 'Chinese', 'Russian'] as const).map((lang) => (
+                    <TouchableOpacity
+                      key={lang}
+                      style={[
+                        styles.langChip,
+                        dailyLanguage === lang && styles.langChipSelected,
+                      ]}
+                      onPress={() => {
+                        setDailyLanguageState(lang);
+                        setDailyLanguage(lang);
+                      }}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: dailyLanguage === lang }}
+                    >
+                      <Text style={[
+                        styles.langChipText,
+                        dailyLanguage === lang && styles.langChipTextSelected,
+                      ]}>
+                        {lang === '' ? t('common.none') || 'None' : lang}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {dailyLanguage === '' && (
+                  <Text style={[styles.aiDescription, { marginTop: spacing.sm }]}>
+                    {t('dailyWords.setLanguage')}
+                  </Text>
+                )}
+              </View>
+            )}
 
             {aiEnabled && (
               <TouchableOpacity
