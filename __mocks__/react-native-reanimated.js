@@ -38,5 +38,8 @@ module.exports = {
     cubic: function mockCubic() {},
     back: () => function mockBack() {},
   },
-  FadeInUp: { duration: () => ({}) },
+  FadeIn: {
+    duration: () => ({ delay: () => ({ springify: () => ({ damping: () => ({}) }) }) }),
+  },
+  FadeInUp: { duration: () => ({ delay: () => ({}) }) },
 };

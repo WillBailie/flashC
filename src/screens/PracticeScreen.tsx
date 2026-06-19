@@ -216,7 +216,9 @@ export default function PracticeScreen({ navigation, route }: Props) {
     }
     if (mode === 'daily' && card) {
       const sm2Result = calculateSM2(card.ease_factor, card.interval, card.repetitions, 0);
-      try { updateReview(card.id, sm2Result.easeFactor, sm2Result.interval, sm2Result.repetitions, sm2Result.nextReviewDate); } catch {}
+      updateReview(card.id, sm2Result.easeFactor, sm2Result.interval, sm2Result.repetitions, sm2Result.nextReviewDate).catch((error: unknown) => {
+        console.error('updateReview failed:', error instanceof Error ? error.message : String(error));
+      });
     }
   };
 
