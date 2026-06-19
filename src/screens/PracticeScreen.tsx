@@ -181,13 +181,16 @@ export default function PracticeScreen({ navigation, route }: Props) {
 
   const handleFlip = () => {
     const result = advanceOnFlip({ cards, currentIndex, isFlipped, stats }, mode);
+    const advanced = result.currentIndex !== currentIndex || result.isComplete;
     setCards(result.cards);
     setCurrentIndex(result.currentIndex);
     setIsFlipped(result.isFlipped);
     setStats(result.stats);
-    setExampleSentence('');
-    setExampleTranslation('');
-    setExamplePinyin('');
+    if (advanced) {
+      setExampleSentence('');
+      setExampleTranslation('');
+      setExamplePinyin('');
+    }
     if (result.isComplete) {
       setSessionComplete(true);
       setShowConfetti(true);
