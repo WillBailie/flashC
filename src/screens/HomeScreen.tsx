@@ -23,7 +23,6 @@ import { SPRING_CONFIG, useReduceMotion } from '../utils/animation';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -73,7 +72,7 @@ export default function HomeScreen({ navigation }: Props) {
   const [newDeckModalVisible, setNewDeckModalVisible] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const { t } = useTranslation();
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   const RING_RADIUS = 72;
   const RING_STROKE = 6;
@@ -217,47 +216,20 @@ export default function HomeScreen({ navigation }: Props) {
       paddingBottom: spacing.xxl + spacing.lg,
     },
     hero: {
-      position: 'relative',
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.xxl + spacing.xl,
       paddingBottom: spacing.xl,
-      overflow: 'hidden',
-    },
-    heroBlob: {
-      position: 'absolute',
-      borderRadius: borderRadius.full,
-    },
-    heroBlob1: {
-      width: 160, height: 160,
-      backgroundColor: withAlpha(colors.textInverse, 0.06),
-      top: -40, right: -30,
-    },
-    heroBlob2: {
-      width: 100, height: 100,
-      backgroundColor: withAlpha(colors.textInverse, 0.08),
-      bottom: 10, left: -20,
-    },
-    heroBlob3: {
-      width: 70, height: 70,
-      backgroundColor: withAlpha(colors.textInverse, 0.05),
-      top: '50%', left: '60%',
-      transform: [{ translateX: -35 }, { translateY: -35 }],
     },
     heroGreeting: {
-      fontFamily: colors.headingFontFamily,
       fontSize: typography.fontSize.xxl,
       fontWeight: typography.fontWeight.heavy,
-      color: colors.textInverse,
-      textAlign: 'center',
+      color: colors.text,
+      textAlign: 'left',
       marginBottom: spacing.xl,
-      position: 'relative',
-      zIndex: 1,
     },
     heroBody: {
       alignItems: 'center',
       marginBottom: spacing.xl,
-      position: 'relative',
-      zIndex: 1,
     },
     ringContainer: {
       width: RING_SIZE,
@@ -278,12 +250,12 @@ export default function HomeScreen({ navigation }: Props) {
       fontFamily: colors.numFontFamily,
       fontSize: 40,
       fontWeight: typography.fontWeight.bold,
-      color: colors.textInverse,
+      color: colors.text,
       lineHeight: 44,
     },
     ringPctLabel: {
       fontSize: typography.fontSize.xs,
-      color: withAlpha(colors.textInverse, 0.65),
+      color: colors.textSecondary,
       fontWeight: typography.fontWeight.medium,
       textTransform: 'uppercase',
       letterSpacing: 1,
@@ -291,11 +263,9 @@ export default function HomeScreen({ navigation }: Props) {
     },
     heroSubtitle: {
       fontSize: typography.fontSize.sm,
-      color: withAlpha(colors.textInverse, 0.7),
+      color: colors.textSecondary,
       fontWeight: typography.fontWeight.medium,
       textAlign: 'center',
-      position: 'relative',
-      zIndex: 1,
     },
 
     sectionLabel: {
@@ -511,7 +481,7 @@ export default function HomeScreen({ navigation }: Props) {
       right: spacing.lg,
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: withAlpha(colors.textInverse, 0.2),
+      backgroundColor: withAlpha(colors.warning, 0.15),
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.xs,
       borderRadius: borderRadius.full,
@@ -521,7 +491,7 @@ export default function HomeScreen({ navigation }: Props) {
     streakPillText: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.bold,
-      color: colors.textInverse,
+      color: colors.warning,
     },
     modalButtons: {
       gap: spacing.sm,
@@ -587,15 +557,7 @@ export default function HomeScreen({ navigation }: Props) {
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
       {/* ——— Hero ——— */}
-      <LinearGradient
-        colors={[colors.primary, colors.secondary]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.hero}
-      >
-        <View style={[styles.heroBlob, styles.heroBlob1]} />
-        <View style={[styles.heroBlob, styles.heroBlob2]} />
-        <View style={[styles.heroBlob, styles.heroBlob3]} />
+      <View style={styles.hero}>
 
         {streak > 0 && (
           <View style={styles.streakPill}>
@@ -606,13 +568,7 @@ export default function HomeScreen({ navigation }: Props) {
         <Text style={styles.heroGreeting}>Welcome back</Text>
 
         <View style={styles.heroBody}>
-          <View style={[styles.ringContainer, isDark && {
-            shadowColor: colors.ringFill,
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 8,
-          }]}>
+          <View style={styles.ringContainer}>
             <Svg width={RING_SIZE} height={RING_SIZE}>
               <G transform={`rotate(-90, ${RING_SIZE / 2}, ${RING_SIZE / 2})`}>
               <Circle
@@ -644,7 +600,7 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
 
         <Text style={styles.heroSubtitle}>{stats.reviewsToday} cards reviewed today</Text>
-      </LinearGradient>
+      </View>
 
       {/* ——— Mode Cards ——— */}
       <View style={styles.modeSection}>
