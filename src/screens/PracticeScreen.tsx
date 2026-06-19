@@ -33,8 +33,8 @@ import {
 import { calculateSM2 } from '../utils/spacedRepetition';
 import { applyReverseSwap, applyReverseTextSwap } from '../utils/reverseSwap';
 import { generateExample } from '../utils/ai';
-import { getAiEnabled, getApiKey } from '../utils/settings';
-import { Quality, TemplateField } from '../models/types';
+import { getAiEnabled, getApiKey, getDailyWordsData } from '../utils/settings';
+import { Quality, TemplateField, type DailyWord } from '../models/types';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { advanceOnFlip, advanceOnSwipeLeft, advanceOnSwipeRight, advanceOnRate } from '../utils/practiceSession';
 
@@ -62,6 +62,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
   const [aiEnabled, setAiEnabled] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [deckLanguage, setDeckLanguage] = useState('');
+  const [pendingDailyWords, setPendingDailyWords] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [exampleSentence, setExampleSentence] = useState('');
   const [exampleTranslation, setExampleTranslation] = useState('');
@@ -117,6 +118,15 @@ export default function PracticeScreen({ navigation, route }: Props) {
     setStats({ reviewed: 0 });
     setCurrentFields([]);
     setCurrentValues({});
+
+    if (mode === 'daily') {
+      getDailyWordsData().then((data) => {
+        const today = new Date().toISOString().slice(0, 10);
+        if (data.date === today && data.words.length > 0) {
+          setPendingDailyWords(true);
+        }
+      });
+    }
   }, [deckId, mode, cardCount]);
 
   const loadCurrentCardTemplate = useCallback(async (card: CardWithReview) => {
@@ -477,6 +487,38 @@ export default function PracticeScreen({ navigation, route }: Props) {
               </Text>
             )}
           </View>
+          {pendingDailyWords && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: withAlpha(colors.primary, 0.08),
+                borderRadius: borderRadius.lg,
+                padding: spacing.md,
+                marginTop: spacing.lg,
+                width: '100%',
+                alignItems: 'center',
+                gap: spacing.xs,
+              }}
+              onPress={() => {
+                navigation.navigate('MainTabs');
+                navigation.getParent()?.setParams({});
+              }}
+              accessibilityRole="button"
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <Ionicons name="sparkles" size={18} color={colors.primary} />
+                <Text style={{
+                  fontSize: typography.fontSize.sm,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: colors.primary,
+                }}>{t('dailyWords.waiting')}</Text>
+              </View>
+              <Text style={{
+                fontSize: typography.fontSize.xs,
+                color: colors.textSecondary,
+                textAlign: 'center',
+              }}>{t('dailyWords.reviewNow')}</Text>
+            </TouchableOpacity>
+          )}
           <View style={styles.completeButtons}>
             <Button
               title={t('common.done')}
