@@ -28,10 +28,9 @@ import { useFocusEffect, CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme, spacing, borderRadius, typography, withAlpha } from '../constants/theme';
-import { getGlobalStats, getStreak } from '../storage/database';
-import { getReverseMode, setReverseMode, getDailyLanguage, getDailyWordsData, clearDailyWords, getApiKey } from '../utils/settings';
+import { getGlobalStats, getStreak, importCards, createDeck, getAllDecks } from '../storage/database';
+import { getReverseMode, setReverseMode, getDailyLanguage, getDailyWordsData, setDailyWordsData as persistDailyWordsData, clearDailyWords, getApiKey } from '../utils/settings';
 import { generateDailyWords } from '../utils/dailyWords';
-import { importCards, createDeck, getAllDecks } from '../storage/database';
 import { DailyWord, Deck } from '../models/types';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
@@ -517,6 +516,7 @@ export default function HomeScreen({ navigation }: Props) {
     setDailyGenerating(false);
     if (words && words.length > 0) {
       const today = new Date().toISOString().slice(0, 10);
+      await persistDailyWordsData(today, words);
       setDailyWordsData({ date: today, words });
       setDailyModalVisible(true);
     } else {
@@ -530,6 +530,8 @@ export default function HomeScreen({ navigation }: Props) {
       back_text: w.back,
     }));
     await importCards(deckId, cards);
+    await clearDailyWords();
+    setDailyWordsData({ date: '', words: [] });
     setDeckPickerVisible(false);
     setDailyModalVisible(false);
   }, [dailyWordsData.words]);
@@ -542,6 +544,8 @@ export default function HomeScreen({ navigation }: Props) {
       back_text: w.back,
     }));
     await importCards(deck.id, cards);
+    await clearDailyWords();
+    setDailyWordsData({ date: '', words: [] });
     setNewDeckModalVisible(false);
     setNewDeckName('');
     setDailyModalVisible(false);

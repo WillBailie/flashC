@@ -16,6 +16,7 @@
   "common.create": "Create",
   "common.add": "Add",
   "common.edit": "Edit",
+  "common.none": "None",
   "home.greeting": "Welcome back",
   "home.todayProgress": "Today's Progress",
   "home.cardsDue": "cards due",

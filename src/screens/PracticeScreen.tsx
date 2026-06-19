@@ -34,7 +34,7 @@ import { calculateSM2 } from '../utils/spacedRepetition';
 import { applyReverseSwap, applyReverseTextSwap } from '../utils/reverseSwap';
 import { generateExample } from '../utils/ai';
 import { getAiEnabled, getApiKey, getDailyWordsData } from '../utils/settings';
-import { Quality, TemplateField, type DailyWord } from '../models/types';
+import { Quality, TemplateField } from '../models/types';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { advanceOnFlip, advanceOnSwipeLeft, advanceOnSwipeRight, advanceOnRate } from '../utils/practiceSession';
 
@@ -500,7 +500,6 @@ export default function PracticeScreen({ navigation, route }: Props) {
               }}
               onPress={() => {
                 navigation.navigate('MainTabs');
-                navigation.getParent()?.setParams({});
               }}
               accessibilityRole="button"
             >

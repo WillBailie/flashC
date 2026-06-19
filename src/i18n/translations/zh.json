@@ -16,6 +16,7 @@
   "common.create": "创建",
   "common.add": "添加",
   "common.edit": "编辑",
+  "common.none": "无",
   "home.greeting": "欢迎回来",
   "home.todayProgress": "今日进度",
   "home.cardsDue": "张卡片待复习",
