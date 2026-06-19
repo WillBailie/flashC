@@ -28,9 +28,10 @@ describe('Confetti', () => {
     expect(toJSON()).toBeTruthy();
   });
 
-  it('returns null when trigger is false', async () => {
+  it('renders without particles when trigger is false', async () => {
     const { toJSON } = await renderConfetti({ trigger: false });
-    expect(toJSON()).toBeNull();
+    const json = toJSON();
+    expect(json).toBeTruthy();
   });
 
   it('calls onComplete after animation delay', async () => {

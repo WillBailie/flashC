@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useEffect, useRef } from 'react';
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +17,9 @@ import ImportScreen from '../screens/ImportScreen';
 import TemplateListScreen from '../screens/TemplateListScreen';
 import StatsScreen from '../screens/StatsScreen';
 import ExportScreen from '../screens/ExportScreen';
+import * as Notifications from 'expo-notifications';
+import { initializeNotificationHandler, scheduleDailyReminder } from '../utils/notifications';
+import { getNotificationsEnabled, getNotificationHour, getNotificationMinute } from '../utils/settings';
 
 export type RootStackParamList = {
   MainTabs: undefined;
@@ -90,8 +93,33 @@ function MainTabs() {
 
 export default function AppNavigator() {
   const { colors } = useTheme();
+  const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
+
+  useEffect(() => {
+    initializeNotificationHandler();
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data;
+      if (data?.screen === 'Practice' && navigationRef.current) {
+        navigationRef.current.navigate('Practice', { mode: (data.mode as 'daily' | 'freeflow') || 'daily' });
+      }
+    });
+
+    getNotificationsEnabled().then(async (enabled) => {
+      if (enabled) {
+        const hour = await getNotificationHour();
+        const minute = await getNotificationMinute();
+        await scheduleDailyReminder(hour, minute);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         screenOptions={{
           headerStyle: { backgroundColor: colors.surface },

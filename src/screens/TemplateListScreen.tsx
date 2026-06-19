@@ -6,13 +6,15 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import Animated, { FadeInUp, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../i18n/TranslationContext';
-import { useTheme, spacing, fontSize, borderRadius, withAlpha } from '../constants/theme';
+import { useTheme, spacing, fontSize, borderRadius, typography, withAlpha } from '../constants/theme';
 import { EmptyState } from '../components/EmptyState';
 import * as Haptics from 'expo-haptics';
 import { SPRING_CONFIG, useReduceMotion } from '../utils/animation';
@@ -32,12 +34,14 @@ export default function TemplateListScreen() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [fieldCounts, setFieldCounts] = useState<Record<number, number>>({});
   const [defaultId, setDefaultId] = useState<number | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   useLayoutEffect(() => {
-    navigation.setOptions({ headerTitle: t('settings.templates') });
-  }, [navigation, t]);
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
 
   const loadTemplates = useCallback(async () => {
     const allTemplates = await getAllTemplates();
@@ -58,6 +62,12 @@ export default function TemplateListScreen() {
       loadTemplates();
     }, [loadTemplates])
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadTemplates();
+    setRefreshing(false);
+  }, [loadTemplates]);
 
   const handleDelete = (template: Template) => {
     if (template.id === defaultId) {
@@ -89,11 +99,45 @@ export default function TemplateListScreen() {
           backgroundColor: colors.background,
         },
         listContent: {
-          padding: spacing.md,
+          paddingHorizontal: spacing.md,
+          paddingTop: insets.top + 44 + spacing.sm + spacing.md + spacing.sm,
           paddingBottom: 80,
         },
         emptyContainer: {
           flexGrow: 1,
+        },
+        floatingHeader: {
+          position: 'absolute',
+          top: 0, left: 0, right: 0,
+          zIndex: 10,
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: spacing.md,
+          paddingTop: insets.top + spacing.sm,
+          paddingBottom: spacing.sm,
+        },
+        floatingBackButton: {
+          width: 44, height: 44,
+          borderRadius: borderRadius.full,
+          backgroundColor: colors.surface,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        floatingSpacer: { width: 44 },
+        floatingPill: {
+          flex: 1,
+          alignItems: 'center',
+        },
+        floatingPillInner: {
+          backgroundColor: withAlpha(colors.primary, 0.12),
+          paddingHorizontal: spacing.xl,
+          paddingVertical: spacing.sm + 2,
+          borderRadius: borderRadius.full,
+        },
+        floatingPillText: {
+          fontSize: typography.fontSize.lg,
+          fontWeight: typography.fontWeight.bold,
+          color: colors.primary,
         },
         templateItem: {
           flexDirection: 'row',
@@ -154,7 +198,7 @@ export default function TemplateListScreen() {
           elevation: 6,
         },
       }),
-    [colors]
+    [colors, insets.top]
   );
 
   const renderTemplate = ({ item, index }: { item: Template; index: number }) => (
@@ -200,6 +244,22 @@ export default function TemplateListScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.floatingHeader}>
+        <TouchableOpacity
+          style={styles.floatingBackButton}
+          onPress={() => navigation.goBack()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.floatingPill}>
+          <View style={styles.floatingPillInner}>
+            <Text style={styles.floatingPillText} numberOfLines={2}>{t('settings.templates')}</Text>
+          </View>
+        </View>
+        <View style={styles.floatingSpacer} />
+      </View>
       <FlatList
         data={templates}
         keyExtractor={(item) => item.id.toString()}
@@ -212,6 +272,9 @@ export default function TemplateListScreen() {
             title={t('template.emptyTitle')}
             subtitle={t('template.emptySubtitle')}
           />
+        }
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
         }
       />
       <Animated.View style={[styles.fab, fabAnimatedStyle]}>

@@ -1,5 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { getReverseMode, setReverseMode, clearSettingsCache, getAiEnabled, setAiEnabled, getApiKey, setApiKey, getAppLanguage, setAppLanguage, getDailyLanguage, setDailyLanguage, getDailyWordsData, setDailyWordsData, clearDailyWords } from '../settings';
+import { getReverseMode, setReverseMode, clearSettingsCache, getAiEnabled, setAiEnabled, getApiKey, setApiKey, getAppLanguage, setAppLanguage, getDailyLanguage, setDailyLanguage, getDailyWordsData, setDailyWordsData, clearDailyWords, getNotificationsEnabled, setNotificationsEnabled, getNotificationHour, setNotificationHour, getNotificationMinute, setNotificationMinute } from '../settings';
 
 jest.mock('expo-file-system/legacy', () => ({
   documentDirectory: '/mock/documents/',
@@ -41,7 +41,7 @@ describe('settings', () => {
       await setReverseMode(true);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: true, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [] })
+        JSON.stringify({ reverseMode: true, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], notificationsEnabled: false, notificationHour: 9, notificationMinute: 0 })
       );
     });
 
@@ -50,7 +50,7 @@ describe('settings', () => {
       await setReverseMode(false);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [] })
+        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], notificationsEnabled: false, notificationHour: 9, notificationMinute: 0 })
       );
     });
 
@@ -61,7 +61,7 @@ describe('settings', () => {
       await setReverseMode(false);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], futureSetting: 'keep' })
+        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], notificationsEnabled: false, notificationHour: 9, notificationMinute: 0, futureSetting: 'keep' })
       );
     });
 
@@ -153,6 +153,40 @@ describe('settings', () => {
       const data = await getDailyWordsData();
       expect(data.date).toBe('');
       expect(data.words).toEqual([]);
+    });
+  });
+
+  describe('Notifications', () => {
+    test('getNotificationsEnabled returns false by default', async () => {
+      const enabled = await getNotificationsEnabled();
+      expect(enabled).toBe(false);
+    });
+
+    test('setNotificationsEnabled and getNotificationsEnabled round-trip', async () => {
+      await setNotificationsEnabled(true);
+      expect(await getNotificationsEnabled()).toBe(true);
+      await setNotificationsEnabled(false);
+      expect(await getNotificationsEnabled()).toBe(false);
+    });
+
+    test('getNotificationHour returns 9 by default', async () => {
+      const hour = await getNotificationHour();
+      expect(hour).toBe(9);
+    });
+
+    test('setNotificationHour and getNotificationHour round-trip', async () => {
+      await setNotificationHour(18);
+      expect(await getNotificationHour()).toBe(18);
+    });
+
+    test('getNotificationMinute returns 0 by default', async () => {
+      const minute = await getNotificationMinute();
+      expect(minute).toBe(0);
+    });
+
+    test('setNotificationMinute and getNotificationMinute round-trip', async () => {
+      await setNotificationMinute(30);
+      expect(await getNotificationMinute()).toBe(30);
     });
   });
 });

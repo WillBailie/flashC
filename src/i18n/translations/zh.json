@@ -121,8 +121,8 @@
   "settings.title": "设置",
   "settings.appLanguage": "应用语言",
   "settings.appLanguageDescription": "更改应用界面的语言",
-  "settings.aiTitle": "AI 例句生成",
-  "settings.aiDescription": "在练习中生成例句",
+  "settings.aiTitle": "AI 功能",
+  "settings.aiDescription": "生成例句和每日词汇建议",
   "settings.apiKey": "API 密钥",
   "settings.apiKeyPlaceholder": "输入您的 DeepSeek API 密钥...",
   "settings.reverseTitle": "翻转模式",
@@ -246,5 +246,8 @@
   "dailyWords.waiting": "您有 5 个新单词等待处理",
   "dailyWords.reviewNow": "立即查看",
   "settings.dailyLanguage": "每日单词语言",
-  "settings.dailyLanguageDescription": "接收此语言的每日词汇建议"
+  "settings.dailyLanguageDescription": "接收此语言的每日词汇建议",
+  "settings.notifications": "通知",
+  "settings.notificationsDescription": "每日提醒复习闪卡",
+  "settings.notificationTime": "提醒时间"
 }

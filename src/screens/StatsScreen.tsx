@@ -4,8 +4,11 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme, spacing, borderRadius, typography, withAlpha } from '../constants/theme';
@@ -81,10 +84,11 @@ export default function StatsScreen() {
   const { colors } = useTheme();
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList, 'Stats'>>();
+  const insets = useSafeAreaInsets();
 
   useLayoutEffect(() => {
-    navigation.setOptions({ headerTitle: t('settings.stats') });
-  }, [navigation, t]);
+    navigation.setOptions({ headerShown: false });
+  }, [navigation]);
 
   const [stats, setStats] = useState<{
     totalCards: number;
@@ -96,29 +100,86 @@ export default function StatsScreen() {
     avgEaseFactor: number;
     masteredCards: number;
   } | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadStats = useCallback(async () => {
+    const s = await getGlobalStats();
+    setStats(s);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
-      let active = true;
-      getGlobalStats().then((s) => {
-        if (active) setStats(s);
-      });
-      return () => { active = false; };
-    }, [])
+      loadStats();
+    }, [loadStats])
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadStats();
+    setRefreshing(false);
+  }, [loadStats]);
 
   const containerStyles = useMemo(() => StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     scroll: { flex: 1 },
-    content: { padding: spacing.lg, paddingBottom: spacing.xl },
+    content: { paddingHorizontal: spacing.lg, paddingTop: insets.top + 44 + spacing.sm + spacing.md + spacing.sm, paddingBottom: spacing.xl },
     row: { flexDirection: 'row', marginHorizontal: -spacing.xs },
-    loading: { flex: 1, alignItems: 'center' as const, padding: spacing.xl, gap: spacing.md },
+    loading: { flex: 1, alignItems: 'center' as const, justifyContent: 'center' as const, padding: spacing.xl, gap: spacing.md },
     loadingText: { color: colors.textSecondary, fontSize: typography.fontSize.md },
-  }), [colors]);
+    floatingHeader: {
+      position: 'absolute',
+      top: 0, left: 0, right: 0,
+      zIndex: 10,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingTop: insets.top + spacing.sm,
+      paddingBottom: spacing.sm,
+    },
+    floatingBackButton: {
+      width: 44, height: 44,
+      borderRadius: borderRadius.full,
+      backgroundColor: colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    floatingSpacer: { width: 44 },
+    floatingPill: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    floatingPillInner: {
+      backgroundColor: withAlpha(colors.primary, 0.12),
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: borderRadius.full,
+    },
+    floatingPillText: {
+      fontSize: typography.fontSize.lg,
+      fontWeight: typography.fontWeight.bold,
+      color: colors.primary,
+    },
+  }), [colors, insets.top]);
 
   if (!stats) {
     return (
       <View style={containerStyles.container}>
+        <View style={containerStyles.floatingHeader}>
+          <TouchableOpacity
+            style={containerStyles.floatingBackButton}
+            onPress={() => navigation.goBack()}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <View style={containerStyles.floatingPill}>
+            <View style={containerStyles.floatingPillInner}>
+              <Text style={containerStyles.floatingPillText} numberOfLines={2}>{t('settings.stats')}</Text>
+            </View>
+          </View>
+          <View style={containerStyles.floatingSpacer} />
+        </View>
         <View style={containerStyles.loading}>
           <Skeleton width="100%" height={80} borderRadius={borderRadius.md} />
           <Skeleton width="100%" height={80} borderRadius={borderRadius.md} />
@@ -150,7 +211,29 @@ export default function StatsScreen() {
 
   return (
     <View style={containerStyles.container}>
-      <ScrollView style={containerStyles.scroll} contentContainerStyle={containerStyles.content}>
+      <View style={containerStyles.floatingHeader}>
+        <TouchableOpacity
+          style={containerStyles.floatingBackButton}
+          onPress={() => navigation.goBack()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <View style={containerStyles.floatingPill}>
+          <View style={containerStyles.floatingPillInner}>
+            <Text style={containerStyles.floatingPillText} numberOfLines={2}>{t('settings.stats')}</Text>
+          </View>
+        </View>
+        <View style={containerStyles.floatingSpacer} />
+      </View>
+      <ScrollView
+        style={containerStyles.scroll}
+        contentContainerStyle={containerStyles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
+        }
+      >
         {statRows.map((row, i) => (
           <View key={i} style={containerStyles.row}>
             {row.map((s) => (

@@ -7,6 +7,7 @@ import {
   TextInput,
   ScrollView,
   Switch,
+  RefreshControl,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -71,6 +72,8 @@ export default function HomeScreen({ navigation }: Props) {
   const [newDeckName, setNewDeckName] = useState('');
   const [newDeckModalVisible, setNewDeckModalVisible] = useState(false);
   const [apiKey, setApiKey] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [animateTrigger, setAnimateTrigger] = useState(0);
   const { t } = useTranslation();
   const { colors } = useTheme();
 
@@ -109,13 +112,13 @@ export default function HomeScreen({ navigation }: Props) {
 
     rafId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(rafId);
-  }, [stats.dueCards]);
+  }, [stats.dueCards, animateTrigger]);
 
   const dueScale = useSharedValue(1);
   const totalScale = useSharedValue(1);
   const streakScaleVal = useSharedValue(1);
 
-  const ringOffset = useSharedValue(dashOffset);
+  const ringOffset = useSharedValue(circumference);
 
   const dueAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: dueScale.value }],
@@ -174,15 +177,24 @@ export default function HomeScreen({ navigation }: Props) {
         easing: Easing.out(Easing.cubic),
       });
     }
-  }, [dashOffset, reduceMotion]);
+  }, [dashOffset, reduceMotion, animateTrigger]);
+
+  const triggerAnimation = useCallback(() => {
+    setDisplayDue(0);
+    setAnimateTrigger(t => t + 1);
+  }, []);
 
   const loadStats = useCallback(async () => {
+    triggerAnimation();
+    if (!reduceMotion) {
+      ringOffset.value = circumference;
+    }
     const s = await getGlobalStats();
     setStats(s);
     const streakData = await getStreak();
     setStreak(streakData.streak);
     setStreakMultiplier(streakData.multiplier);
-  }, []);
+  }, [reduceMotion, triggerAnimation]);
 
   useFocusEffect(
     useCallback(() => {
@@ -201,6 +213,24 @@ export default function HomeScreen({ navigation }: Props) {
       });
     }, [loadStats])
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadStats();
+    await getReverseMode().then(setReverseModeState);
+    await getDailyLanguage().then(setDailyLanguage);
+    await getApiKey().then(setApiKey);
+    await getDailyWordsData().then((data) => {
+      const today = new Date().toISOString().slice(0, 10);
+      if (data.date !== today) {
+        clearDailyWords();
+        setDailyWordsData({ date: '', words: [] });
+      } else {
+        setDailyWordsData(data);
+      }
+    });
+    setRefreshing(false);
+  }, [loadStats]);
 
   const masteredPct = stats.totalCards > 0
     ? Math.round((stats.masteredCards / stats.totalCards) * 100)
@@ -556,7 +586,10 @@ export default function HomeScreen({ navigation }: Props) {
   }, [dailyLanguage]);
 
   return (
-    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
+    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
+      }>
       {/* ——— Hero ——— */}
       <View style={styles.hero}>
 
@@ -713,14 +746,9 @@ export default function HomeScreen({ navigation }: Props) {
             )}
           </View>
         </View>
-      </View>
-
-      {/* ——— Daily Words ——— */}
-      <View style={styles.activitySection}>
-        <Text style={styles.sectionLabel}>{t('dailyWords.title')}</Text>
         {!apiKey ? (
           <TouchableOpacity
-            style={[styles.activityCard, { opacity: 0.5 }]}
+            style={[styles.activityCard, { marginTop: spacing.sm, opacity: 0.5 }]}
             activeOpacity={0.7}
             onPress={() => navigation.navigate('Settings')}
             accessibilityRole="button"
@@ -740,7 +768,7 @@ export default function HomeScreen({ navigation }: Props) {
           </TouchableOpacity>
         ) : !dailyLanguage ? (
           <TouchableOpacity
-            style={styles.activityCard}
+            style={[styles.activityCard, { marginTop: spacing.sm }]}
             activeOpacity={0.7}
             onPress={() => navigation.navigate('Settings')}
             accessibilityRole="button"
@@ -756,7 +784,7 @@ export default function HomeScreen({ navigation }: Props) {
           </TouchableOpacity>
         ) : dailyWordsData.words.length > 0 ? (
           <TouchableOpacity
-            style={styles.activityCard}
+            style={[styles.activityCard, { marginTop: spacing.sm }]}
             activeOpacity={0.7}
             onPress={() => setDailyModalVisible(true)}
             accessibilityRole="button"
@@ -774,7 +802,7 @@ export default function HomeScreen({ navigation }: Props) {
           </TouchableOpacity>
         ) : dailyError ? (
           <TouchableOpacity
-            style={styles.activityCard}
+            style={[styles.activityCard, { marginTop: spacing.sm }]}
             activeOpacity={0.7}
             onPress={handleGenerateDaily}
             accessibilityRole="button"
@@ -789,7 +817,7 @@ export default function HomeScreen({ navigation }: Props) {
             <Ionicons name="refresh-outline" size={16} color={colors.border} />
           </TouchableOpacity>
         ) : dailyGenerating ? (
-          <View style={styles.activityCard}>
+          <View style={[styles.activityCard, { marginTop: spacing.sm }]}>
             <View style={[styles.activityIconWrap, { backgroundColor: withAlpha(colors.primary, 0.12) }]}>
               <Ionicons name="hourglass-outline" size={20} color={colors.primary} />
             </View>
@@ -800,7 +828,7 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         ) : (
           <TouchableOpacity
-            style={styles.activityCard}
+            style={[styles.activityCard, { marginTop: spacing.sm }]}
             activeOpacity={0.7}
             onPress={handleGenerateDaily}
             accessibilityRole="button"

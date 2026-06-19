@@ -469,7 +469,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
           </TouchableOpacity>
           <View style={styles.floatingPill}>
             <View style={styles.floatingPillInner}>
-              <Text style={styles.floatingPillText} numberOfLines={1}>{title}</Text>
+              <Text style={styles.floatingPillText} numberOfLines={2}>{title}</Text>
             </View>
           </View>
           <View style={styles.floatingSpacer} />
@@ -559,7 +559,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
           </TouchableOpacity>
           <View style={styles.floatingPill}>
             <View style={styles.floatingPillInner}>
-              <Text style={styles.floatingPillText} numberOfLines={1}>{title}</Text>
+              <Text style={styles.floatingPillText} numberOfLines={2}>{title}</Text>
             </View>
           </View>
           <View style={styles.floatingSpacer} />
@@ -587,7 +587,7 @@ export default function PracticeScreen({ navigation, route }: Props) {
         </TouchableOpacity>
         <View style={styles.floatingPill}>
           <View style={styles.floatingPillInner}>
-            <Text style={styles.floatingPillText} numberOfLines={1}>{title}</Text>
+            <Text style={styles.floatingPillText} numberOfLines={2}>{title}</Text>
           </View>
         </View>
         <View style={styles.floatingSpacer} />

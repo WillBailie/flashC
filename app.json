@@ -7,7 +7,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yibeitea.flashcardapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -26,7 +30,8 @@
       "expo-sqlite",
       "expo-asset",
       "expo-sharing",
-      "expo-font"
+      "expo-font",
+      "expo-notifications"
     ],
     "updates": {
       "url": "https://u.expo.dev/5cdf6502-d017-40de-87ee-decc88c1858c",

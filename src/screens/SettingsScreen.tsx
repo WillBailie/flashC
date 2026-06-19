@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, CompositeNavigationProp } from '@react-navigation/native';
@@ -16,7 +17,8 @@ import { Card } from '../components/Card';
 import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
-import { getAiEnabled, setAiEnabled, getApiKey, setApiKey, getDailyLanguage, setDailyLanguage } from '../utils/settings';
+import { getAiEnabled, setAiEnabled, getApiKey, setApiKey, getDailyLanguage, setDailyLanguage, getNotificationsEnabled, setNotificationsEnabled, getNotificationHour, setNotificationHour, getNotificationMinute, setNotificationMinute } from '../utils/settings';
+import { requestNotificationPermissions, scheduleDailyReminder, cancelDailyReminder } from '../utils/notifications';
 import { useTranslation } from '../i18n/TranslationContext';
 import { RootStackParamList, TabParamList } from '../navigation/AppNavigator';
 
@@ -37,6 +39,9 @@ export default function SettingsScreen() {
   const [testStatus, setTestStatus] = useState<'idle' | 'success' | 'fail'>('idle');
   const [apiKeySheetVisible, setApiKeySheetVisible] = useState(false);
   const [dailyLanguage, setDailyLanguageState] = useState('');
+  const [notificationsEnabled, setNotificationsEnabledLocal] = useState(false);
+  const [notificationHour, setNotificationHourLocal] = useState('9');
+  const [notificationMinute, setNotificationMinuteLocal] = useState('0');
 
   useEffect(() => {
     getAiEnabled().then(setAiEnabledLocal);
@@ -45,6 +50,9 @@ export default function SettingsScreen() {
       setDraftApiKey(key);
     });
     getDailyLanguage().then(setDailyLanguageState);
+    getNotificationsEnabled().then(setNotificationsEnabledLocal);
+    getNotificationHour().then(h => setNotificationHourLocal(String(h)));
+    getNotificationMinute().then(m => setNotificationMinuteLocal(String(m)));
   }, []);
 
   const styles = useMemo(() => StyleSheet.create({
@@ -274,6 +282,91 @@ export default function SettingsScreen() {
               </View>
               <Ionicons name="chevron-forward" size={16} color={colors.border} />
             </TouchableOpacity>
+            <View style={[styles.toolRow, styles.toolRowBorder, { borderBottomWidth: 0 }]}>
+              <View style={styles.toolRowLeft}>
+                <Ionicons name="notifications-outline" size={18} color={colors.textSecondary} />
+                <Text style={styles.toolRowText}>{t('settings.notifications')}</Text>
+              </View>
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={async (v) => {
+                  setNotificationsEnabledLocal(v);
+                  await setNotificationsEnabled(v);
+                  if (v) {
+                    const granted = await requestNotificationPermissions();
+                    if (granted) {
+                      const h = parseInt(notificationHour) || 9;
+                      const m = parseInt(notificationMinute) || 0;
+                      await scheduleDailyReminder(h, m);
+                    } else {
+                      setNotificationsEnabledLocal(false);
+                      await setNotificationsEnabled(false);
+                    }
+                  } else {
+                    await cancelDailyReminder();
+                  }
+                }}
+                trackColor={{ false: colors.border, true: withAlpha(colors.primary, 0.4) }}
+                thumbColor={notificationsEnabled ? colors.primary : colors.textSecondary}
+              />
+            </View>
+            {notificationsEnabled && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingTop: spacing.xs, paddingBottom: spacing.sm + 2 }}>
+                <Text style={[styles.toolRowText, { color: colors.textSecondary, fontSize: typography.fontSize.sm }]}>{t('settings.notificationTime')}</Text>
+                <View style={{ flex: 1 }} />
+                <TextInput
+                  style={{
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: borderRadius.sm,
+                    paddingHorizontal: spacing.sm,
+                    paddingVertical: spacing.xs + 2,
+                    fontSize: typography.fontSize.sm,
+                    color: colors.text,
+                    textAlign: 'center',
+                    minWidth: 44,
+                    backgroundColor: colors.background,
+                  }}
+                  keyboardType="numeric"
+                  value={notificationHour}
+                  onChangeText={async (text) => {
+                    setNotificationHourLocal(text);
+                    const h = parseInt(text) || 9;
+                    await setNotificationHour(h);
+                    const m = parseInt(notificationMinute) || 0;
+                    await scheduleDailyReminder(h, m);
+                  }}
+                  maxLength={2}
+                  selectTextOnFocus
+                />
+                <Text style={{ fontSize: typography.fontSize.sm, color: colors.text, fontWeight: typography.fontWeight.bold }}>:</Text>
+                <TextInput
+                  style={{
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    borderRadius: borderRadius.sm,
+                    paddingHorizontal: spacing.sm,
+                    paddingVertical: spacing.xs + 2,
+                    fontSize: typography.fontSize.sm,
+                    color: colors.text,
+                    textAlign: 'center',
+                    minWidth: 44,
+                    backgroundColor: colors.background,
+                  }}
+                  keyboardType="numeric"
+                  value={notificationMinute}
+                  onChangeText={async (text) => {
+                    setNotificationMinuteLocal(text);
+                    const h = parseInt(notificationHour) || 9;
+                    const m = parseInt(text) || 0;
+                    await setNotificationMinute(m);
+                    await scheduleDailyReminder(h, m);
+                  }}
+                  maxLength={2}
+                  selectTextOnFocus
+                />
+              </View>
+            )}
           </View>
         </Card>
 

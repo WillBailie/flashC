@@ -12,6 +12,9 @@ interface Settings {
   dailyLanguage: string;
   dailyWordsDate: string;
   dailyWords: DailyWord[];
+  notificationsEnabled: boolean;
+  notificationHour: number;
+  notificationMinute: number;
 }
 
 const DEFAULTS: Settings = {
@@ -23,6 +26,9 @@ const DEFAULTS: Settings = {
   dailyLanguage: '',
   dailyWordsDate: '',
   dailyWords: [],
+  notificationsEnabled: false,
+  notificationHour: 9,
+  notificationMinute: 0,
 };
 
 let cache: Settings | null = null;
@@ -137,5 +143,38 @@ export async function clearDailyWords(): Promise<void> {
   const settings = await readSettings();
   settings.dailyWordsDate = '';
   settings.dailyWords = [];
+  await writeSettings(settings);
+}
+
+export async function getNotificationsEnabled(): Promise<boolean> {
+  const settings = await readSettings();
+  return settings.notificationsEnabled;
+}
+
+export async function setNotificationsEnabled(value: boolean): Promise<void> {
+  const settings = await readSettings();
+  settings.notificationsEnabled = value;
+  await writeSettings(settings);
+}
+
+export async function getNotificationHour(): Promise<number> {
+  const settings = await readSettings();
+  return settings.notificationHour;
+}
+
+export async function setNotificationHour(value: number): Promise<void> {
+  const settings = await readSettings();
+  settings.notificationHour = value;
+  await writeSettings(settings);
+}
+
+export async function getNotificationMinute(): Promise<number> {
+  const settings = await readSettings();
+  return settings.notificationMinute;
+}
+
+export async function setNotificationMinute(value: number): Promise<void> {
+  const settings = await readSettings();
+  settings.notificationMinute = value;
   await writeSettings(settings);
 }

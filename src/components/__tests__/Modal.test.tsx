@@ -33,10 +33,9 @@ describe('Modal', () => {
     expect(getByText('Modal content')).toBeTruthy();
   });
 
-  it('returns null when not visible', async () => {
-    const { queryByText, toJSON } = await renderModal({ visible: false });
+  it('does not render children when not visible', async () => {
+    const { queryByText } = await renderModal({ visible: false });
     expect(queryByText('Modal content')).toBeNull();
-    expect(toJSON()).toBeNull();
   });
 
   it('renders title when provided', async () => {

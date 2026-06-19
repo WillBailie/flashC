@@ -13,6 +13,7 @@ import {
   Share,
   Switch,
   Pressable,
+  RefreshControl,
 } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -60,6 +61,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
   const [editingLang, setEditingLang] = useState('');
   const [editingCustomLang, setEditingCustomLang] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const titleInputRef = React.useRef<TextInput>(null);
@@ -108,6 +110,12 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       });
     }, [loadCards, deckId])
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadCards();
+    setRefreshing(false);
+  }, [loadCards]);
 
   React.useLayoutEffect(() => {
     navigation.setOptions({ headerShown: false });
@@ -681,7 +689,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
               accessibilityLabel={`Edit deck name: ${displayName}`}
             >
               <View style={styles.floatingPillInner}>
-                <Text style={styles.floatingPillText} numberOfLines={1}>{displayName}</Text>
+                <Text style={styles.floatingPillText} numberOfLines={2}>{displayName}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -733,7 +741,6 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
         data={filteredCards}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderCard}
-        bounces={false}
         overScrollMode="never"
         contentContainerStyle={
           cards.length === 0 ? styles.emptyContainer : styles.listContent
@@ -743,6 +750,9 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
             title={t('deckDetail.emptyTitle')}
             subtitle={t('deckDetail.emptySubtitle')}
           />
+        }
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
         }
       />
 

@@ -121,8 +121,8 @@
   "settings.title": "Settings",
   "settings.appLanguage": "App Language",
   "settings.appLanguageDescription": "Change the language of the app interface",
-  "settings.aiTitle": "AI Example Generation",
-  "settings.aiDescription": "Generate example sentences during practice",
+  "settings.aiTitle": "AI Features",
+  "settings.aiDescription": "Generate example sentences and daily vocabulary suggestions",
   "settings.apiKey": "API Key",
   "settings.apiKeyPlaceholder": "Enter your DeepSeek API key...",
   "settings.reverseTitle": "Reverse Mode",
@@ -246,5 +246,8 @@
   "dailyWords.waiting": "You have 5 new words waiting",
   "dailyWords.reviewNow": "Review Now",
   "settings.dailyLanguage": "Daily Words Language",
-  "settings.dailyLanguageDescription": "Receive daily vocabulary suggestions in this language"
+  "settings.dailyLanguageDescription": "Receive daily vocabulary suggestions in this language",
+  "settings.notifications": "Notifications",
+  "settings.notificationsDescription": "Daily reminder to review your flashcards",
+  "settings.notificationTime": "Reminder time"
 }

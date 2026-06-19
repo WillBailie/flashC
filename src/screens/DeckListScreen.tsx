@@ -6,6 +6,7 @@ import {
   FlatList,
   Pressable,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import Animated, { FadeInUp, useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -44,6 +45,7 @@ export default function DeckListScreen({ navigation }: Props) {
   const { colors } = useTheme();
   const [decks, setDecks] = useState<DeckWithStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [newDeckName, setNewDeckName] = useState('');
   const [newDeckDesc, setNewDeckDesc] = useState('');
@@ -72,6 +74,12 @@ export default function DeckListScreen({ navigation }: Props) {
 
   useEffect(() => {
     return on('decks-changed', loadDecks);
+  }, [loadDecks]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadDecks();
+    setRefreshing(false);
   }, [loadDecks]);
 
   const styles = useMemo(
@@ -285,6 +293,9 @@ export default function DeckListScreen({ navigation }: Props) {
               title={t('deckList.emptyTitle')}
               subtitle={t('deckList.emptySubtitle')}
             />
+          }
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
           }
         />
       )}

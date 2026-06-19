@@ -11,6 +11,20 @@ jest.mock('../../utils/settings', () => ({
   setApiKey: jest.fn().mockResolvedValue(undefined),
   getDailyLanguage: jest.fn().mockResolvedValue('en'),
   setDailyLanguage: jest.fn().mockResolvedValue(undefined),
+  getNotificationsEnabled: jest.fn().mockResolvedValue(false),
+  setNotificationsEnabled: jest.fn().mockResolvedValue(undefined),
+  getNotificationHour: jest.fn().mockResolvedValue(9),
+  setNotificationHour: jest.fn().mockResolvedValue(undefined),
+  getNotificationMinute: jest.fn().mockResolvedValue(0),
+  setNotificationMinute: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('../../utils/notifications', () => ({
+  initializeNotificationHandler: jest.fn(),
+  requestNotificationPermissions: jest.fn().mockResolvedValue(true),
+  scheduleDailyReminder: jest.fn().mockResolvedValue(undefined),
+  cancelDailyReminder: jest.fn().mockResolvedValue(undefined),
+  NOTIFICATION_ID: 'daily-review-reminder',
 }));
 
 jest.mock('../../i18n/TranslationContext', () => ({
