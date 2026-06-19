@@ -360,7 +360,7 @@ export default function ImportScreen() {
     },
     parseButtonText: {
       fontSize: fontSize.md,
-      color: colors.surface,
+      color: colors.textInverse,
       fontWeight: '700',
     },
     previewItem: {
@@ -424,7 +424,7 @@ export default function ImportScreen() {
       opacity: 0.5,
     },
     importButtonText: {
-      color: colors.surface,
+      color: colors.textInverse,
       fontSize: fontSize.md,
       fontWeight: '700',
     },

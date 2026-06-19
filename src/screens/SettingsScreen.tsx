@@ -91,7 +91,7 @@ export default function SettingsScreen() {
       fontWeight: typography.fontWeight.semibold,
       color: colors.text,
     },
-    themeChipTextActive: { color: colors.surface },
+    themeChipTextActive: { color: colors.textInverse },
     langChip: {
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.xs + 4,
@@ -106,7 +106,7 @@ export default function SettingsScreen() {
       color: colors.text,
     },
     langChipTextSelected: {
-      color: colors.surface,
+      color: colors.textInverse,
       fontWeight: typography.fontWeight.semibold,
     },
     toolRow: {

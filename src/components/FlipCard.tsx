@@ -190,7 +190,7 @@ export function FlipCard({
           flexShrink: 1,
         },
         backText: {
-          color: colors.surface,
+          color: colors.textInverse,
         },
         fieldValue: {
           fontSize: typography.fontSize.xl,
@@ -198,25 +198,24 @@ export function FlipCard({
           fontWeight: typography.fontWeight.medium,
           textAlign: 'center',
         },
-        fieldRow: {
-          width: '100%',
-          marginBottom: 10,
-        },
         fieldLabel: {
           fontSize: typography.fontSize.xs,
-          fontWeight: typography.fontWeight.bold,
+          fontWeight: typography.fontWeight.semibold,
           color: colors.primary,
-          textTransform: 'uppercase',
           letterSpacing: 0.5,
           marginBottom: 2,
           textAlign: 'center',
         },
         backFieldLabel: {
-          color: colors.surface,
+          color: colors.textInverse,
           opacity: 0.7,
         },
         backFieldValue: {
-          color: colors.surface,
+          color: colors.textInverse,
+        },
+        fieldRow: {
+          width: '100%',
+          marginBottom: 10,
         },
         exampleLabel: {
           fontSize: 10,
@@ -236,10 +235,10 @@ export function FlipCard({
           flexShrink: 1,
         },
         backExampleLabel: {
-          color: withAlpha(colors.surface, 0.7),
+          color: withAlpha(colors.textInverse, 0.7),
         },
         backExampleText: {
-          color: colors.surface,
+          color: colors.textInverse,
         },
       }),
     [colors]

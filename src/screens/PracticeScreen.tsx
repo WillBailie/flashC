@@ -332,12 +332,12 @@ export default function PracticeScreen({ navigation, route }: Props) {
       justifyContent: 'center',
     },
     rateButtonText: {
-      color: colors.surface,
+      color: colors.textInverse,
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.bold,
     },
     rateInterval: {
-      color: withAlpha(colors.surface, 0.7),
+      color: withAlpha(colors.textInverse, 0.7),
       fontSize: typography.fontSize.xs,
       marginTop: 2,
     },

@@ -121,7 +121,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
       alignItems: 'center',
     },
     saveNameButtonText: {
-      color: colors.surface,
+      color: colors.textInverse,
       fontSize: fontSize.sm,
       fontWeight: '700',
     },
@@ -147,7 +147,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
       borderRadius: borderRadius.sm,
     },
     addFieldButtonText: {
-      color: colors.surface,
+      color: colors.textInverse,
       fontSize: fontSize.sm,
       fontWeight: '600',
     },
@@ -316,7 +316,7 @@ export default function TemplateEditorScreen({ route, navigation }: Props) {
     },
     addButtonText: {
       fontSize: fontSize.md,
-      color: colors.surface,
+      color: colors.textInverse,
       fontWeight: '600',
     },
   }), [colors]);

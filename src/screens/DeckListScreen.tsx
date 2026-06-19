@@ -303,7 +303,7 @@ export default function DeckListScreen({ navigation }: Props) {
           accessibilityRole="button"
           accessibilityLabel="Create new deck"
         >
-          <Ionicons name="add" size={28} color={colors.surface} />
+          <Ionicons name="add" size={28} color={colors.textInverse} />
         </Pressable>
       </Animated.View>
 

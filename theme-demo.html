@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Theme Demo — Warm Minimal vs Glass Neon</title>
+<style>
+  /* ===== CSS Custom Properties ===== */
+  :root {
+    --primary: #C45D3E;
+    --secondary: #5B8A72;
+    --background: #FAF7F2;
+    --surface: #FFFFFF;
+    --surface-variant: #F5F0E9;
+    --text: #2C2420;
+    --text-secondary: #8C7E74;
+    --text-tertiary: #B5A899;
+    --border: #EDE6DC;
+    --success: #5B8A72;
+    --danger: #D14D4D;
+    --warning: #D4A03C;
+    --again: #D14D4D;
+    --hard: #D4A03C;
+    --good: #5B8A72;
+    --easy: #5B8A9E;
+    --shadow: #2C2420;
+    --overlay: rgba(44,36,32,0.5);
+    --tab-bar-bg: rgba(250,247,242,0.94);
+    --tab-active: #C45D3E;
+    --tab-inactive: #B5A899;
+    --toast-bg: #2C2420;
+    --toast-text: #FAF7F2;
+    --canvas-alpha: 0;
+    --heading-ff: 'Playfair Display', serif;
+    --num-ff: 'Space Grotesk', sans-serif;
+    --card-shadow: 0 1px 3px rgba(44,36,32,0.04);
+    --ring-track: #EDE6DC;
+    --ring-fill: #C45D3E;
+    --ring-glow: none;
+    --ring-due-label-color: var(--text-tertiary);
+    --ring-due-label-weight: 400;
+    --activity-icon-bg: rgba(196,93,62,0.08);
+    --activity-icon-color: #C45D3E;
+    --dailywords-icon-bg: rgba(91,138,114,0.1);
+    --dailywords-icon-color: #5B8A72;
+  }
+
+  [data-theme="dark"] {
+    --primary: #00E5A0;
+    --secondary: #3FB950;
+    --background: #08080D;
+    --surface: rgba(255,255,255,0.04);
+    --surface-variant: rgba(255,255,255,0.06);
+    --text: #E8E6E3;
+    --text-secondary: #6B6B7B;
+    --text-tertiary: #4A4A5A;
+    --border: rgba(255,255,255,0.08);
+    --success: #3FB950;
+    --danger: #FF4D5A;
+    --warning: #F0A840;
+    --again: #FF4D5A;
+    --hard: #F0A840;
+    --good: #3FB950;
+    --easy: #4A9EFF;
+    --shadow: transparent;
+    --overlay: rgba(0,0,0,0.7);
+    --tab-bar-bg: rgba(8,8,13,0.92);
+    --tab-active: #00E5A0;
+    --tab-inactive: #4A4A5A;
+    --toast-bg: rgba(0,229,160,0.15);
+    --toast-text: #00E5A0;
+    --canvas-alpha: 1;
+    --heading-ff: 'Space Grotesk', sans-serif;
+    --num-ff: 'JetBrains Mono', monospace;
+    --card-shadow: none;
+    --ring-track: rgba(255,255,255,0.06);
+    --ring-fill: #00E5A0;
+    --ring-glow: drop-shadow(0 0 8px rgba(0,229,160,0.3));
+    --ring-due-label-color: var(--primary);
+    --ring-due-label-weight: 600;
+    --activity-icon-bg: rgba(255,60,131,0.1);
+    --activity-icon-color: #FF3C83;
+    --dailywords-icon-bg: rgba(0,229,160,0.1);
+    --dailywords-icon-color: #00E5A0;
+  }
+
+  /* ===== Reset ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    transition: background 0.4s, color 0.4s;
+    min-height: 100vh;
+  }
+
+  /* ===== Layout ===== */
+  .demo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.4s, border-color 0.4s;
+  }
+  .demo-header h1 { font-size: 18px; font-weight: 600; }
+  .theme-toggle {
+    display: flex;
+    gap: 6px;
+    background: var(--surface-variant);
+    border-radius: 10px;
+    padding: 3px;
+    transition: background 0.4s;
+  }
+  .theme-chip {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+  }
+  .theme-chip.active {
+    background: var(--primary);
+    color: #fff;
+  }
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 20px;
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* ===== Section ===== */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+    box-shadow: var(--card-shadow);
+  }
+  .section-title {
+    font-family: var(--heading-ff);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+
+  /* ===== Swatches ===== */
+  .swatch-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .swatch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+  }
+  .swatch-chip {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    transition: border-color 0.4s;
+  }
+  .swatch-info { display: flex; flex-direction: column; }
+  .swatch-name { font-size: 11px; color: var(--text-tertiary); }
+  .swatch-value { font-family: var(--num-ff); font-size: 12px; color: var(--text-secondary); }
+
+  /* ===== Typography demo ===== */
+  .type-heading { font-family: var(--heading-ff); font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .type-stat { font-family: var(--num-ff); font-size: 32px; font-weight: 600; color: var(--primary); }
+  .type-body { font-size: 14px; color: var(--text); margin-top: 2px; }
+  .type-secondary { font-size: 12px; color: var(--text-secondary); }
+  .type-tertiary { font-size: 11px; color: var(--text-tertiary); }
+
+  /* ===== Cards ===== */
+  .demo-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--card-shadow);
+    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+  }
+  .demo-card-variant {
+    background: var(--surface-variant);
+    border-radius: 12px;
+    padding: 16px;
+    transition: background 0.4s;
+  }
+
+  /* ===== Buttons ===== */
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s, opacity 0.3s;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-secondary { background: var(--secondary); color: #fff; }
+  .btn-surface { background: var(--surface-variant); color: var(--text); }
+  .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+
+  /* ===== Rating pills ===== */
+  .rating-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rating-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  /* ===== Progress/ring ===== */
+  .ring-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 12px 0;
+  }
+  .ring-svg { filter: var(--ring-glow); transition: filter 0.4s; }
+  .ring-label {
+    font-family: var(--num-ff);
+    font-size: 28px;
+    font-weight: 700;
+  }
+  .ring-due-label {
+    color: var(--ring-due-label-color);
+    font-weight: var(--ring-due-label-weight);
+    font-size: 12px;
+    transition: color 0.4s, font-weight 0.4s;
+  }
+
+  /* ===== Tab bar mock ===== */
+  .tab-bar-mock {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 12px 0 20px;
+    background: var(--tab-bar-bg);
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    transition: background 0.4s, border-color 0.4s;
+  }
+  .tab-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .tab-icon { width: 24px; height: 24px; border-radius: 6px; }
+  .tab-label { font-size: 10px; font-weight: 600; transition: color 0.4s; }
+  .tab-active .tab-icon { background: var(--tab-active); }
+  .tab-active .tab-label { color: var(--tab-active); }
+  .tab-inactive .tab-icon { background: var(--tab-inactive); }
+  .tab-inactive .tab-label { color: var(--tab-inactive); }
+
+  /* ===== Toast ===== */
+  .toast {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    background: var(--toast-bg);
+    color: var(--toast-text);
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.4s, color 0.4s;
+  }
+
+  /* ===== Activity / Daily Words icon mock ===== */
+  .icon-pair { display: flex; gap: 12px; align-items: center; }
+  .icon-wrap {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.4s;
+  }
+  .icon-circle {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+  }
+  .activity-icon { background: var(--activity-icon-bg); }
+  .activity-icon .icon-circle { background: var(--activity-icon-color); }
+  .dailywords-icon { background: var(--dailywords-icon-bg); }
+  .dailywords-icon .icon-circle { background: var(--dailywords-icon-color); }
+
+  /* ===== Canvas particle mock ===== */
+  .canvas-mock {
+    position: relative;
+    height: 60px;
+    background: radial-gradient(circle at 30% 50%, rgba(196,93,62,0.05) 0%, transparent 50%),
+                radial-gradient(circle at 70% 50%, rgba(91,138,114,0.04) 0%, transparent 50%);
+    border-radius: 12px;
+    border: 1px dashed var(--border);
+    opacity: var(--canvas-alpha);
+    transition: opacity 0.4s, border-color 0.4s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    overflow: hidden;
+  }
+  .canvas-mock::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 20% 80%, var(--primary) 1px, transparent 1px),
+                      radial-gradient(circle at 60% 20%, var(--secondary) 1px, transparent 1px),
+                      radial-gradient(circle at 80% 70%, var(--primary) 1px, transparent 1px),
+                      radial-gradient(circle at 40% 60%, var(--secondary) 1px, transparent 1px),
+                      radial-gradient(circle at 25% 30%, var(--primary) 1px, transparent 1px),
+                      radial-gradient(circle at 90% 40%, var(--secondary) 1px, transparent 1px),
+                      radial-gradient(circle at 55% 90%, var(--primary) 1px, transparent 1px),
+                      radial-gradient(circle at 10% 70%, var(--secondary) 1px, transparent 1px);
+    background-size: 120px 120px;
+  }
+
+  /* ===== Stack header mock ===== */
+  .stack-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.4s, border-color 0.4s;
+  }
+  .stack-back { color: var(--primary); font-size: 16px; }
+  .stack-title { font-size: 17px; font-weight: 700; }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="demo-header">
+  <h1 style="font-family: var(--heading-ff);">Theme Demo</h1>
+  <div class="theme-toggle">
+    <button class="theme-chip active" data-theme="light" onclick="setTheme('light')">Light</button>
+    <button class="theme-chip" data-theme="system" onclick="setTheme('system')">System</button>
+    <button class="theme-chip" data-theme="dark" onclick="setTheme('dark')">Dark</button>
+  </div>
+</div>
+
+<div class="demo-grid">
+
+  <!-- Color Palette Swatches -->
+  <div class="section">
+    <div class="section-title"><span class="dot"></span> Palette</div>
+    <div class="swatch-grid" id="swatches"></div>
+  </div>
+
+  <!-- Typography -->
+  <div class="section">
+    <div class="section-title"><span class="dot"></span> Typography</div>
+    <div class="type-heading">Playfair / Space Grotesk</div>
+    <div class="type-body">The quick brown fox jumps over the lazy dog.</div>
+    <div class="type-secondary">Secondary text for descriptions and metadata. Color: var(--text-secondary)</div>
+    <div class="type-tertiary">Tertiary muted labels · var(--text-tertiary)</div>
+    <div style="margin-top: 12px;">
+      <div class="type-stat">1,337</div>
+      <div class="type-secondary" style="margin-top: 2px;">Number · JetBrains / Space Grotesk</div>
+    </div>
+  </div>
+
+  <!-- Cards + Shadows -->
+  <div class="section">
+    <div class="section-title"><span class="dot"></span> Cards &amp; Surfaces</div>
+    <div class="demo-card" style="margin-bottom: 12px;">
+      <div class="type-heading" style="font-size: 14px;">Elevated Card</div>
+      <div class="type-secondary">surface bg · card-shadow · border-radius: 12px</div>
+    </div>
+    <div class="demo-card-variant" style="margin-bottom: 12px;">
+      <div class="type-heading" style="font-size: 14px;">Surface Variant</div>
+      <div class="type-secondary">surface-variant bg · no shadow</div>
+    </div>
+    <div style="height: 20px; background: var(--background); border-radius: 12px; border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-tertiary); transition: background 0.4s, border-color 0.4s;">
+      background
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="section">
+    <div class="section-title"><span class="dot"></span> Buttons</div>
+    <div class="btn-row" style="margin-bottom: 10px;">
+      <button class="btn btn-primary">Primary</button>
+      <button class="btn btn-secondary">Secondary</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-surface">Surface</button>
+      <button class="btn btn-ghost">Ghost</button>
+    </div>
+  </div>
+
+  <!-- Rating Buttons -->
+  <div class="section">
+    <div class="section-title"><span class="dot"></span> SM-2 Rating</div>
+    <div class="rating-row">
+      <div class="rating-pill" style="background: var(--again);">Again</div>
+      <div class="rating-pill" style="background: var(--hard);">Hard</div>
+      <div class="rating-pill" style="background: var(--good);">Good</div>
+      <div class="rating-pill" style="background: var(--easy);">Easy</div>
+    </div>
+    <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 4px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--success);"></span><span class="type-tertiary">Success</span></div>
+      <div style="display: flex; align-items: center; gap: 4px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--danger);"></span><span class="type-tertiary">Danger</span></div>
+      <div style="display: flex; align-items: center; gap: 4px;"><span style="width:12px;height:12px;border-radius:3px;background:var(--warning);"></span><span class="type-tertiary">Warning</span></div>
+    </div>
+  </div>
+
+  <!-- Progress Ring -->
+  <div class="section">
+    <div class="section-title"><span class="dot"></span> Progress Ring</div>
+    <div class="ring-container">
+      <svg width="80" height="80" viewBox="0 0 80 80" class="ring-svg">
+        <circle cx="40" cy="40" r="32" fill="none" stroke="var(--ring-track)" stroke-width="6" style="transition: stroke 0.4s;"/>
+        <circle cx="40" cy="40" r="32" fill="none" stroke="var(--ring-fill)" stroke-width="6" stroke-dasharray="140 201" stroke-linecap="round" transform="rotate(-90 40 40)" style="transition: stroke 0.4s;"/>
+      </svg>
+      <div>
+        <div class="ring-label">70%</div>
+        <div class="ring-due-label">Due today</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="section">
+    <div class="section-title"><span class="dot"></span> Tab Bar</div>
+    <div class="tab-bar-mock">
+      <div class="tab-item tab-active">
+        <div class="tab-icon"></div>
+        <div class="tab-label">Home</div>
+      </div>
+      <div class="tab-item tab-inactive">
+        <div class="tab-icon"></div>
+        <div class="tab-label">Decks</div>
+      </div>
+      <div class="tab-item tab-inactive">
+        <div class="tab-icon"></div>
+        <div class="tab-label">Settings</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="section">
+    <div class="section-title"><span class="dot"></span> Toast / Prompt</div>
+    <div class="toast">5 new words ready!</div>
+  </div>
+
+  <!-- Activity + Daily Words icons -->
+  <div class="section">
+    <div class="section-title"><span class="dot"></span> Activity &amp; Daily Words Icons</div>
+    <div class="icon-pair">
+      <div class="icon-wrap activity-icon">
+        <div class="icon-circle"></div>
+      </div>
+      <span class="type-tertiary">Activity (streak)</span>
+    </div>
+    <div class="icon-pair" style="margin-top: 10px;">
+      <div class="icon-wrap dailywords-icon">
+        <div class="icon-circle"></div>
+      </div>
+      <span class="type-tertiary">Daily Words</span>
+    </div>
+  </div>
+
+  <!-- Canvas / Particles -->
+  <div class="section">
+    <div class="section-title"><span class="dot"></span> Background Particles</div>
+    <div class="canvas-mock">
+      <span>Particle canvas · opacity: var(--canvas-alpha)</span>
+    </div>
+    <div class="type-tertiary" style="margin-top: 8px;">Visible in dark mode, invisible in light mode (opacity: 0 vs 1)</div>
+  </div>
+
+  <!-- Stack Header -->
+  <div class="section">
+    <div class="section-title"><span class="dot"></span> Stack Header</div>
+    <div class="stack-header">
+      <span class="stack-back">&#8592;</span>
+      <span class="stack-title">Deck Name</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function setTheme(mode) {
+    const html = document.documentElement;
+    if (mode === 'dark') {
+      html.setAttribute('data-theme', 'dark');
+    } else {
+      html.removeAttribute('data-theme');
+    }
+    document.querySelectorAll('.theme-chip').forEach(chip => {
+      chip.classList.toggle('active', chip.dataset.theme === mode);
+    });
+    try { localStorage.setItem('theme', mode); } catch(e) {}
+  }
+
+  // On load: restore from localStorage or system preference
+  (function() {
+    let saved;
+    try { saved = localStorage.getItem('theme'); } catch(e) {}
+    if (saved === 'dark') {
+      setTheme('dark');
+    } else if (saved === 'light') {
+      setTheme('light');
+    } else {
+      // system preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(prefersDark ? 'dark' : 'light');
+    }
+  })();
+
+  // Generate swatches
+  (function() {
+    const colors = [
+      ['Primary', '--primary'],
+      ['Secondary', '--secondary'],
+      ['Background', '--background'],
+      ['Surface', '--surface'],
+      ['Surface Variant', '--surface-variant'],
+      ['Text', '--text'],
+      ['Text Secondary', '--text-secondary'],
+      ['Text Tertiary', '--text-tertiary'],
+      ['Border', '--border'],
+      ['Success', '--success'],
+      ['Danger', '--danger'],
+      ['Warning', '--warning'],
+      ['Again', '--again'],
+      ['Hard', '--hard'],
+      ['Good', '--good'],
+      ['Easy', '--easy'],
+      ['Overlay', '--overlay'],
+      ['Tab Bar BG', '--tab-bar-bg'],
+      ['Tab Active', '--tab-active'],
+      ['Tab Inactive', '--tab-inactive'],
+      ['Toast BG', '--toast-bg'],
+      ['Toast Text', '--toast-text'],
+    ];
+
+    const grid = document.getElementById('swatches');
+    colors.forEach(([name, prop]) => {
+      const val = getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
+      const swatch = document.createElement('div');
+      swatch.className = 'swatch';
+      swatch.innerHTML = `
+        <div class="swatch-chip" style="background: ${val};"></div>
+        <div class="swatch-info">
+          <span class="swatch-name">${name}</span>
+          <span class="swatch-value">${val}</span>
+        </div>
+      `;
+      grid.appendChild(swatch);
+    });
+  })();
+
+  // Update swatches on theme change
+  const observer = new MutationObserver(() => {
+    document.getElementById('swatches').innerHTML = '';
+    const colors = [
+      ['Primary', '--primary'],
+      ['Secondary', '--secondary'],
+      ['Background', '--background'],
+      ['Surface', '--surface'],
+      ['Surface Variant', '--surface-variant'],
+      ['Text', '--text'],
+      ['Text Secondary', '--text-secondary'],
+      ['Text Tertiary', '--text-tertiary'],
+      ['Border', '--border'],
+      ['Success', '--success'],
+      ['Danger', '--danger'],
+      ['Warning', '--warning'],
+      ['Again', '--again'],
+      ['Hard', '--hard'],
+      ['Good', '--good'],
+      ['Easy', '--easy'],
+      ['Overlay', '--overlay'],
+      ['Tab Bar BG', '--tab-bar-bg'],
+      ['Tab Active', '--tab-active'],
+      ['Tab Inactive', '--tab-inactive'],
+      ['Toast BG', '--toast-bg'],
+      ['Toast Text', '--toast-text'],
+    ];
+    const grid = document.getElementById('swatches');
+    colors.forEach(([name, prop]) => {
+      const val = getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
+      const swatch = document.createElement('div');
+      swatch.className = 'swatch';
+      swatch.innerHTML = `
+        <div class="swatch-chip" style="background: ${val};"></div>
+        <div class="swatch-info">
+          <span class="swatch-name">${name}</span>
+          <span class="swatch-value">${val}</span>
+        </div>
+      `;
+      grid.appendChild(swatch);
+    });
+  });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  // Listen for system color scheme changes
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    const chip = document.querySelector('.theme-chip[data-theme="system"]');
+    if (chip && chip.classList.contains('active')) {
+      setTheme(e.matches ? 'dark' : 'light');
+    }
+  });
+</script>
+
+</body>
+</html>

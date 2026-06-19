@@ -219,7 +219,7 @@ export default function HomeScreen({ navigation }: Props) {
     },
     heroGreeting: {
       fontSize: typography.fontSize.md,
-      color: withAlpha(colors.surface, 0.7),
+      color: withAlpha(colors.textInverse, 0.7),
       fontWeight: typography.fontWeight.medium,
       marginBottom: spacing.lg,
       letterSpacing: 0.3,
@@ -251,12 +251,12 @@ export default function HomeScreen({ navigation }: Props) {
     ringPct: {
       fontSize: typography.fontSize.xl,
       fontWeight: typography.fontWeight.heavy,
-      color: colors.surface,
+      color: colors.textInverse,
       lineHeight: typography.fontSize.xl * typography.lineHeight.tight,
     },
     ringPctLabel: {
       fontSize: typography.fontSize.xs,
-      color: withAlpha(colors.surface, 0.65),
+      color: withAlpha(colors.textInverse, 0.65),
       fontWeight: typography.fontWeight.medium,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -268,12 +268,12 @@ export default function HomeScreen({ navigation }: Props) {
     heroStatValue: {
       fontSize: typography.fontSize.xxxl,
       fontWeight: typography.fontWeight.heavy,
-      color: colors.surface,
+      color: colors.textInverse,
       lineHeight: typography.fontSize.xxxl * typography.lineHeight.tight,
     },
     heroStatLabel: {
       fontSize: typography.fontSize.sm,
-      color: withAlpha(colors.surface, 0.7),
+      color: withAlpha(colors.textInverse, 0.7),
       fontWeight: typography.fontWeight.medium,
       marginTop: spacing.xs,
     },
@@ -491,7 +491,7 @@ export default function HomeScreen({ navigation }: Props) {
       right: spacing.lg,
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: withAlpha(colors.surface, 0.2),
+      backgroundColor: withAlpha(colors.textInverse, 0.2),
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.xs,
       borderRadius: borderRadius.full,
@@ -501,7 +501,7 @@ export default function HomeScreen({ navigation }: Props) {
     streakPillText: {
       fontSize: typography.fontSize.sm,
       fontWeight: typography.fontWeight.bold,
-      color: colors.surface,
+      color: colors.textInverse,
     },
     modalButtons: {
       gap: spacing.sm,

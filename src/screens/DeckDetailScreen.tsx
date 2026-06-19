@@ -388,7 +388,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       alignItems: 'center',
     },
     practiceButtonText: {
-      color: colors.surface,
+      color: colors.textInverse,
       fontSize: fontSize.md,
       fontWeight: '700',
     },
@@ -508,7 +508,7 @@ export default function DeckDetailScreen({ navigation, route }: Props) {
       alignItems: 'center',
     },
     freeflowStartText: {
-      color: colors.surface,
+      color: colors.textInverse,
       fontSize: fontSize.md,
       fontWeight: '700',
     },

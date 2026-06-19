@@ -71,10 +71,10 @@ export function Button({
       const s = sizeStyles[size];
 
       const variantStyles: Record<string, { bg: string; text: string; border?: string }> = {
-        primary: { bg: colors.primary, text: colors.surface },
+        primary: { bg: colors.primary, text: colors.textInverse },
         secondary: { bg: 'transparent', text: colors.primary, border: colors.primary },
         ghost: { bg: 'transparent', text: colors.textSecondary },
-        danger: { bg: colors.danger, text: colors.surface },
+        danger: { bg: colors.danger, text: colors.textInverse },
       };
       const v = variantStyles[variant];
 

@@ -29,6 +29,11 @@ describe('ColorScheme - light palette (Warm Minimal)', () => {
     expect(lightColors.toastText).toBe('#FAF7F2');
   });
 
+  it('has textInverse defined', () => {
+    expect(lightColors.textInverse).toBe('#FFFFFF');
+    expect(darkColors.textInverse).toBe('#08080D');
+  });
+
   it('has overlay defined', () => {
     expect(lightColors.overlay).toBe('rgba(44,36,32,0.5)');
   });
@@ -36,7 +41,7 @@ describe('ColorScheme - light palette (Warm Minimal)', () => {
   it('contains all required ColorScheme keys', () => {
     const requiredKeys: (keyof typeof lightColors)[] = [
       'primary', 'secondary', 'background', 'surface', 'surfaceVariant',
-      'text', 'textSecondary', 'textTertiary', 'border',
+      'text', 'textSecondary', 'textTertiary', 'textInverse', 'border',
       'success', 'danger', 'warning', 'again', 'hard', 'good', 'easy',
       'shadow', 'overlay', 'tabBarBackground', 'tabActive', 'tabInactive',
       'toastBackground', 'toastText', 'canvasAlpha',

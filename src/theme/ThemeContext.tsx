@@ -11,6 +11,7 @@ export interface ColorScheme {
   text: string;
   textSecondary: string;
   textTertiary: string;
+  textInverse: string;
   border: string;
   success: string;
   danger: string;
@@ -40,6 +41,7 @@ export const lightColors: ColorScheme = {
   text: '#2C2420',
   textSecondary: '#8C7E74',
   textTertiary: '#B5A899',
+  textInverse: '#FFFFFF',
   border: '#EDE6DC',
   success: '#5B8A72',
   danger: '#D14D4D',
@@ -69,6 +71,7 @@ export const darkColors: ColorScheme = {
   text: '#E8E6E3',
   textSecondary: '#6B6B7B',
   textTertiary: '#4A4A5A',
+  textInverse: '#08080D',
   border: 'rgba(255,255,255,0.08)',
   success: '#3FB950',
   danger: '#FF4D5A',

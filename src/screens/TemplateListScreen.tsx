@@ -226,7 +226,7 @@ export default function TemplateListScreen() {
           }}
           style={{ width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}
         >
-          <Ionicons name="add" size={28} color={colors.surface} />
+          <Ionicons name="add" size={28} color={colors.textInverse} />
         </TouchableOpacity>
       </Animated.View>
     </View>
