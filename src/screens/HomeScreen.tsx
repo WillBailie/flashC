@@ -29,9 +29,13 @@ import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme, spacing, borderRadius, typography, withAlpha } from '../constants/theme';
 import { getGlobalStats, getStreak } from '../storage/database';
-import { getReverseMode, setReverseMode } from '../utils/settings';
+import { getReverseMode, setReverseMode, getDailyLanguage, getDailyWordsData, clearDailyWords, getApiKey } from '../utils/settings';
+import { generateDailyWords } from '../utils/dailyWords';
+import { importCards, createDeck, getAllDecks } from '../storage/database';
+import { DailyWord, Deck } from '../models/types';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
+import { Input } from '../components/Input';
 import { useTranslation } from '../i18n/TranslationContext';
 import { RootStackParamList, TabParamList } from '../navigation/AppNavigator';
 
@@ -59,6 +63,16 @@ export default function HomeScreen({ navigation }: Props) {
   const [streak, setStreak] = useState(0);
   const [streakMultiplier, setStreakMultiplier] = useState(1);
   const [reverseMode, setReverseModeState] = useState(false);
+  const [dailyLanguage, setDailyLanguage] = useState('');
+  const [dailyWordsData, setDailyWordsData] = useState<{ date: string; words: DailyWord[] }>({ date: '', words: [] });
+  const [dailyGenerating, setDailyGenerating] = useState(false);
+  const [dailyError, setDailyError] = useState(false);
+  const [dailyModalVisible, setDailyModalVisible] = useState(false);
+  const [deckPickerVisible, setDeckPickerVisible] = useState(false);
+  const [languageDecks, setLanguageDecks] = useState<Deck[]>([]);
+  const [newDeckName, setNewDeckName] = useState('');
+  const [newDeckModalVisible, setNewDeckModalVisible] = useState(false);
+  const [apiKey, setApiKey] = useState('');
   const { t } = useTranslation();
   const greeting = t('home.greeting');
   const { colors } = useTheme();
@@ -150,6 +164,17 @@ export default function HomeScreen({ navigation }: Props) {
     useCallback(() => {
       loadStats();
       getReverseMode().then(setReverseModeState);
+      getDailyLanguage().then(setDailyLanguage);
+      getApiKey().then(setApiKey);
+      getDailyWordsData().then((data) => {
+        const today = new Date().toISOString().slice(0, 10);
+        if (data.date !== today) {
+          clearDailyWords();
+          setDailyWordsData({ date: '', words: [] });
+        } else {
+          setDailyWordsData(data);
+        }
+      });
     }, [loadStats])
   );
 
@@ -484,6 +509,57 @@ export default function HomeScreen({ navigation }: Props) {
     },
   }), [colors]);
 
+  const handleGenerateDaily = useCallback(async () => {
+    if (!dailyLanguage || !apiKey) return;
+    setDailyGenerating(true);
+    setDailyError(false);
+    const words = await generateDailyWords(dailyLanguage, apiKey);
+    setDailyGenerating(false);
+    if (words && words.length > 0) {
+      const today = new Date().toISOString().slice(0, 10);
+      setDailyWordsData({ date: today, words });
+      setDailyModalVisible(true);
+    } else {
+      setDailyError(true);
+    }
+  }, [dailyLanguage, apiKey]);
+
+  const handleAddToDeck = useCallback(async (deckId: number) => {
+    const cards = dailyWordsData.words.map((w) => ({
+      front_text: w.front,
+      back_text: w.back,
+    }));
+    await importCards(deckId, cards);
+    setDeckPickerVisible(false);
+    setDailyModalVisible(false);
+  }, [dailyWordsData.words]);
+
+  const handleCreateAndAdd = useCallback(async () => {
+    if (!newDeckName.trim()) return;
+    const deck = await createDeck(newDeckName.trim(), '', dailyLanguage);
+    const cards = dailyWordsData.words.map((w) => ({
+      front_text: w.front,
+      back_text: w.back,
+    }));
+    await importCards(deck.id, cards);
+    setNewDeckModalVisible(false);
+    setNewDeckName('');
+    setDailyModalVisible(false);
+  }, [dailyWordsData.words, dailyLanguage, newDeckName]);
+
+  const handleDiscardDailyWords = useCallback(async () => {
+    await clearDailyWords();
+    setDailyWordsData({ date: '', words: [] });
+    setDailyModalVisible(false);
+  }, []);
+
+  const openDeckPicker = useCallback(async () => {
+    const decks = await getAllDecks();
+    const filtered = decks.filter((d) => d.language.toLowerCase() === dailyLanguage.toLowerCase());
+    setLanguageDecks(filtered);
+    setDeckPickerVisible(true);
+  }, [dailyLanguage]);
+
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}>
       {/* ——— Hero ——— */}
@@ -655,6 +731,108 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
       </View>
 
+      {/* ——— Daily Words ——— */}
+      <View style={styles.activitySection}>
+        <Text style={styles.sectionLabel}>{t('dailyWords.title')}</Text>
+        {!apiKey ? (
+          <TouchableOpacity
+            style={[styles.activityCard, { opacity: 0.5 }]}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Settings')}
+            accessibilityRole="button"
+          >
+            <View style={[styles.activityIconWrap, { backgroundColor: withAlpha(colors.textSecondary, 0.1) }]}>
+              <Ionicons name="sparkles-outline" size={20} color={colors.textSecondary} />
+            </View>
+            <View style={styles.activityInfo}>
+              <Text style={[styles.activityValue, { color: colors.textSecondary }]}>
+                {t('dailyWords.title')}
+              </Text>
+              <Text style={styles.activityLabel}>
+                {t('dailyWords.noApiKey')}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.border} />
+          </TouchableOpacity>
+        ) : !dailyLanguage ? (
+          <TouchableOpacity
+            style={styles.activityCard}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Settings')}
+            accessibilityRole="button"
+          >
+            <View style={[styles.activityIconWrap, { backgroundColor: withAlpha(colors.secondary, 0.12) }]}>
+              <Ionicons name="language-outline" size={20} color={colors.secondary} />
+            </View>
+            <View style={styles.activityInfo}>
+              <Text style={styles.activityValue}>{t('dailyWords.title')}</Text>
+              <Text style={styles.activityLabel}>{t('dailyWords.setLanguage')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.border} />
+          </TouchableOpacity>
+        ) : dailyWordsData.words.length > 0 ? (
+          <TouchableOpacity
+            style={styles.activityCard}
+            activeOpacity={0.7}
+            onPress={() => setDailyModalVisible(true)}
+            accessibilityRole="button"
+          >
+            <View style={[styles.activityIconWrap, { backgroundColor: withAlpha(colors.primary, 0.12) }]}>
+              <Ionicons name="sparkles" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.activityInfo}>
+              <Text style={styles.activityValue}>
+                {t('dailyWords.ready', { count: String(dailyWordsData.words.length) })}
+              </Text>
+              <Text style={styles.activityLabel}>{t('dailyWords.reviewWords')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.border} />
+          </TouchableOpacity>
+        ) : dailyError ? (
+          <TouchableOpacity
+            style={styles.activityCard}
+            activeOpacity={0.7}
+            onPress={handleGenerateDaily}
+            accessibilityRole="button"
+          >
+            <View style={[styles.activityIconWrap, { backgroundColor: withAlpha(colors.danger, 0.12) }]}>
+              <Ionicons name="alert-circle-outline" size={20} color={colors.danger} />
+            </View>
+            <View style={styles.activityInfo}>
+              <Text style={styles.activityValue}>{t('dailyWords.title')}</Text>
+              <Text style={styles.activityLabel}>{t('dailyWords.failed')}</Text>
+            </View>
+            <Ionicons name="refresh-outline" size={16} color={colors.border} />
+          </TouchableOpacity>
+        ) : dailyGenerating ? (
+          <View style={styles.activityCard}>
+            <View style={[styles.activityIconWrap, { backgroundColor: withAlpha(colors.primary, 0.12) }]}>
+              <Ionicons name="hourglass-outline" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.activityInfo}>
+              <Text style={styles.activityValue}>{t('dailyWords.title')}</Text>
+              <Text style={styles.activityLabel}>{t('dailyWords.generating')}</Text>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.activityCard}
+            activeOpacity={0.7}
+            onPress={handleGenerateDaily}
+            accessibilityRole="button"
+          >
+            <View style={[styles.activityIconWrap, { backgroundColor: withAlpha(colors.primary, 0.12) }]}>
+              <Ionicons name="sparkles-outline" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.activityInfo}>
+              <Text style={styles.activityValue}>{t('dailyWords.title')}</Text>
+              <Text style={styles.activityLabel}>{t('dailyWords.tapToGenerate')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={colors.border} />
+          </TouchableOpacity>
+        )}
+      </View>
+
       {/* ——— Freeflow Modal ——— */}
       <Modal
         visible={freeflowModal}
@@ -695,6 +873,118 @@ export default function HomeScreen({ navigation }: Props) {
             title={t('common.cancel')}
             variant="ghost"
             onPress={() => setFreeflowModal(false)}
+            fullWidth
+          />
+        </View>
+      </Modal>
+
+      {/* ——— Daily Words Review Modal ——— */}
+      <Modal
+        visible={dailyModalVisible}
+        onClose={() => setDailyModalVisible(false)}
+        title={t('dailyWords.title')}
+      >
+        <ScrollView style={{ maxHeight: 400 }}>
+          {dailyWordsData.words.map((word, i) => (
+            <View
+              key={i}
+              style={{
+                paddingVertical: spacing.sm,
+                borderBottomWidth: i < dailyWordsData.words.length - 1 ? 1 : 0,
+                borderBottomColor: colors.border,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                <Text style={{ fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: colors.text }}>
+                  {word.front}
+                </Text>
+                <View style={{
+                  backgroundColor: withAlpha(colors.primary, 0.1),
+                  paddingHorizontal: spacing.sm,
+                  paddingVertical: 2,
+                  borderRadius: borderRadius.full,
+                }}>
+                  <Text style={{ fontSize: typography.fontSize.xs, color: colors.primary }}>
+                    {t('dailyWords.complexity', { level: String(word.complexity) })}
+                  </Text>
+                </View>
+              </View>
+              <Text style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary, marginTop: 2 }}>
+                {word.back}
+              </Text>
+            </View>
+          ))}
+        </ScrollView>
+        <View style={{ gap: spacing.sm, marginTop: spacing.md }}>
+          <Button
+            title={t('dailyWords.addToDeck')}
+            onPress={openDeckPicker}
+            fullWidth
+          />
+          <Button
+            title={t('dailyWords.discard')}
+            variant="ghost"
+            onPress={handleDiscardDailyWords}
+            fullWidth
+          />
+        </View>
+      </Modal>
+
+      {/* ——— Deck Picker Modal ——— */}
+      <Modal
+        visible={deckPickerVisible}
+        onClose={() => setDeckPickerVisible(false)}
+        title={t('dailyWords.selectDeck')}
+      >
+        <ScrollView style={{ maxHeight: 300 }}>
+          {languageDecks.map((deck) => (
+            <TouchableOpacity
+              key={deck.id}
+              style={{
+                paddingVertical: spacing.sm + 2,
+                paddingHorizontal: spacing.sm,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.border,
+              }}
+              onPress={() => handleAddToDeck(deck.id)}
+            >
+              <Text style={{ fontSize: typography.fontSize.md, color: colors.text }}>{deck.name}</Text>
+              <Text style={{ fontSize: typography.fontSize.xs, color: colors.textSecondary }}>
+                {deck.language}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        <View style={{ marginTop: spacing.md }}>
+          <Button
+            title={t('dailyWords.createNewDeck')}
+            variant="secondary"
+            onPress={() => {
+              setDeckPickerVisible(false);
+              setNewDeckModalVisible(true);
+            }}
+            fullWidth
+          />
+        </View>
+      </Modal>
+
+      {/* ——— New Deck Modal ——— */}
+      <Modal
+        visible={newDeckModalVisible}
+        onClose={() => setNewDeckModalVisible(false)}
+        title={t('dailyWords.createNewDeck')}
+      >
+        <Input
+          label={t('dailyWords.newDeckName')}
+          placeholder=""
+          value={newDeckName}
+          onChangeText={setNewDeckName}
+        />
+        <View style={{ marginTop: spacing.md }}>
+          <Button
+            title={t('common.create')}
+            onPress={handleCreateAndAdd}
+            disabled={!newDeckName.trim()}
             fullWidth
           />
         </View>
