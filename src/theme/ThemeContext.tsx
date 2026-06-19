@@ -1,15 +1,16 @@
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
+import { getThemeMode, setThemeMode } from '../utils/settings';
 
 export interface ColorScheme {
   primary: string;
-  primaryDark: string;
   secondary: string;
   background: string;
   surface: string;
   surfaceVariant: string;
   text: string;
   textSecondary: string;
+  textTertiary: string;
   border: string;
   success: string;
   danger: string;
@@ -20,48 +21,72 @@ export interface ColorScheme {
   easy: string;
   shadow: string;
   overlay: string;
+  tabBarBackground: string;
+  tabActive: string;
+  tabInactive: string;
+  toastBackground: string;
+  toastText: string;
+  canvasAlpha: number;
+  headingFontFamily: string;
+  numFontFamily: string;
 }
 
 export const lightColors: ColorScheme = {
-  primary: '#4A90D9',
-  primaryDark: '#3A7BC8',
-  secondary: '#6C63FF',
-  background: '#F5F7FA',
+  primary: '#C45D3E',
+  secondary: '#5B8A72',
+  background: '#FAF7F2',
   surface: '#FFFFFF',
-  surfaceVariant: '#F0F2F7',
-  text: '#1A1A2E',
-  textSecondary: '#6B7280',
-  border: '#E5E7EB',
-  success: '#10B981',
-  danger: '#EF4444',
-  warning: '#F59E0B',
-  again: '#EF4444',
-  hard: '#F59E0B',
-  good: '#10B981',
-  easy: '#3B82F6',
-  shadow: '#0000001A',
-  overlay: 'rgba(0,0,0,0.5)',
+  surfaceVariant: '#F5F0E9',
+  text: '#2C2420',
+  textSecondary: '#8C7E74',
+  textTertiary: '#B5A899',
+  border: '#EDE6DC',
+  success: '#5B8A72',
+  danger: '#D14D4D',
+  warning: '#D4A03C',
+  again: '#D14D4D',
+  hard: '#D4A03C',
+  good: '#5B8A72',
+  easy: '#5B8A9E',
+  shadow: '#2C2420',
+  overlay: 'rgba(44,36,32,0.5)',
+  tabBarBackground: 'rgba(250,247,242,0.94)',
+  tabActive: '#C45D3E',
+  tabInactive: '#B5A899',
+  toastBackground: '#2C2420',
+  toastText: '#FAF7F2',
+  canvasAlpha: 0,
+  headingFontFamily: 'Playfair Display',
+  numFontFamily: 'Space Grotesk',
 };
 
 export const darkColors: ColorScheme = {
-  primary: '#5B9FE0',
-  primaryDark: '#4A90D9',
-  secondary: '#8B83FF',
-  background: '#0F1117',
-  surface: '#1A1D26',
-  surfaceVariant: '#222531',
-  text: '#E4E6EB',
-  textSecondary: '#9CA3AF',
-  border: '#2D3039',
-  success: '#10B981',
-  danger: '#EF4444',
-  warning: '#F59E0B',
-  again: '#EF4444',
-  hard: '#F59E0B',
-  good: '#10B981',
-  easy: '#3B82F6',
-  shadow: '#00000040',
+  primary: '#00E5A0',
+  secondary: '#3FB950',
+  background: '#08080D',
+  surface: 'rgba(255,255,255,0.04)',
+  surfaceVariant: 'rgba(255,255,255,0.06)',
+  text: '#E8E6E3',
+  textSecondary: '#6B6B7B',
+  textTertiary: '#4A4A5A',
+  border: 'rgba(255,255,255,0.08)',
+  success: '#3FB950',
+  danger: '#FF4D5A',
+  warning: '#F0A840',
+  again: '#FF4D5A',
+  hard: '#F0A840',
+  good: '#3FB950',
+  easy: '#4A9EFF',
+  shadow: 'transparent',
   overlay: 'rgba(0,0,0,0.7)',
+  tabBarBackground: 'rgba(8,8,13,0.92)',
+  tabActive: '#00E5A0',
+  tabInactive: '#4A4A5A',
+  toastBackground: 'rgba(0,229,160,0.15)',
+  toastText: '#00E5A0',
+  canvasAlpha: 1,
+  headingFontFamily: 'Space Grotesk',
+  numFontFamily: 'JetBrains Mono',
 };
 
 export function withAlpha(hex: string, opacity: number): string {
@@ -87,16 +112,31 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useColorScheme();
   const [mode, setMode] = useState<ThemeMode>('system');
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    getThemeMode().then((saved) => {
+      if (saved === 'light' || saved === 'dark' || saved === 'system') {
+        setMode(saved);
+      }
+      setLoaded(true);
+    });
+  }, []);
 
   const isDark = mode === 'system' ? systemScheme === 'dark' : mode === 'dark';
   const colors = isDark ? darkColors : lightColors;
 
-  const setModeStable = useCallback((m: ThemeMode) => setMode(m), []);
+  const setModeStable = useCallback((m: ThemeMode) => {
+    setMode(m);
+    setThemeMode(m);
+  }, []);
 
   const value = useMemo(
     () => ({ colors, mode, isDark, setMode: setModeStable }),
     [colors, mode, isDark, setModeStable]
   );
+
+  if (!loaded) return null;
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

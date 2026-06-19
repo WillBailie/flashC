@@ -41,7 +41,7 @@ describe('settings', () => {
       await setReverseMode(true);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: true, aiEnabled: false, apiKey: '', appLanguage: 'en', dailyLanguage: '', dailyWordsDate: '', dailyWords: [] })
+        JSON.stringify({ reverseMode: true, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [] })
       );
     });
 
@@ -50,7 +50,7 @@ describe('settings', () => {
       await setReverseMode(false);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', dailyLanguage: '', dailyWordsDate: '', dailyWords: [] })
+        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [] })
       );
     });
 
@@ -61,7 +61,7 @@ describe('settings', () => {
       await setReverseMode(false);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], futureSetting: 'keep' })
+        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], futureSetting: 'keep' })
       );
     });
 

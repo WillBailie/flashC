@@ -8,6 +8,7 @@ interface Settings {
   aiEnabled: boolean;
   apiKey: string;
   appLanguage: 'en' | 'zh';
+  themeMode: 'system' | 'light' | 'dark';
   dailyLanguage: string;
   dailyWordsDate: string;
   dailyWords: DailyWord[];
@@ -18,6 +19,7 @@ const DEFAULTS: Settings = {
   aiEnabled: false,
   apiKey: '',
   appLanguage: 'en',
+  themeMode: 'system',
   dailyLanguage: '',
   dailyWordsDate: '',
   dailyWords: [],
@@ -94,6 +96,17 @@ export async function getAppLanguage(): Promise<'en' | 'zh'> {
 export async function setAppLanguage(lang: 'en' | 'zh'): Promise<void> {
   const settings = await readSettings();
   settings.appLanguage = lang;
+  await writeSettings(settings);
+}
+
+export async function getThemeMode(): Promise<'system' | 'light' | 'dark'> {
+  const settings = await readSettings();
+  return settings.themeMode;
+}
+
+export async function setThemeMode(mode: 'system' | 'light' | 'dark'): Promise<void> {
+  const settings = await readSettings();
+  settings.themeMode = mode;
   await writeSettings(settings);
 }
 
