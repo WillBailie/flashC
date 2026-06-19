@@ -47,3 +47,14 @@ export interface ReviewResult {
   cardId: number;
   quality: Quality;
 }
+
+export interface DailyWord {
+  front: string;
+  back: string;
+  complexity: number;
+}
+
+export interface AnchorCard {
+  front_text: string;
+  back_text: string;
+}
