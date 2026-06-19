@@ -64,14 +64,14 @@ function MainTabs() {
             <Ionicons
               name={focused ? icons.focused : icons.unfocused}
               size={size}
-              color={focused ? colors.primary : colors.textSecondary}
+              color={focused ? colors.tabActive : colors.tabInactive}
             />
           );
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarActiveTintColor: colors.tabActive,
+        tabBarInactiveTintColor: colors.tabInactive,
         tabBarStyle: {
-          backgroundColor: colors.surface,
+          backgroundColor: colors.tabBarBackground,
           borderTopColor: colors.border,
         },
         tabBarLabelStyle: {
