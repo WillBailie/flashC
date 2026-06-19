@@ -1,6 +1,6 @@
-import { lightColors, darkColors, withAlpha } from '../ThemeContext';
+import { lightColors, darkColors, withAlpha, resolveIsDark } from '../ThemeContext';
 
-describe('ColorScheme - Warm Minimal (light)', () => {
+describe('ColorScheme - light palette (Warm Minimal)', () => {
   it('has correct primary and background', () => {
     expect(lightColors.primary).toBe('#C45D3E');
     expect(lightColors.background).toBe('#FAF7F2');
@@ -49,7 +49,7 @@ describe('ColorScheme - Warm Minimal (light)', () => {
   });
 });
 
-describe('ColorScheme - Glass Neon (dark)', () => {
+describe('ColorScheme - dark palette (Glass Neon)', () => {
   it('has correct primary and background', () => {
     expect(darkColors.primary).toBe('#00E5A0');
     expect(darkColors.background).toBe('#08080D');
@@ -114,6 +114,35 @@ describe('ColorScheme - semantic colors', () => {
     expect(darkColors.hard).toBeTruthy();
     expect(darkColors.good).toBeTruthy();
     expect(darkColors.easy).toBeTruthy();
+  });
+});
+
+describe('resolveIsDark', () => {
+  it('returns true when mode is system and scheme is dark', () => {
+    expect(resolveIsDark('system', 'dark')).toBe(true);
+  });
+
+  it('returns false when mode is system and scheme is light', () => {
+    expect(resolveIsDark('system', 'light')).toBe(false);
+  });
+
+  it('returns true when mode is explicit dark', () => {
+    expect(resolveIsDark('dark', 'light')).toBe(true);
+    expect(resolveIsDark('dark', 'dark')).toBe(true);
+    expect(resolveIsDark('dark', null)).toBe(true);
+    expect(resolveIsDark('dark', undefined)).toBe(true);
+  });
+
+  it('returns false when mode is explicit light', () => {
+    expect(resolveIsDark('light', 'dark')).toBe(false);
+    expect(resolveIsDark('light', 'light')).toBe(false);
+    expect(resolveIsDark('light', null)).toBe(false);
+    expect(resolveIsDark('light', undefined)).toBe(false);
+  });
+
+  it('returns false when mode is system and scheme is null or undefined', () => {
+    expect(resolveIsDark('system', null)).toBe(false);
+    expect(resolveIsDark('system', undefined)).toBe(false);
   });
 });
 

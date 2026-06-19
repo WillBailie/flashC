@@ -89,6 +89,12 @@ export const darkColors: ColorScheme = {
   numFontFamily: 'JetBrains Mono',
 };
 
+type ThemeMode = 'system' | 'light' | 'dark';
+
+export function resolveIsDark(mode: ThemeMode, systemScheme: string | null | undefined): boolean {
+  return mode === 'system' ? systemScheme === 'dark' : mode === 'dark';
+}
+
 export function withAlpha(hex: string, opacity: number): string {
   const clamped = Math.max(0, Math.min(1, opacity));
   const alpha = Math.round(clamped * 255)
@@ -97,8 +103,6 @@ export function withAlpha(hex: string, opacity: number): string {
     .toUpperCase();
   return `${hex}${alpha}`;
 }
-
-type ThemeMode = 'system' | 'light' | 'dark';
 
 interface ThemeContextValue {
   colors: ColorScheme;
@@ -123,7 +127,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const isDark = mode === 'system' ? systemScheme === 'dark' : mode === 'dark';
+  const isDark = resolveIsDark(mode, systemScheme);
   const colors = isDark ? darkColors : lightColors;
 
   const setModeStable = useCallback((m: ThemeMode) => {
