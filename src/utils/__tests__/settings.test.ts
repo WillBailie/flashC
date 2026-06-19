@@ -1,5 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { getReverseMode, setReverseMode, clearSettingsCache, getAiEnabled, setAiEnabled, getApiKey, setApiKey, getAppLanguage, setAppLanguage } from '../settings';
+import { getReverseMode, setReverseMode, clearSettingsCache, getAiEnabled, setAiEnabled, getApiKey, setApiKey, getAppLanguage, setAppLanguage, getDailyLanguage, setDailyLanguage, getDailyWordsData, setDailyWordsData, clearDailyWords } from '../settings';
 
 jest.mock('expo-file-system/legacy', () => ({
   documentDirectory: '/mock/documents/',
@@ -41,7 +41,7 @@ describe('settings', () => {
       await setReverseMode(true);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: true, aiEnabled: false, apiKey: '', appLanguage: 'en' })
+        JSON.stringify({ reverseMode: true, aiEnabled: false, apiKey: '', appLanguage: 'en', dailyLanguage: '', dailyWordsDate: '', dailyWords: [] })
       );
     });
 
@@ -50,7 +50,7 @@ describe('settings', () => {
       await setReverseMode(false);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en' })
+        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', dailyLanguage: '', dailyWordsDate: '', dailyWords: [] })
       );
     });
 
@@ -61,7 +61,7 @@ describe('settings', () => {
       await setReverseMode(false);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', futureSetting: 'keep' })
+        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], futureSetting: 'keep' })
       );
     });
 
@@ -114,6 +114,45 @@ describe('settings', () => {
       expect(await getAppLanguage()).toBe('zh');
       await setAppLanguage('en');
       expect(await getAppLanguage()).toBe('en');
+    });
+  });
+
+  describe('Daily language', () => {
+    test('getDailyLanguage returns empty string by default', async () => {
+      const lang = await getDailyLanguage();
+      expect(lang).toBe('');
+    });
+
+    test('setDailyLanguage and getDailyLanguage round-trip', async () => {
+      await setDailyLanguage('French');
+      expect(await getDailyLanguage()).toBe('French');
+      await setDailyLanguage('');
+      expect(await getDailyLanguage()).toBe('');
+    });
+  });
+
+  describe('Daily words', () => {
+    test('getDailyWordsData returns empty by default', async () => {
+      const data = await getDailyWordsData();
+      expect(data.date).toBe('');
+      expect(data.words).toEqual([]);
+    });
+
+    test('setDailyWordsData and getDailyWordsData round-trip', async () => {
+      const words = [{ front: 'bonjour', back: 'hello', complexity: 2 }];
+      await setDailyWordsData('2026-06-19', words);
+      const data = await getDailyWordsData();
+      expect(data.date).toBe('2026-06-19');
+      expect(data.words).toEqual(words);
+    });
+
+    test('clearDailyWords resets to empty', async () => {
+      const words = [{ front: 'bonjour', back: 'hello', complexity: 2 }];
+      await setDailyWordsData('2026-06-19', words);
+      await clearDailyWords();
+      const data = await getDailyWordsData();
+      expect(data.date).toBe('');
+      expect(data.words).toEqual([]);
     });
   });
 });
