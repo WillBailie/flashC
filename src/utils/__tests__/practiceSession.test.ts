@@ -175,3 +175,60 @@ describe('advanceOnRate', () => {
     expect(result.cards.map(c => c.id)).toEqual([2, 3, 1]);
   });
 });
+
+describe('example data should survive front→back flip', () => {
+  /** The rule: clear example data only when the card index changes OR session ends.
+   *  A front→back flip keeps the same card — example must persist so the
+   *  translation is visible on the back face. */
+  function signalsClearExample(result: { currentIndex: number; isComplete: boolean }, previousIndex: number): boolean {
+    return result.currentIndex !== previousIndex || result.isComplete;
+  }
+
+  test('daily mode, front→back flip: does NOT signal clear (same card)', () => {
+    const s = snap({ isFlipped: false, currentIndex: 0 });
+    const result = advanceOnFlip(s, 'daily');
+    expect(signalsClearExample(result, s.currentIndex)).toBe(false);
+    expect(result.isFlipped).toBe(true); // stayed on same card, just flipped
+  });
+
+  test('daily mode, back tap: does NOT signal clear (daily mode stays)', () => {
+    const s = snap({ isFlipped: true, currentIndex: 0 });
+    const result = advanceOnFlip(s, 'daily');
+    expect(signalsClearExample(result, s.currentIndex)).toBe(false);
+    expect(result.isFlipped).toBe(true); // waits for rating button
+  });
+
+  test('freeflow, front→back flip: does NOT signal clear (same card)', () => {
+    const s = snap({ isFlipped: false, currentIndex: 0 });
+    const result = advanceOnFlip(s, 'freeflow');
+    expect(signalsClearExample(result, s.currentIndex)).toBe(false);
+    expect(result.isFlipped).toBe(true);
+  });
+
+  test('freeflow, back tap: DOES signal clear (advances to next card)', () => {
+    const s = snap({ isFlipped: true, currentIndex: 0 });
+    const result = advanceOnFlip(s, 'freeflow');
+    expect(signalsClearExample(result, s.currentIndex)).toBe(true);
+    expect(result.isFlipped).toBe(false);
+    expect(result.currentIndex).toBe(1);
+  });
+
+  test('freeflow, last card back tap: DOES signal clear (session complete)', () => {
+    const s = snap({ isFlipped: true, currentIndex: 1 });
+    const result = advanceOnFlip(s, 'freeflow');
+    expect(signalsClearExample(result, s.currentIndex)).toBe(true);
+    expect(result.isComplete).toBe(true);
+  });
+
+  test('swipe-left on back: always signals clear (new card)', () => {
+    const s = snap({ isFlipped: true, currentIndex: 0 });
+    const result = advanceOnSwipeLeft(s, 'daily');
+    expect(signalsClearExample(result, s.currentIndex)).toBe(true);
+  });
+
+  test('rate (not Again): always signals clear (new card)', () => {
+    const s = snap({ isFlipped: true, currentIndex: 0 });
+    const result = advanceOnRate(s, 3);
+    expect(signalsClearExample(result, s.currentIndex)).toBe(true);
+  });
+});
