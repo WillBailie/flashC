@@ -15,6 +15,7 @@ interface Settings {
   notificationsEnabled: boolean;
   notificationHour: number;
   notificationMinute: number;
+  dailyTemplateId: number | null;
 }
 
 const DEFAULTS: Settings = {
@@ -29,6 +30,7 @@ const DEFAULTS: Settings = {
   notificationsEnabled: false,
   notificationHour: 9,
   notificationMinute: 0,
+  dailyTemplateId: null,
 };
 
 let cache: Settings | null = null;
@@ -182,5 +184,16 @@ export async function getNotificationMinute(): Promise<number> {
 export async function setNotificationMinute(value: number): Promise<void> {
   const settings = await readSettings();
   settings.notificationMinute = value;
+  await writeSettings(settings);
+}
+
+export async function getDailyTemplateId(): Promise<number | null> {
+  const settings = await readSettings();
+  return settings.dailyTemplateId;
+}
+
+export async function setDailyTemplateId(templateId: number | null): Promise<void> {
+  const settings = await readSettings();
+  settings.dailyTemplateId = templateId;
   await writeSettings(settings);
 }

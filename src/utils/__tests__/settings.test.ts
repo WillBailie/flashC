@@ -1,5 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { getReverseMode, setReverseMode, clearSettingsCache, getAiEnabled, setAiEnabled, getApiKey, setApiKey, getAppLanguage, setAppLanguage, getDailyLanguage, setDailyLanguage, getDailyWordsData, setDailyWordsData, clearDailyWords, getNotificationsEnabled, setNotificationsEnabled, getNotificationHour, setNotificationHour, getNotificationMinute, setNotificationMinute } from '../settings';
+import { getReverseMode, setReverseMode, clearSettingsCache, getAiEnabled, setAiEnabled, getApiKey, setApiKey, getAppLanguage, setAppLanguage, getDailyLanguage, setDailyLanguage, getDailyWordsData, setDailyWordsData, clearDailyWords, getNotificationsEnabled, setNotificationsEnabled, getNotificationHour, setNotificationHour, getNotificationMinute, setNotificationMinute, getDailyTemplateId, setDailyTemplateId } from '../settings';
 import { DailyWord } from '../../models/types';
 
 jest.mock('expo-file-system/legacy', () => ({
@@ -42,7 +42,7 @@ describe('settings', () => {
       await setReverseMode(true);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: true, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], notificationsEnabled: false, notificationHour: 9, notificationMinute: 0 })
+        JSON.stringify({ reverseMode: true, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], notificationsEnabled: false, notificationHour: 9, notificationMinute: 0, dailyTemplateId: null })
       );
     });
 
@@ -51,7 +51,7 @@ describe('settings', () => {
       await setReverseMode(false);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], notificationsEnabled: false, notificationHour: 9, notificationMinute: 0 })
+        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], notificationsEnabled: false, notificationHour: 9, notificationMinute: 0, dailyTemplateId: null })
       );
     });
 
@@ -62,7 +62,7 @@ describe('settings', () => {
       await setReverseMode(false);
       expect(mockedFs.writeAsStringAsync).toHaveBeenCalledWith(
         '/mock/documents/settings.json',
-        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], notificationsEnabled: false, notificationHour: 9, notificationMinute: 0, futureSetting: 'keep' })
+        JSON.stringify({ reverseMode: false, aiEnabled: false, apiKey: '', appLanguage: 'en', themeMode: 'system', dailyLanguage: '', dailyWordsDate: '', dailyWords: [], notificationsEnabled: false, notificationHour: 9, notificationMinute: 0, dailyTemplateId: null, futureSetting: 'keep' })
       );
     });
 
@@ -199,6 +199,20 @@ describe('settings', () => {
     test('setNotificationMinute and getNotificationMinute round-trip', async () => {
       await setNotificationMinute(30);
       expect(await getNotificationMinute()).toBe(30);
+    });
+  });
+
+  describe('dailyTemplateId', () => {
+    test('getDailyTemplateId returns null by default', async () => {
+      const id = await getDailyTemplateId();
+      expect(id).toBeNull();
+    });
+
+    test('setDailyTemplateId and getDailyTemplateId round-trip', async () => {
+      await setDailyTemplateId(3);
+      expect(await getDailyTemplateId()).toBe(3);
+      await setDailyTemplateId(null);
+      expect(await getDailyTemplateId()).toBeNull();
     });
   });
 });
