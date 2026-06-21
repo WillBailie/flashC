@@ -6,17 +6,19 @@ jest.mock('../../storage/database', () => ({
   getAnchorCards: jest.fn(),
   getAllFrontTextsByLanguage: jest.fn(),
   getAvgIntervalByLanguage: jest.fn(),
+  getTemplateFields: jest.fn(),
 }));
 
 import { buildDailyWordsPrompt, dedupAndRank, generateDailyWords } from '../dailyWords';
-import { DailyWord, AnchorCard } from '../../models/types';
+import { DailyWord, AnchorCard, TemplateField } from '../../models/types';
 import { callDeepSeek } from '../ai';
-import { getAnchorCards, getAllFrontTextsByLanguage, getAvgIntervalByLanguage } from '../../storage/database';
+import { getAnchorCards, getAllFrontTextsByLanguage, getAvgIntervalByLanguage, getTemplateFields } from '../../storage/database';
 
 const mockedCallDeepSeek = jest.mocked(callDeepSeek);
 const mockedGetAnchorCards = jest.mocked(getAnchorCards);
 const mockedGetAllFrontTexts = jest.mocked(getAllFrontTextsByLanguage);
 const mockedGetAvgInterval = jest.mocked(getAvgIntervalByLanguage);
+const mockedGetTemplateFields = jest.mocked(getTemplateFields);
 
 describe('buildDailyWordsPrompt', () => {
   test('produces system and user prompts with anchors', () => {
@@ -55,6 +57,45 @@ describe('buildDailyWordsPrompt', () => {
     const { user } = buildDailyWordsPrompt('Spanish', anchors);
     expect(user).toContain('hola');
     expect(user).toContain('hello');
+  });
+
+  test('includes template fields in user prompt for custom templates', () => {
+    const anchors: AnchorCard[] = [
+      { front_text: '你好', back_text: 'hello' },
+    ];
+    const templateFields: TemplateField[] = [
+      { id: 1, template_id: 2, name: '汉字', side: 'front', position: 0 },
+      { id: 2, template_id: 2, name: '翻译', side: 'back', position: 0 },
+      { id: 3, template_id: 2, name: '拼音', side: 'back', position: 1 },
+    ];
+
+    const { user } = buildDailyWordsPrompt('Chinese', anchors, templateFields);
+
+    expect(user).toContain('汉字');
+    expect(user).toContain('翻译');
+    expect(user).toContain('拼音');
+    expect(user).toContain('"fields"');
+  });
+
+  test('uses simple front/back format for Basic template', () => {
+    const anchors: AnchorCard[] = [];
+    const templateFields: TemplateField[] = [
+      { id: 1, template_id: 1, name: 'Front', side: 'front', position: 0 },
+      { id: 2, template_id: 1, name: 'Back', side: 'back', position: 0 },
+    ];
+
+    const { user } = buildDailyWordsPrompt('French', anchors, templateFields);
+
+    expect(user).toContain('"front"');
+    expect(user).toContain('"back"');
+    expect(user).not.toContain('"fields"');
+  });
+
+  test('uses simple front/back format when no template fields provided', () => {
+    const { user } = buildDailyWordsPrompt('German', []);
+
+    expect(user).toContain('"front"');
+    expect(user).toContain('"back"');
   });
 });
 
@@ -181,5 +222,32 @@ describe('generateDailyWords', () => {
     const result = await generateDailyWords('French', 'sk-test');
     expect(result).toHaveLength(5);
     expect(result![0].front).toBe('salut'); // 'bonjour' was deduped
+  });
+
+  test('parses fields format response for custom template', async () => {
+    mockedGetAnchorCards.mockResolvedValue([]);
+    mockedGetAllFrontTexts.mockResolvedValue([]);
+    mockedGetAvgInterval.mockResolvedValue(0);
+    mockedGetTemplateFields.mockResolvedValue([
+      { id: 1, template_id: 2, name: '汉字', side: 'front', position: 0 },
+      { id: 2, template_id: 2, name: '翻译', side: 'back', position: 0 },
+      { id: 3, template_id: 2, name: '拼音', side: 'back', position: 1 },
+    ] as TemplateField[]);
+    mockedCallDeepSeek.mockResolvedValue(JSON.stringify({
+      words: [
+        { fields: { '汉字': '你好', '翻译': 'hello', '拼音': 'nǐ hǎo' }, complexity: 1 },
+        { fields: { '汉字': '谢谢', '翻译': 'thanks', '拼音': 'xiè xiè' }, complexity: 1 },
+        { fields: { '汉字': '再见', '翻译': 'goodbye', '拼音': 'zài jiàn' }, complexity: 2 },
+        { fields: { '汉字': '对不起', '翻译': 'sorry', '拼音': 'duì bù qǐ' }, complexity: 2 },
+        { fields: { '汉字': '高兴', '翻译': 'happy', '拼音': 'gāo xìng' }, complexity: 1 },
+        { fields: { '汉字': '美丽', '翻译': 'beautiful', '拼音': 'měi lì' }, complexity: 3 },
+      ],
+    }));
+
+    const result = await generateDailyWords('Chinese', 'sk-test', 2);
+    expect(result).toHaveLength(5);
+    expect(result![0].fields['汉字']).toBe('你好');
+    expect(result![0].front).toBe('你好');
+    expect(result![0].back).toBe('hello');
   });
 });

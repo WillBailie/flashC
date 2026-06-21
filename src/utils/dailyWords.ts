@@ -1,34 +1,76 @@
 import { DailyWord, AnchorCard, TemplateField } from '../models/types';
 import { callDeepSeek } from './ai';
-import { getAnchorCards, getAllFrontTextsByLanguage, getAvgIntervalByLanguage } from '../storage/database';
+import { getAnchorCards, getAllFrontTextsByLanguage, getAvgIntervalByLanguage, getTemplateFields } from '../storage/database';
 
 const SYSTEM_PROMPT = `You are a language tutor creating a daily vocabulary drop. Given words the student recently reviewed, generate 15 new words at a similar difficulty level. Each word should be naturally adjacent to the anchors — same topic domain, complexity tier, and word type (noun/verb/adj). Return ONLY valid JSON.`;
 
 export function buildDailyWordsPrompt(
   language: string,
-  anchors: AnchorCard[]
+  anchors: AnchorCard[],
+  templateFields?: TemplateField[]
 ): { system: string; user: string } {
-  let userPrompt: string;
+  const sortedFields = templateFields
+    ? [...templateFields].sort((a, b) => {
+        if (a.side !== b.side) return a.side === 'front' ? -1 : 1;
+        return a.position - b.position;
+      })
+    : [];
+  const frontFields = sortedFields.filter(f => f.side === 'front');
+  const backFields = sortedFields.filter(f => f.side === 'back');
+  const isBasicTemplate = frontFields.length === 1 && backFields.length === 1
+    && frontFields[0].name === 'Front' && backFields[0].name === 'Back';
 
   if (anchors.length === 0) {
-    userPrompt = `Language: ${language}. The learner is a complete beginner.
+    if (isBasicTemplate || sortedFields.length === 0) {
+      return {
+        system: SYSTEM_PROMPT,
+        user: `Language: ${language}. The learner is a complete beginner.
 Generate 15 new ${language} words appropriate for elementary level.
 Rate each complexity (1=easiest, 5=most advanced).
-Return ONLY valid JSON: {"words": [{"front":"...","back":"...","complexity":3}, ...]}`;
-  } else {
-    const anchorLines = anchors
-      .map((a, i) => `${i + 1}. "${a.front_text}" = "${a.back_text}"`)
-      .join('\n');
+Return ONLY valid JSON: {"words": [{"front":"...","back":"...","complexity":3}, ...]}`,
+      };
+    }
+    return {
+      system: SYSTEM_PROMPT,
+      user: `Language: ${language}. The learner is a complete beginner.
+Template fields (front): ${frontFields.map(f => f.name).join(', ')}
+Template fields (back): ${backFields.map(f => f.name).join(', ')}
 
-    userPrompt = `Language: ${language}.
+Generate 15 new ${language} words appropriate for elementary level.
+For each word, provide values for ALL fields listed above.
+Rate each complexity (1=easiest, 5=most advanced).
+Return ONLY valid JSON: {"words": [{"fields": {${sortedFields.map(f => `"${f.name}":"..."`).join(',')}},"complexity":3}, ...]}`,
+    };
+  }
+
+  const anchorLines = anchors
+    .map((a, i) => `${i + 1}. "${a.front_text}" = "${a.back_text}"`)
+    .join('\n');
+
+  if (isBasicTemplate || sortedFields.length === 0) {
+    return {
+      system: SYSTEM_PROMPT,
+      user: `Language: ${language}.
 Anchors:
 ${anchorLines}
 
 Generate 15 new words, rating each complexity (1=easiest, 5=most advanced).
-Return ONLY valid JSON: {"words": [{"front":"...","back":"...","complexity":3}, ...]}`;
+Return ONLY valid JSON: {"words": [{"front":"...","back":"...","complexity":3}, ...]}`,
+    };
   }
 
-  return { system: SYSTEM_PROMPT, user: userPrompt };
+  return {
+    system: SYSTEM_PROMPT,
+    user: `Language: ${language}.
+Anchors:
+${anchorLines}
+Template fields (front): ${frontFields.map(f => f.name).join(', ')}
+Template fields (back): ${backFields.map(f => f.name).join(', ')}
+
+Generate 15 new words, rating each complexity (1=easiest, 5=most advanced).
+For each word, provide values for ALL fields listed above.
+Return ONLY valid JSON: {"words": [{"fields": {${sortedFields.map(f => `"${f.name}":"..."`).join(',')}},"complexity":3}, ...]}`,
+  };
 }
 
 export function dedupAndRank(
@@ -91,12 +133,17 @@ function computeTargetLevel(avgInterval: number): number {
 
 export async function generateDailyWords(
   language: string,
-  apiKey: string
+  apiKey: string,
+  templateId?: number
 ): Promise<DailyWord[] | null> {
   if (!language || !apiKey) return null;
 
   const anchors = await getAnchorCards(language);
-  const { system, user } = buildDailyWordsPrompt(language, anchors);
+  let templateFields: TemplateField[] = [];
+  if (templateId) {
+    templateFields = await getTemplateFields(templateId);
+  }
+  const { system, user } = buildDailyWordsPrompt(language, anchors, templateFields.length > 0 ? templateFields : undefined);
 
   const MAX_RETRIES = 2;
   let survivingWords: DailyWord[] = [];
@@ -119,7 +166,7 @@ export async function generateDailyWords(
     if (!rawText) return null;
 
     try {
-      const candidates = parseWordsResponse(rawText);
+      const candidates = parseWordsResponse(rawText, templateFields.length > 0 ? templateFields : undefined);
       const ranked = dedupAndRank(candidates, knownWords, targetLevel);
 
       if (attempt === 0) {
