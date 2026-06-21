@@ -6,6 +6,7 @@ let db: SQLite.SQLiteDatabase | null = null;
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   if (db) return db;
   db = await SQLite.openDatabaseAsync('flashcards.db');
+  await db.execAsync('PRAGMA foreign_keys = ON');
   await initializeDatabase(db);
   return db;
 }

@@ -245,6 +245,7 @@ export function FlipCard({
 
   const frontFields = templateFields?.filter((f) => f.side === 'front') ?? [];
   const backFields = templateFields?.filter((f) => f.side === 'back') ?? [];
+  const hasFieldValues = fieldValues != null && Object.keys(fieldValues).length > 0;
 
   const renderFieldValue = (
     field: TemplateField,
@@ -269,7 +270,7 @@ export function FlipCard({
   };
 
   const renderFront = () => {
-    if (frontFields.length > 0) {
+    if (frontFields.length > 0 && hasFieldValues) {
       return (
         <>
           {frontFields.map((f) => renderFieldValue(f, fieldValues, f.name, false))}
@@ -288,7 +289,7 @@ export function FlipCard({
   };
 
   const renderBack = () => {
-    if (backFields.length > 0) {
+    if (backFields.length > 0 && hasFieldValues) {
       return (
         <>
           {backFields.map((f) => renderFieldValue(f, fieldValues, f.name, true))}

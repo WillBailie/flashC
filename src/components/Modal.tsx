@@ -17,6 +17,7 @@ interface ModalProps {
   children: React.ReactNode;
   maxWidth?: number;
   style?: ViewStyle;
+  position?: 'center' | 'top';
 }
 
 export function Modal({
@@ -26,13 +27,14 @@ export function Modal({
   children,
   maxWidth = 400,
   style,
+  position = 'center',
 }: ModalProps) {
   const { colors } = useTheme();
   const reduceMotion = useReduceMotion();
   const [shouldRender, setShouldRender] = useState(false);
 
   const overlayOpacity = useSharedValue(0);
-  const sheetTranslateY = useSharedValue(300);
+  const sheetTranslateY = useSharedValue(position === 'top' ? -300 : 300);
 
   const animatedOverlay = useAnimatedStyle(() => ({
     opacity: overlayOpacity.value,
@@ -44,27 +46,31 @@ export function Modal({
 
   const animateIn = useCallback(() => {
     setShouldRender(true);
+    const startY = position === 'top' ? -300 : 300;
     if (reduceMotion) {
+      sheetTranslateY.value = startY;
       overlayOpacity.value = 1;
       sheetTranslateY.value = 0;
       return;
     }
+    sheetTranslateY.value = startY;
     overlayOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) });
     sheetTranslateY.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
-  }, [reduceMotion]);
+  }, [reduceMotion, position]);
 
   const animateOut = useCallback(() => {
+    const endY = position === 'top' ? -300 : 300;
     if (reduceMotion) {
       setShouldRender(false);
       return;
     }
     overlayOpacity.value = withTiming(0, { duration: 200, easing: Easing.in(Easing.cubic) });
-    sheetTranslateY.value = withTiming(300, { duration: 250, easing: Easing.in(Easing.cubic) }, (finished) => {
+    sheetTranslateY.value = withTiming(endY, { duration: 250, easing: Easing.in(Easing.cubic) }, (finished) => {
       if (finished) {
         runOnJS(setShouldRender)(false);
       }
     });
-  }, [reduceMotion]);
+  }, [reduceMotion, position]);
 
   useEffect(() => {
     if (visible) {
@@ -84,9 +90,10 @@ export function Modal({
           right: 0,
           bottom: 0,
           backgroundColor: colors.overlay,
-          justifyContent: 'center',
+          justifyContent: position === 'top' ? 'flex-start' : 'center',
           alignItems: 'center',
           padding: spacing.lg,
+          paddingTop: position === 'top' ? 60 : spacing.lg,
         },
         content: {
           backgroundColor: colors.surface,
@@ -108,7 +115,7 @@ export function Modal({
           marginBottom: spacing.md,
         },
       }),
-    [colors, maxWidth]
+    [colors, maxWidth, position]
   );
 
   if (!shouldRender && !visible) return null;

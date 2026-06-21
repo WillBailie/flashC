@@ -905,6 +905,7 @@ export default function HomeScreen({ navigation }: Props) {
         visible={freeflowModal}
         onClose={() => setFreeflowModal(false)}
         title={t('home.freeflow')}
+        position="top"
       >
         <Text style={[styles.modeCardLabel, { fontSize: typography.fontSize.sm, marginBottom: spacing.md }]}>
           {t('home.freeflowPrompt')}
