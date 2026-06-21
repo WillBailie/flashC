@@ -245,6 +245,7 @@
   "dailyWords.someDuplicates": "Some words were already in your collection",
   "dailyWords.waiting": "You have 5 new words waiting",
   "dailyWords.reviewNow": "Review Now",
+  "dailyWords.selectTemplate": "Select Template",
   "settings.dailyLanguage": "Daily Words Language",
   "settings.dailyLanguageDescription": "Receive daily vocabulary suggestions in this language",
   "settings.notifications": "Notifications",

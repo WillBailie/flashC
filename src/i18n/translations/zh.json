@@ -245,6 +245,7 @@
   "dailyWords.someDuplicates": "部分单词已存在于您的收藏中",
   "dailyWords.waiting": "您有 5 个新单词等待处理",
   "dailyWords.reviewNow": "立即查看",
+  "dailyWords.selectTemplate": "选择模板",
   "settings.dailyLanguage": "每日单词语言",
   "settings.dailyLanguageDescription": "接收此语言的每日词汇建议",
   "settings.notifications": "通知",
