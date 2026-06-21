@@ -15,8 +15,9 @@ Currently daily words are created as plain `{front_text, back_text}` cards with 
 
 ```
 User taps "Generate Daily Words"
-  → Template picker shows (unless only 1 template exists)
-  → User picks template (or default Basic)
+  → If template previously selected → skip picker, use it
+  → If only 1 template exists → skip picker, use it
+  → Otherwise → Template picker shows
   → AI generates words matching template fields
   → Review modal shows words with field labels
   → User adds to existing deck or creates new one
@@ -104,11 +105,16 @@ const [availableTemplates, setAvailableTemplates] = useState<Template[]>([]);
 
 ```ts
 const handleGenerateDailyWords = useCallback(async () => {
-  // If only Basic template exists, skip picker
+  const persistedId = await getDailyTemplateId();
+  if (persistedId) {
+    setSelectedTemplateId(persistedId);
+    // ... proceed directly to generation
+    return;
+  }
   const templates = await getAllTemplates();
   if (templates.length <= 1) {
     setSelectedTemplateId(templates[0]?.id ?? null);
-    // ... existing generation logic
+    // ... proceed directly to generation
   } else {
     setAvailableTemplates(templates);
     setTemplatePickerVisible(true);
