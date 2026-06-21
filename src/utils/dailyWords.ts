@@ -1,4 +1,4 @@
-import { DailyWord, AnchorCard } from '../models/types';
+import { DailyWord, AnchorCard, TemplateField } from '../models/types';
 import { callDeepSeek } from './ai';
 import { getAnchorCards, getAllFrontTextsByLanguage, getAvgIntervalByLanguage } from '../storage/database';
 
@@ -53,17 +53,34 @@ export function dedupAndRank(
   return deduped;
 }
 
-function parseWordsResponse(rawText: string): DailyWord[] {
+function parseWordsResponse(rawText: string, templateFields?: TemplateField[]): DailyWord[] {
   const cleaned = rawText.replace(/```(?:json)?\s*/g, '').trim();
   const parsed = JSON.parse(cleaned);
   if (!parsed.words || !Array.isArray(parsed.words)) {
     throw new Error('Invalid response format: missing words array');
   }
-  return parsed.words.map((w: any) => ({
-    front: String(w.front || ''),
-    back: String(w.back || ''),
-    complexity: Number(w.complexity) || 1,
-  }));
+  return parsed.words.map((w: any) => {
+    let front: string;
+    let back: string;
+    let fields: Record<string, string>;
+    if (w.fields && typeof w.fields === 'object') {
+      fields = w.fields;
+      const frontFields = templateFields?.filter(f => f.side === 'front').sort((a, b) => a.position - b.position) ?? [];
+      const backFields = templateFields?.filter(f => f.side === 'back').sort((a, b) => a.position - b.position) ?? [];
+      front = frontFields.length > 0 ? fields[frontFields[0].name] || '' : '';
+      back = backFields.length > 0 ? fields[backFields[0].name] || '' : '';
+    } else {
+      front = String(w.front || '');
+      back = String(w.back || '');
+      fields = { Front: front, Back: back };
+    }
+    return {
+      fields,
+      front,
+      back,
+      complexity: Number(w.complexity) || 1,
+    };
+  });
 }
 
 function computeTargetLevel(avgInterval: number): number {

@@ -129,7 +129,13 @@ export async function setDailyLanguage(value: string): Promise<void> {
 
 export async function getDailyWordsData(): Promise<{ date: string; words: DailyWord[] }> {
   const settings = await readSettings();
-  return { date: settings.dailyWordsDate, words: settings.dailyWords };
+  const words: DailyWord[] = settings.dailyWords.map((w: any) => {
+    if (w.fields && typeof w.fields === 'object') {
+      return { fields: w.fields, front: w.front || '', back: w.back || '', complexity: w.complexity ?? 1 };
+    }
+    return { fields: { Front: w.front || '', Back: w.back || '' }, front: w.front || '', back: w.back || '', complexity: w.complexity ?? 1 };
+  });
+  return { date: settings.dailyWordsDate, words };
 }
 
 export async function setDailyWordsData(date: string, words: DailyWord[]): Promise<void> {

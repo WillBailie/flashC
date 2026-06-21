@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import { getReverseMode, setReverseMode, clearSettingsCache, getAiEnabled, setAiEnabled, getApiKey, setApiKey, getAppLanguage, setAppLanguage, getDailyLanguage, setDailyLanguage, getDailyWordsData, setDailyWordsData, clearDailyWords, getNotificationsEnabled, setNotificationsEnabled, getNotificationHour, setNotificationHour, getNotificationMinute, setNotificationMinute } from '../settings';
+import { DailyWord } from '../../models/types';
 
 jest.mock('expo-file-system/legacy', () => ({
   documentDirectory: '/mock/documents/',
@@ -139,20 +140,31 @@ describe('settings', () => {
     });
 
     test('setDailyWordsData and getDailyWordsData round-trip', async () => {
-      const words = [{ front: 'bonjour', back: 'hello', complexity: 2 }];
-      await setDailyWordsData('2026-06-19', words);
+      const words: DailyWord[] = [{ front: 'bonjour', back: 'hello', complexity: 2, fields: { Front: 'bonjour', Back: 'hello' } }];
+      await setDailyWordsData('2026-06-21', words);
       const data = await getDailyWordsData();
-      expect(data.date).toBe('2026-06-19');
-      expect(data.words).toEqual(words);
+      expect(data.date).toBe('2026-06-21');
+      expect(data.words[0].front).toBe('bonjour');
+      expect(data.words[0].fields).toEqual({ Front: 'bonjour', Back: 'hello' });
     });
 
     test('clearDailyWords resets to empty', async () => {
-      const words = [{ front: 'bonjour', back: 'hello', complexity: 2 }];
-      await setDailyWordsData('2026-06-19', words);
+      const words: DailyWord[] = [{ front: 'bonjour', back: 'hello', complexity: 2, fields: { Front: 'bonjour', Back: 'hello' } }];
+      await setDailyWordsData('2026-06-21', words);
       await clearDailyWords();
       const data = await getDailyWordsData();
       expect(data.date).toBe('');
       expect(data.words).toEqual([]);
+    });
+
+    test('normalizes old daily words without fields', async () => {
+      mockedFs.readAsStringAsync.mockResolvedValue(JSON.stringify({
+        dailyWordsDate: '2026-06-21',
+        dailyWords: [{ front: 'hola', back: 'hello', complexity: 2 }],
+      }));
+      const data = await getDailyWordsData();
+      expect(data.words[0].fields).toEqual({ Front: 'hola', Back: 'hello' });
+      expect(data.words[0].front).toBe('hola');
     });
   });
 

@@ -61,10 +61,10 @@ describe('buildDailyWordsPrompt', () => {
 describe('dedupAndRank', () => {
   test('removes duplicates matching existing front_text (case-insensitive)', () => {
     const candidates: DailyWord[] = [
-      { front: 'bonjour', back: 'hello', complexity: 1 },
-      { front: 'salut', back: 'hi', complexity: 2 },
-      { front: 'BONJOUR', back: 'hello again', complexity: 3 },
-      { front: 'merci', back: 'thanks', complexity: 1 },
+      { front: 'bonjour', back: 'hello', complexity: 1, fields: { Front: 'bonjour', Back: 'hello' } },
+      { front: 'salut', back: 'hi', complexity: 2, fields: { Front: 'salut', Back: 'hi' } },
+      { front: 'BONJOUR', back: 'hello again', complexity: 3, fields: { Front: 'BONJOUR', Back: 'hello again' } },
+      { front: 'merci', back: 'thanks', complexity: 1, fields: { Front: 'merci', Back: 'thanks' } },
     ];
 
     const known = ['bonjour', 'au revoir'];
@@ -77,10 +77,10 @@ describe('dedupAndRank', () => {
 
   test('ranks by closeness to target complexity', () => {
     const candidates: DailyWord[] = [
-      { front: 'word1', back: 't1', complexity: 1 },
-      { front: 'word2', back: 't2', complexity: 3 },
-      { front: 'word3', back: 't3', complexity: 5 },
-      { front: 'word4', back: 't4', complexity: 2 },
+      { front: 'word1', back: 't1', complexity: 1, fields: { Front: 'word1', Back: 't1' } },
+      { front: 'word2', back: 't2', complexity: 3, fields: { Front: 'word2', Back: 't2' } },
+      { front: 'word3', back: 't3', complexity: 5, fields: { Front: 'word3', Back: 't3' } },
+      { front: 'word4', back: 't4', complexity: 2, fields: { Front: 'word4', Back: 't4' } },
     ];
 
     const result = dedupAndRank(candidates, [], 3);
@@ -95,7 +95,7 @@ describe('dedupAndRank', () => {
 
   test('returns empty array if all are duplicates', () => {
     const candidates: DailyWord[] = [
-      { front: 'bonjour', back: 'hello', complexity: 1 },
+      { front: 'bonjour', back: 'hello', complexity: 1, fields: { Front: 'bonjour', Back: 'hello' } },
     ];
 
     const result = dedupAndRank(candidates, ['bonjour', 'merci'], 1);
@@ -104,11 +104,11 @@ describe('dedupAndRank', () => {
 
   test('returns all items sorted by fit when not limited', () => {
     const candidates: DailyWord[] = [
-      { front: 'a', back: 'a', complexity: 1 },
-      { front: 'b', back: 'b', complexity: 2 },
-      { front: 'c', back: 'c', complexity: 3 },
-      { front: 'd', back: 'd', complexity: 4 },
-      { front: 'e', back: 'e', complexity: 5 },
+      { front: 'a', back: 'a', complexity: 1, fields: { Front: 'a', Back: 'a' } },
+      { front: 'b', back: 'b', complexity: 2, fields: { Front: 'b', Back: 'b' } },
+      { front: 'c', back: 'c', complexity: 3, fields: { Front: 'c', Back: 'c' } },
+      { front: 'd', back: 'd', complexity: 4, fields: { Front: 'd', Back: 'd' } },
+      { front: 'e', back: 'e', complexity: 5, fields: { Front: 'e', Back: 'e' } },
     ];
 
     const result = dedupAndRank(candidates, [], 3);
@@ -122,8 +122,8 @@ describe('dedupAndRank', () => {
 
   test('sorts by fit score then complexity ascending on tie', () => {
     const candidates: DailyWord[] = [
-      { front: 'a', back: 'a', complexity: 5 },
-      { front: 'b', back: 'b', complexity: 1 },
+      { front: 'a', back: 'a', complexity: 5, fields: { Front: 'a', Back: 'a' } },
+      { front: 'b', back: 'b', complexity: 1, fields: { Front: 'b', Back: 'b' } },
     ];
 
     // Both complexity 5 and 1 have same |diff| from target 3: |5-3|=2, |1-3|=2

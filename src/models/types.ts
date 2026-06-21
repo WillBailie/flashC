@@ -49,6 +49,7 @@ export interface ReviewResult {
 }
 
 export interface DailyWord {
+  fields: Record<string, string>;
   front: string;
   back: string;
   complexity: number;
