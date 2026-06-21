@@ -28,10 +28,10 @@ import { useFocusEffect, CompositeScreenProps } from '@react-navigation/native';
 import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTheme, spacing, borderRadius, typography, withAlpha } from '../constants/theme';
-import { getGlobalStats, getStreak, importCards, createDeck, getAllDecks } from '../storage/database';
-import { getReverseMode, setReverseMode, getDailyLanguage, getDailyWordsData, setDailyWordsData as persistDailyWordsData, clearDailyWords, getApiKey } from '../utils/settings';
+import { getGlobalStats, getStreak, importCards, createDeck, getAllDecks, getTemplateFields, getAllTemplates } from '../storage/database';
+import { getReverseMode, setReverseMode, getDailyLanguage, getDailyWordsData, setDailyWordsData as persistDailyWordsData, clearDailyWords, getApiKey, getDailyTemplateId, setDailyTemplateId } from '../utils/settings';
 import { generateDailyWords } from '../utils/dailyWords';
-import { DailyWord, Deck } from '../models/types';
+import { DailyWord, Deck, Template, TemplateField } from '../models/types';
 import { Modal } from '../components/Modal';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
@@ -74,6 +74,10 @@ export default function HomeScreen({ navigation }: Props) {
   const [apiKey, setApiKey] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [animateTrigger, setAnimateTrigger] = useState(0);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
+  const [templatePickerVisible, setTemplatePickerVisible] = useState(false);
+  const [availableTemplates, setAvailableTemplates] = useState<Template[]>([]);
+  const [reviewTemplateFields, setReviewTemplateFields] = useState<TemplateField[]>([]);
   const { t } = useTranslation();
   const { colors } = useTheme();
 
@@ -200,8 +204,13 @@ export default function HomeScreen({ navigation }: Props) {
     useCallback(() => {
       loadStats();
       getReverseMode().then(setReverseModeState);
-      getDailyLanguage().then(setDailyLanguage);
       getApiKey().then(setApiKey);
+      getDailyLanguage().then((lang) => {
+        if (lang !== dailyLanguage) {
+          setSelectedTemplateId(null);
+        }
+        setDailyLanguage(lang);
+      });
       getDailyWordsData().then((data) => {
         const today = new Date().toISOString().slice(0, 10);
         if (data.date !== today) {
@@ -529,33 +538,68 @@ export default function HomeScreen({ navigation }: Props) {
     },
   }), [colors]);
 
-  const handleGenerateDaily = useCallback(async () => {
-    if (!dailyLanguage || !apiKey) return;
+  const doGenerateDailyWords = useCallback(async (templateId: number | null) => {
     setDailyGenerating(true);
     setDailyError(false);
-    const words = await generateDailyWords(dailyLanguage, apiKey);
-    setDailyGenerating(false);
-    if (words && words.length > 0) {
-      const today = new Date().toISOString().slice(0, 10);
-      await persistDailyWordsData(today, words);
-      setDailyWordsData({ date: today, words });
-      setDailyModalVisible(true);
-    } else {
+    const today = new Date().toISOString().slice(0, 10);
+
+    try {
+      const words = await generateDailyWords(dailyLanguage, apiKey, templateId ?? undefined);
+      if (words && words.length > 0) {
+        await persistDailyWordsData(today, words);
+        setDailyWordsData({ date: today, words });
+        setDailyModalVisible(true);
+      } else {
+        setDailyError(true);
+      }
+    } catch {
       setDailyError(true);
+    } finally {
+      setDailyGenerating(false);
     }
   }, [dailyLanguage, apiKey]);
+
+  const handleGenerateDaily = useCallback(async () => {
+    if (!dailyLanguage || !apiKey) return;
+
+    const persistedId = await getDailyTemplateId();
+    if (persistedId) {
+      setSelectedTemplateId(persistedId);
+      await doGenerateDailyWords(persistedId);
+      return;
+    }
+
+    const templates = await getAllTemplates();
+    if (templates.length <= 1) {
+      const id = templates[0]?.id ?? null;
+      setSelectedTemplateId(id);
+      await doGenerateDailyWords(id);
+    } else {
+      setAvailableTemplates(templates);
+      setTemplatePickerVisible(true);
+    }
+  }, [dailyLanguage, apiKey, doGenerateDailyWords]);
+
+  const handleTemplateSelect = useCallback(async (template: Template) => {
+    setTemplatePickerVisible(false);
+    setSelectedTemplateId(template.id);
+    await setDailyTemplateId(template.id);
+    await doGenerateDailyWords(template.id);
+  }, [doGenerateDailyWords]);
 
   const handleAddToDeck = useCallback(async (deckId: number) => {
     const cards = dailyWordsData.words.map((w) => ({
       front_text: w.front,
       back_text: w.back,
+      field_values: w.fields,
     }));
-    await importCards(deckId, cards);
+    await importCards(deckId, cards, selectedTemplateId ?? undefined);
     await clearDailyWords();
     setDailyWordsData({ date: '', words: [] });
     setDeckPickerVisible(false);
     setDailyModalVisible(false);
-  }, [dailyWordsData.words]);
+    setReviewTemplateFields([]);
+  }, [dailyWordsData.words, selectedTemplateId]);
 
   const handleCreateAndAdd = useCallback(async () => {
     if (!newDeckName.trim()) return;
@@ -563,20 +607,31 @@ export default function HomeScreen({ navigation }: Props) {
     const cards = dailyWordsData.words.map((w) => ({
       front_text: w.front,
       back_text: w.back,
+      field_values: w.fields,
     }));
-    await importCards(deck.id, cards);
+    await importCards(deck.id, cards, selectedTemplateId ?? undefined);
     await clearDailyWords();
     setDailyWordsData({ date: '', words: [] });
     setNewDeckModalVisible(false);
     setNewDeckName('');
     setDailyModalVisible(false);
-  }, [dailyWordsData.words, dailyLanguage, newDeckName]);
+    setReviewTemplateFields([]);
+  }, [dailyWordsData.words, dailyLanguage, newDeckName, selectedTemplateId]);
 
   const handleDiscardDailyWords = useCallback(async () => {
     await clearDailyWords();
     setDailyWordsData({ date: '', words: [] });
     setDailyModalVisible(false);
+    setReviewTemplateFields([]);
   }, []);
+
+  useEffect(() => {
+    if (dailyModalVisible && selectedTemplateId) {
+      getTemplateFields(selectedTemplateId).then(setReviewTemplateFields).catch(() => setReviewTemplateFields([]));
+    } else if (!dailyModalVisible) {
+      setReviewTemplateFields([]);
+    }
+  }, [dailyModalVisible, selectedTemplateId]);
 
   const openDeckPicker = useCallback(async () => {
     const decks = await getAllDecks();
@@ -890,6 +945,33 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
       </Modal>
 
+      {/* ——— Template Picker Modal ——— */}
+      <Modal
+        visible={templatePickerVisible}
+        onClose={() => {
+          setTemplatePickerVisible(false);
+          setDailyGenerating(false);
+        }}
+        title={t('dailyWords.selectTemplate')}
+      >
+        <ScrollView style={{ maxHeight: 300 }}>
+          {availableTemplates.map((template) => (
+            <TouchableOpacity
+              key={template.id}
+              style={{
+                paddingVertical: spacing.sm + 2,
+                paddingHorizontal: spacing.sm,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.border,
+              }}
+              onPress={() => handleTemplateSelect(template)}
+            >
+              <Text style={{ fontSize: typography.fontSize.md, color: colors.text }}>{template.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </Modal>
+
       {/* ——— Daily Words Review Modal ——— */}
       <Modal
         visible={dailyModalVisible}
@@ -906,24 +988,57 @@ export default function HomeScreen({ navigation }: Props) {
                 borderBottomColor: colors.border,
               }}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                <Text style={{ fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: colors.text }}>
-                  {word.front}
-                </Text>
-                <View style={{
-                  backgroundColor: withAlpha(colors.primary, 0.1),
-                  paddingHorizontal: spacing.sm,
-                  paddingVertical: 2,
-                  borderRadius: borderRadius.full,
-                }}>
-                  <Text style={{ fontSize: typography.fontSize.xs, color: colors.primary }}>
-                    {t('dailyWords.complexity', { level: String(word.complexity) })}
+              {reviewTemplateFields.length > 0 ? (
+                <View>
+                  {reviewTemplateFields.map((f) => (
+                    <View key={f.id} style={{ marginBottom: 4 }}>
+                      <Text style={{ fontSize: typography.fontSize.xs, color: colors.textSecondary, marginBottom: 1 }}>
+                        {f.name}
+                      </Text>
+                      <Text style={{
+                        fontSize: typography.fontSize.md,
+                        color: colors.text,
+                        fontWeight: f.side === 'front' ? typography.fontWeight.bold : typography.fontWeight.regular,
+                      }}>
+                        {word.fields[f.name] || '—'}
+                      </Text>
+                    </View>
+                  ))}
+                  <View style={{
+                    backgroundColor: withAlpha(colors.primary, 0.1),
+                    paddingHorizontal: spacing.sm,
+                    paddingVertical: 2,
+                    borderRadius: borderRadius.full,
+                    alignSelf: 'flex-start',
+                    marginTop: 4,
+                  }}>
+                    <Text style={{ fontSize: typography.fontSize.xs, color: colors.primary }}>
+                      {t('dailyWords.complexity', { level: String(word.complexity) })}
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                    <Text style={{ fontSize: typography.fontSize.md, fontWeight: typography.fontWeight.bold, color: colors.text }}>
+                      {word.front}
+                    </Text>
+                    <View style={{
+                      backgroundColor: withAlpha(colors.primary, 0.1),
+                      paddingHorizontal: spacing.sm,
+                      paddingVertical: 2,
+                      borderRadius: borderRadius.full,
+                    }}>
+                      <Text style={{ fontSize: typography.fontSize.xs, color: colors.primary }}>
+                        {t('dailyWords.complexity', { level: String(word.complexity) })}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary, marginTop: 2 }}>
+                    {word.back}
                   </Text>
                 </View>
-              </View>
-              <Text style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary, marginTop: 2 }}>
-                {word.back}
-              </Text>
+              )}
             </View>
           ))}
         </ScrollView>
