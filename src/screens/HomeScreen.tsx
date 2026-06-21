@@ -78,6 +78,11 @@ export default function HomeScreen({ navigation }: Props) {
   const [templatePickerVisible, setTemplatePickerVisible] = useState(false);
   const [availableTemplates, setAvailableTemplates] = useState<Template[]>([]);
   const [reviewTemplateFields, setReviewTemplateFields] = useState<TemplateField[]>([]);
+
+  const isAnyModalOpen = useMemo(() =>
+    freeflowModal || dailyModalVisible || templatePickerVisible || deckPickerVisible || newDeckModalVisible,
+    [freeflowModal, dailyModalVisible, templatePickerVisible, deckPickerVisible, newDeckModalVisible]
+  );
   const { t } = useTranslation();
   const { colors } = useTheme();
 
@@ -642,6 +647,7 @@ export default function HomeScreen({ navigation }: Props) {
 
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.scrollContent}
+      scrollEnabled={!isAnyModalOpen}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
       }>
