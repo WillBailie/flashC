@@ -724,5 +724,95 @@ describe('Database Operations', () => {
       await database.deleteDeck(deck.id);
     });
   });
+
+  describe('Orphan card operations', () => {
+    test('getOrphanCards returns empty when no orphans exist', async () => {
+      const cards = await database.getOrphanCards();
+      expect(cards).toEqual([]);
+    });
+
+    test('getOrphanCardCount returns 0 when no orphans exist', async () => {
+      const count = await database.getOrphanCardCount();
+      expect(count).toBe(0);
+    });
+
+    test('getOrphanCards returns cards with broken deck_id references', async () => {
+      const db = await database.getDatabase();
+      // Insert a card with a deck_id that points to a non-existent deck
+      const result = await db.runAsync(
+        'INSERT INTO cards (deck_id, front_text, back_text, created_at, modified_at) VALUES (?, ?, ?, ?, ?)',
+        [99999, 'Orphan Front', 'Orphan Back', new Date().toISOString(), new Date().toISOString()]
+      );
+
+      const cards = await database.getOrphanCards();
+      expect(cards.length).toBe(1);
+      expect(cards[0].front_text).toBe('Orphan Front');
+      expect(cards[0].deck_id).toBe(99999);
+
+      // Clean up
+      await db.runAsync('DELETE FROM cards WHERE id = ?', [result.lastInsertRowId]);
+    });
+
+    test('getOrphanCardCount returns correct count with orphans', async () => {
+      const db = await database.getDatabase();
+      const r1 = await db.runAsync(
+        'INSERT INTO cards (deck_id, front_text, back_text, created_at, modified_at) VALUES (?, ?, ?, ?, ?)',
+        [99998, 'Orphan 1', 'Back 1', new Date().toISOString(), new Date().toISOString()]
+      );
+      const r2 = await db.runAsync(
+        'INSERT INTO cards (deck_id, front_text, back_text, created_at, modified_at) VALUES (?, ?, ?, ?, ?)',
+        [99997, 'Orphan 2', 'Back 2', new Date().toISOString(), new Date().toISOString()]
+      );
+
+      const count = await database.getOrphanCardCount();
+      expect(count).toBe(2);
+
+      await db.runAsync('DELETE FROM cards WHERE id = ?', [r1.lastInsertRowId]);
+      await db.runAsync('DELETE FROM cards WHERE id = ?', [r2.lastInsertRowId]);
+    });
+
+    test('moveCardsToDeck reassigns cards to a target deck', async () => {
+      const db = await database.getDatabase();
+      const deck = await database.createDeck('Target Deck', '');
+      try {
+        const r1 = await db.runAsync(
+          'INSERT INTO cards (deck_id, front_text, back_text, created_at, modified_at) VALUES (?, ?, ?, ?, ?)',
+          [99999, 'Move Me', 'Back', new Date().toISOString(), new Date().toISOString()]
+        );
+
+        const orphans = await database.getOrphanCards();
+        expect(orphans.length).toBe(1);
+
+        await database.moveCardsToDeck(orphans.map((c) => c.id), deck.id);
+
+        const remaining = await database.getOrphanCards();
+        expect(remaining.length).toBe(0);
+
+        const deckCards = await database.getCardsByDeckId(deck.id);
+        expect(deckCards.some((c) => c.front_text === 'Move Me')).toBe(true);
+        expect(deckCards.some((c) => c.deck_id === deck.id)).toBe(true);
+      } finally {
+        await database.deleteDeck(deck.id);
+      }
+    });
+
+    test('deleteOrphanCards removes all orphans and returns count', async () => {
+      const db = await database.getDatabase();
+      await db.runAsync(
+        'INSERT INTO cards (deck_id, front_text, back_text, created_at, modified_at) VALUES (?, ?, ?, ?, ?)',
+        [99999, 'Delete Me 1', 'Back', new Date().toISOString(), new Date().toISOString()]
+      );
+      await db.runAsync(
+        'INSERT INTO cards (deck_id, front_text, back_text, created_at, modified_at) VALUES (?, ?, ?, ?, ?)',
+        [99999, 'Delete Me 2', 'Back', new Date().toISOString(), new Date().toISOString()]
+      );
+
+      const count = await database.deleteOrphanCards();
+      expect(count).toBe(2);
+
+      const remaining = await database.getOrphanCards();
+      expect(remaining).toEqual([]);
+    });
+  });
 });
 

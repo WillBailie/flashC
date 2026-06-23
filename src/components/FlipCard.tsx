@@ -118,6 +118,7 @@ export function FlipCard({
         // Swipe right
         if (isFlippedSV.value) {
           // Back → front: flip back
+          isFlippedSV.value = false;
           translateX.value = withSpring(0, springConfig);
           runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
           if (onSwipeRight) {
@@ -127,6 +128,7 @@ export function FlipCard({
           }
         } else {
           // Front → back: flip to reveal
+          isFlippedSV.value = true;
           translateX.value = withSpring(0, springConfig);
           runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
           runOnJS(onFlip)();
@@ -134,8 +136,10 @@ export function FlipCard({
       } else if (event.translationX < -SWIPE_THRESHOLD) {
         // Swipe left
         if (onSwipeLeft && isFlippedSV.value) {
+          isFlippedSV.value = false;
           goNext('left');
         } else if (!isFlippedSV.value) {
+          isFlippedSV.value = true;
           translateX.value = withSpring(0, springConfig);
           runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
           runOnJS(onFlip)();

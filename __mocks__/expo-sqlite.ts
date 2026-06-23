@@ -212,6 +212,24 @@ class MockDatabase {
     }
 
     if (/UPDATE/i.test(sql)) {
+      // Handle UPDATE ... SET ... WHERE id IN (?, ?, ...)
+      const updateInMatch = sql.match(/UPDATE\s+(\w+)\s+SET\s+(\w+)\s*=\s*\?\s*WHERE\s+(\w+)\s+IN\s+\(([^)]*)\)/i);
+      if (updateInMatch) {
+        const table = getOrCreateTable(updateInMatch[1]);
+        const setCol = updateInMatch[2];
+        const whereCol = updateInMatch[3];
+        const newVal = params[0];
+        const inVals = params.slice(1);
+        let changes = 0;
+        for (const row of table.rows) {
+          if (inVals.some((v: any) => String(row[whereCol]) === String(v))) {
+            row[setCol] = newVal;
+            changes++;
+          }
+        }
+        return Promise.resolve({ lastInsertRowId: 0, changes });
+      }
+
       const parsed = parseUpdate(sql, params);
       if (parsed) {
         const table = getOrCreateTable(parsed.table);
@@ -227,6 +245,27 @@ class MockDatabase {
     }
 
     if (/DELETE/i.test(sql)) {
+      // Handle DELETE ... WHERE col NOT IN (SELECT id FROM otherTable)
+      const notInDeleteMatch = sql.match(/DELETE\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s+NOT\s+IN\s+\(\s*SELECT\s+id\s+FROM\s+(\w+)\s*\)/i);
+      if (notInDeleteMatch) {
+        const table = getOrCreateTable(notInDeleteMatch[1]);
+        const col = notInDeleteMatch[2];
+        const otherTable = tables[notInDeleteMatch[3]] || { rows: [] };
+        const validIds = new Set(otherTable.rows.map((r) => String(r.id)));
+        const before = table.rows.length;
+        const deletedCardIds = table.rows
+          .filter((r) => !validIds.has(String(r[col])))
+          .map((r) => r.id);
+        table.rows = table.rows.filter((r) => validIds.has(String(r[col])));
+        // Cascade: delete reviews for orphan cards
+        if (notInDeleteMatch[1] === 'cards' && tables['reviews']) {
+          tables['reviews'].rows = tables['reviews'].rows.filter(
+            (r) => !deletedCardIds.includes(r.card_id)
+          );
+        }
+        return Promise.resolve({ lastInsertRowId: 0, changes: before - table.rows.length });
+      }
+
       const parsed = parseDelete(sql, params);
       if (parsed) {
         const table = getOrCreateTable(parsed.table);
@@ -363,9 +402,18 @@ class MockDatabase {
     const isCount = /COUNT\(\*\) as count/i.test(sql);
 
     if (isCount) {
+      // Handle NOT IN (SELECT id FROM otherTable)
+      const countNotInMatch = sql.match(/(\w+)\s+NOT\s+IN\s+\(\s*SELECT\s+id\s+FROM\s+(\w+)\s*\)/i);
+      let countRows = table.rows;
+      if (countNotInMatch) {
+        const col = countNotInMatch[1];
+        const otherTable = tables[countNotInMatch[2]] || { rows: [] };
+        const validIds = new Set(otherTable.rows.map((r) => String(r.id)));
+        countRows = countRows.filter((r) => !validIds.has(String(r[col])));
+      }
+
       // Check for WHERE on deck_id
       const countWhereMatch = sql.match(/WHERE (\w+)\.(\w+) = \?/i) || sql.match(/WHERE (\w+) = \?/i);
-      let countRows = table.rows;
       if (countWhereMatch && params.length > 0) {
         const col = countWhereMatch[2] || countWhereMatch[1];
         countRows = countRows.filter((r) => String(r[col]) === String(params[0]));
@@ -403,6 +451,15 @@ class MockDatabase {
     }
 
     let result = [...table.rows];
+
+    // Handle NOT IN (SELECT id FROM otherTable)
+    const notInSelectMatch = sql.match(/(\w+)\s+NOT\s+IN\s+\(\s*SELECT\s+id\s+FROM\s+(\w+)\s*\)/i);
+    if (notInSelectMatch) {
+      const col = notInSelectMatch[1];
+      const otherTable = tables[notInSelectMatch[2]] || { rows: [] };
+      const validIds = new Set(otherTable.rows.map((r) => String(r.id)));
+      result = result.filter((r) => !validIds.has(String(r[col])));
+    }
 
     const whereMatch = sql.match(/WHERE (\w+)\.(\w+) = \?/) || sql.match(/WHERE (\w+) = \?/i);
     if (whereMatch && params.length > 0) {
@@ -483,6 +540,15 @@ class MockDatabase {
     if (isCount) {
       let countRows = table.rows;
 
+      // Handle NOT IN (SELECT id FROM otherTable)
+      const notInSelectMatch = sql.match(/(\w+)\s+NOT\s+IN\s+\(\s*SELECT\s+id\s+FROM\s+(\w+)\s*\)/i);
+      if (notInSelectMatch) {
+        const col = notInSelectMatch[1];
+        const otherTable = tables[notInSelectMatch[2]] || { rows: [] };
+        const validIds = new Set(otherTable.rows.map((r) => String(r.id)));
+        countRows = countRows.filter((r) => !validIds.has(String(r[col])));
+      }
+
       // Handle COUNT with JOIN
       const countJoin = sql.match(/INNER JOIN (\w+) \w+ ON (?:c\.)?(\w+) = (?:r\.)?(\w+)/i);
       if (countJoin) {
@@ -524,6 +590,15 @@ class MockDatabase {
     }
 
     let result = table.rows;
+
+    // Handle NOT IN (SELECT id FROM otherTable)
+    const notInSelectMatch = sql.match(/(\w+)\s+NOT\s+IN\s+\(\s*SELECT\s+id\s+FROM\s+(\w+)\s*\)/i);
+    if (notInSelectMatch) {
+      const col = notInSelectMatch[1];
+      const otherTable = tables[notInSelectMatch[2]] || { rows: [] };
+      const validIds = new Set(otherTable.rows.map((r) => String(r.id)));
+      result = result.filter((r) => !validIds.has(String(r[col])));
+    }
 
     const whereMatch = sql.match(/WHERE (\w+)\.(\w+) = \?/) || sql.match(/WHERE (\w+) = \?/i);
     if (whereMatch && params.length > 0) {

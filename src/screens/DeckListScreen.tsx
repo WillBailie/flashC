@@ -23,7 +23,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Modal } from '../components/Modal';
 import { SkeletonCard } from '../components/Skeleton';
-import { createDeck, deleteDeck, getAllDecks, getDeckStats } from '../storage/database';
+import { createDeck, deleteDeck, getAllDecks, getDeckStats, getOrphanCardCount, getOrphanCards, moveCardsToDeck, deleteOrphanCards } from '../storage/database';
 import { on, emit } from '../utils/eventBus';
 import { useTranslation } from '../i18n/TranslationContext';
 import { Deck } from '../models/types';
@@ -51,6 +51,9 @@ export default function DeckListScreen({ navigation }: Props) {
   const [newDeckDesc, setNewDeckDesc] = useState('');
   const [newDeckLanguage, setNewDeckLanguage] = useState('');
   const [customLanguage, setCustomLanguage] = useState('');
+  const [orphanCount, setOrphanCount] = useState(0);
+  const [orphanModalVisible, setOrphanModalVisible] = useState(false);
+  const [showDeckPicker, setShowDeckPicker] = useState(false);
 
   const commonLanguages = ['Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Japanese', 'Korean', 'Chinese', 'Russian', 'Arabic'];
 
@@ -63,6 +66,8 @@ export default function DeckListScreen({ navigation }: Props) {
       decksWithStats.push({ ...deck, ...stats });
     }
     setDecks(decksWithStats);
+    const count = await getOrphanCardCount();
+    setOrphanCount(count);
     setLoading(false);
   }, []);
 
@@ -181,6 +186,33 @@ export default function DeckListScreen({ navigation }: Props) {
         languageChipTextSelected: {
           color: colors.primary,
         },
+        orphanHeader: {
+          marginBottom: spacing.md,
+        },
+        orphanIcon: {
+          width: 44,
+          height: 44,
+          borderRadius: borderRadius.md,
+          backgroundColor: withAlpha(colors.warning, 0.12),
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        orphanCount: {
+          fontSize: typography.fontSize.sm,
+          color: colors.warning,
+          fontWeight: typography.fontWeight.semibold,
+        },
+        deckPickerItem: {
+          paddingVertical: 14,
+          paddingHorizontal: spacing.md,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: colors.border,
+        },
+        deckPickerName: {
+          fontSize: typography.fontSize.md,
+          fontWeight: typography.fontWeight.medium,
+          color: colors.text,
+        },
       }),
     [colors]
   );
@@ -217,6 +249,42 @@ export default function DeckListScreen({ navigation }: Props) {
             await deleteDeck(deck.id);
             emit('decks-changed');
             await loadDecks();
+          },
+        },
+      ]
+    );
+  };
+
+  const handleMoveOrphans = async (deckId: number, deckName: string) => {
+    const orphans = await getOrphanCards();
+    const ids = orphans.map((c) => c.id);
+    if (ids.length > 0) {
+      await moveCardsToDeck(ids, deckId);
+      const count = ids.length;
+      const s = count !== 1 ? 's' : '';
+      Alert.alert('', t('deckList.orphanMoved', { count: String(count), deck: deckName, s }));
+      emit('decks-changed');
+      await loadDecks();
+      setShowDeckPicker(false);
+      setOrphanModalVisible(false);
+    }
+  };
+
+  const handleDeleteOrphans = () => {
+    Alert.alert(
+      t('common.delete'),
+      t('deckList.orphanDeleteConfirm', { count: String(orphanCount), s: orphanCount !== 1 ? 's' : '' }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            const deleted = await deleteOrphanCards();
+            Alert.alert('', t('deckList.orphanDeleted', { count: String(deleted), s: deleted !== 1 ? 's' : '' }));
+            emit('decks-changed');
+            await loadDecks();
+            setOrphanModalVisible(false);
           },
         },
       ]
@@ -287,7 +355,36 @@ export default function DeckListScreen({ navigation }: Props) {
           data={decks}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderDeck}
-          contentContainerStyle={decks.length === 0 ? styles.emptyContainer : styles.listContent}
+          contentContainerStyle={decks.length === 0 && orphanCount === 0 ? styles.emptyContainer : styles.listContent}
+          ListHeaderComponent={
+            orphanCount > 0 ? (
+              <Animated.View
+                entering={FadeInUp.duration(250)}
+                style={styles.orphanHeader}
+              >
+                <Card
+                  variant="outlined"
+                  interactive
+                  onPress={() => {
+                    setShowDeckPicker(false);
+                    setOrphanModalVisible(true);
+                  }}
+                  style={{ borderColor: colors.warning, borderWidth: 1.5 }}
+                >
+                  <View style={styles.deckHeader}>
+                    <View style={styles.orphanIcon}>
+                      <Ionicons name="warning-outline" size={22} color={colors.warning} />
+                    </View>
+                    <Text style={styles.deckName}>{t('deckList.orphanTitle')}</Text>
+                    <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+                  </View>
+                  <Text style={styles.orphanCount}>
+                    {t('deckList.orphanCount', { count: String(orphanCount), s: orphanCount !== 1 ? 's' : '' })}
+                  </Text>
+                </Card>
+              </Animated.View>
+            ) : null
+          }
           ListEmptyComponent={
             <EmptyState
               title={t('deckList.emptyTitle')}
@@ -317,6 +414,74 @@ export default function DeckListScreen({ navigation }: Props) {
           <Ionicons name="add" size={28} color={colors.textInverse} />
         </Pressable>
       </Animated.View>
+
+      <Modal
+        visible={orphanModalVisible}
+        onClose={() => {
+          setOrphanModalVisible(false);
+          setShowDeckPicker(false);
+        }}
+        title={showDeckPicker ? t('deckList.orphanMoveToDeck') : t('deckList.orphanTitle')}
+      >
+        {showDeckPicker ? (
+          <>
+            <Text style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary, marginBottom: spacing.md }}>
+              {t('deckList.orphanSelectDeck')}
+            </Text>
+            {decks.length === 0 ? (
+              <EmptyState
+                title={t('deckList.emptyTitle')}
+                subtitle={t('deckList.emptySubtitle')}
+              />
+            ) : (
+              decks.map((deck) => (
+                <Pressable
+                  key={deck.id}
+                  style={styles.deckPickerItem}
+                  onPress={() => handleMoveOrphans(deck.id, deck.name)}
+                >
+                  <Text style={styles.deckPickerName}>{deck.name}</Text>
+                </Pressable>
+              ))
+            )}
+            <View style={styles.modalButtons}>
+              <Button
+                title={t('common.cancel')}
+                variant="secondary"
+                onPress={() => setShowDeckPicker(false)}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </>
+        ) : (
+          <>
+            <Text style={{ fontSize: typography.fontSize.sm, color: colors.textSecondary, marginBottom: spacing.md }}>
+              {t('deckList.orphanCount', { count: String(orphanCount), s: orphanCount !== 1 ? 's' : '' })}
+            </Text>
+            <View style={styles.modalButtons}>
+              <Button
+                title={t('deckList.orphanMoveToDeck')}
+                onPress={() => setShowDeckPicker(true)}
+                style={{ flex: 1 }}
+              />
+              <Button
+                title={t('deckList.orphanDeleteAll')}
+                variant="danger"
+                onPress={handleDeleteOrphans}
+                style={{ flex: 1 }}
+              />
+            </View>
+            <View style={styles.modalButtons}>
+              <Button
+                title={t('common.cancel')}
+                variant="secondary"
+                onPress={() => setOrphanModalVisible(false)}
+                style={{ flex: 1 }}
+              />
+            </View>
+          </>
+        )}
+      </Modal>
 
       <Modal
         visible={modalVisible}

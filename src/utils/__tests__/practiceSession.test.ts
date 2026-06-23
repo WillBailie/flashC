@@ -232,3 +232,64 @@ describe('example data should survive front→back flip', () => {
     expect(signalsClearExample(result, s.currentIndex)).toBe(true);
   });
 });
+
+describe('swipe-right peek → flip → advance flow', () => {
+  test('peek (swipe-right on back) flips to front, stays on same card', () => {
+    const s = snap({ isFlipped: true, currentIndex: 0, stats: { reviewed: 2 } });
+    const result = advanceOnSwipeRight(s);
+    expect(result.isFlipped).toBe(false);
+    expect(result.currentIndex).toBe(0);
+    expect(result.stats.reviewed).toBe(2);
+    expect(result.isComplete).toBe(false);
+  });
+
+  test('after peek, flip to back keeps same card', () => {
+    const s = snap({ isFlipped: false, currentIndex: 0 });
+    const peekResult = advanceOnSwipeRight(s);
+    expect(peekResult.isFlipped).toBe(false); // already front, no-op
+
+    const flipResult = advanceOnFlip(peekResult, 'freeflow');
+    expect(flipResult.isFlipped).toBe(true);
+    expect(flipResult.currentIndex).toBe(0);
+  });
+
+  test('after peek then flip, swipe-left advances in daily', () => {
+    const s = snap({ isFlipped: true, currentIndex: 0, stats: { reviewed: 0 } });
+    const afterPeek = advanceOnSwipeRight(s); // isFlipped: false
+    const afterFlip = advanceOnFlip(afterPeek, 'daily'); // isFlipped: true
+    expect(afterFlip.isFlipped).toBe(true);
+    expect(afterFlip.currentIndex).toBe(0);
+
+    const advance = advanceOnSwipeLeft(afterFlip, 'daily');
+    expect(advance.isFlipped).toBe(false);
+    expect(advance.currentIndex).toBe(1);
+    expect(advance.stats.reviewed).toBe(1);
+  });
+
+  test('after peek then flip, tap advances in freeflow', () => {
+    const s = snap({ isFlipped: true, currentIndex: 0, stats: { reviewed: 0 } });
+    const afterPeek = advanceOnSwipeRight(s); // isFlipped: false
+    const afterFlip = advanceOnFlip(afterPeek, 'freeflow'); // isFlipped: true
+    expect(afterFlip.isFlipped).toBe(true);
+    expect(afterFlip.currentIndex).toBe(0);
+
+    const advance = advanceOnFlip(afterFlip, 'freeflow');
+    expect(advance.isFlipped).toBe(false);
+    expect(advance.currentIndex).toBe(1);
+    expect(advance.stats.reviewed).toBe(1);
+  });
+
+  test('advanceOnSwipeRight does not increment stats even with high count', () => {
+    const s = snap({ isFlipped: true, stats: { reviewed: 99 } });
+    const result = advanceOnSwipeRight(s);
+    expect(result.stats.reviewed).toBe(99);
+  });
+
+  test('advanceOnSwipeRight on last card does not complete session', () => {
+    const s = snap({ isFlipped: true, currentIndex: 1, stats: { reviewed: 0 } });
+    const result = advanceOnSwipeRight(s);
+    expect(result.isComplete).toBe(false);
+    expect(result.currentIndex).toBe(1);
+    expect(result.isFlipped).toBe(false);
+  });
+});

@@ -272,6 +272,38 @@ export async function deleteCard(id: number): Promise<void> {
   await database.runAsync('DELETE FROM cards WHERE id = ?', [id]);
 }
 
+export async function getOrphanCards(): Promise<Card[]> {
+  const database = await getDatabase();
+  return database.getAllAsync<Card>(
+    'SELECT * FROM cards WHERE deck_id NOT IN (SELECT id FROM decks)'
+  );
+}
+
+export async function getOrphanCardCount(): Promise<number> {
+  const database = await getDatabase();
+  const result = await database.getFirstAsync<{ count: number }>(
+    'SELECT COUNT(*) as count FROM cards WHERE deck_id NOT IN (SELECT id FROM decks)'
+  );
+  return result?.count ?? 0;
+}
+
+export async function moveCardsToDeck(cardIds: number[], deckId: number): Promise<void> {
+  const database = await getDatabase();
+  const placeholders = cardIds.map(() => '?').join(',');
+  await database.runAsync(
+    `UPDATE cards SET deck_id = ? WHERE id IN (${placeholders})`,
+    [deckId, ...cardIds]
+  );
+}
+
+export async function deleteOrphanCards(): Promise<number> {
+  const database = await getDatabase();
+  const result = await database.runAsync(
+    'DELETE FROM cards WHERE deck_id NOT IN (SELECT id FROM decks)'
+  );
+  return result.changes;
+}
+
 export async function getCardsByDeckId(deckId: number): Promise<Card[]> {
   const database = await getDatabase();
   return database.getAllAsync<Card>(

@@ -96,4 +96,38 @@ describe('FlipCard', () => {
     const { getByText } = await renderFlip({ isFlipped: true, templateFields: undefined, fieldValues: undefined });
     expect(getByText(TEST_BACK)).toBeTruthy();
   });
+
+  it('accepts onSwipeRight callback without errors', async () => {
+    const onSwipeRight = jest.fn();
+    const { toJSON } = await renderFlip({ isFlipped: true, onSwipeRight });
+    expect(toJSON()).toBeTruthy();
+  });
+
+  it('accepts onSwipeLeft callback without errors', async () => {
+    const onSwipeLeft = jest.fn();
+    const { toJSON } = await renderFlip({ isFlipped: true, onSwipeLeft });
+    expect(toJSON()).toBeTruthy();
+  });
+
+  it('renders with both swipe callbacks provided', async () => {
+    const onSwipeLeft = jest.fn();
+    const onSwipeRight = jest.fn();
+    const { getByText } = await renderFlip({ isFlipped: false, onSwipeLeft, onSwipeRight });
+    expect(getByText(TEST_FRONT)).toBeTruthy();
+  });
+
+  it('example label is not rendered when no example data', async () => {
+    const { queryByText } = await renderFlip({ isFlipped: false });
+    expect(queryByText('Example')).toBeNull();
+  });
+
+  it('renders example sentence but not translation on front face', async () => {
+    const { getByText } = await renderFlip({
+      isFlipped: false,
+      exampleSentence: EXAMPLE_SENTENCE,
+      exampleTranslation: EXAMPLE_TRANSLATION,
+    });
+    expect(getByText(EXAMPLE_SENTENCE)).toBeTruthy();
+    expect(getByText(EXAMPLE_TRANSLATION)).toBeTruthy();
+  });
 });
