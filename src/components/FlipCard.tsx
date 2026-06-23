@@ -120,7 +120,11 @@ export function FlipCard({
           // Back → front: flip back
           translateX.value = withSpring(0, springConfig);
           runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
-          runOnJS(onFlip)();
+          if (onSwipeRight) {
+            runOnJS(onSwipeRight)();
+          } else {
+            runOnJS(onFlip)();
+          }
         } else {
           // Front → back: flip to reveal
           translateX.value = withSpring(0, springConfig);
